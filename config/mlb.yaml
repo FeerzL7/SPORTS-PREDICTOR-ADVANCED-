@@ -1,0 +1,247 @@
+# config/mlb.yaml
+#
+# Configuración específica para MLB — sobreescribe config/base.yaml.
+# Cargado por ConfigLoader con deep-merge sobre base.yaml:
+#   load_config(sport='mlb') → base.yaml ← mlb.yaml
+#
+# TODOS los valores aquí son calibrados empíricamente desde el
+# backtesting del sistema MLB-PREDICTOR-ADVANCED (2025-2026) y
+# validados contra el MLB_EDGE_AUDIT.md / CRITICAL_FINDINGS.md.
+#
+# Hallazgo principal del audit:
+#   - TOTAL: hit_rate=56%, ROI=+11.15%, n=92 → EDGE REAL (p<0.05)
+#   - ML:    hit_rate=39%, ROI=-22.43%, n=155 → SIN EDGE CONFIRMADO
+#   - RL:    hit_rate=33%, ROI=-31.87%, n=55  → SIN EDGE CONFIRMADO
+#
+# Las constantes de ML y RL están configuradas de forma CONSERVADORA
+# hasta que el nuevo modelo con los bugs corregidos genere suficiente
+# historial para recalibrar (objetivo: n >= 150 picks por mercado).
+# ─────────────────────────────────────────────────────────────────────
+
+# ── Blending modelo-mercado ───────────────────────────────────────────────────
+# Calibrado desde análisis de OCI (Overconfidence Index) del audit.
+# OCI MLB-ML = +0.16 (el modelo sobreestimaba en 16pp) →
+# model_weight bajo para dar más peso al mercado más eficiente.
+#
+# MLB-TOTAL: el modelo Poisson calibrado para totales tiene mejor
+# correlación con el resultado real → model_weight más alto (0.62).
+#
+blending:
+  ML:
+    model_weight: 0.35      # 35% modelo, 65% mercado.
+                            # Mercado MLB-ML es altamente eficiente
+                            # (Pinnacle, sharp market). Modelo aún
+                            # tiene OCI alto en este mercado.
+    prob_cap:     0.58      # Límite de confianza del modelo en ML.
+                            # Ningún pick ML puede tener model_prob > 58%.
+                            # Calibrado: distribución histórica de picks
+                            # ganadores nunca superó 56% de prob real.
+
+  SPREAD:                   # RL (Runline) en terminología MLB
+    model_weight: 0.35      # Igual que ML — mercado RL igualmente eficiente.
+    prob_cap:     0.57      # Cap levemente menor: RL tiene más incertidumbre.
+
+  TOTAL:
+    model_weight: 0.62      # Modelo más informativo en totales.
+                            # ERA, FIP, park factors predicen totales
+                            # mejor que ML. Edge real confirmado (H1).
+    prob_cap:     0.62      # Cap para totales: el modelo raramente
+                            # supera 62% de confianza real en TOTAL.
+
+# ── Filtros de mercado ────────────────────────────────────────────────────────
+# Calibrados del sistema original analysis/value.py:
+#   UMBRAL_EV_ML=6, UMBRAL_PROB_ML=0.535, MIN_CUOTA_ML=1.88, MAX_CUOTA_ML=2.12
+#   EDGE_MIN_ML=0.035, EDGE_MAX_ML=0.180
+#   UMBRAL_EV_TOTAL=15, UMBRAL_PROB_TOTAL=0.56
+#
+# IMPORTANTE: ML y RL tienen umbrales MÁS ALTOS que en el sistema
+# original porque con los bugs corregidos (ensemble, features) el
+# modelo genera EV más realista — los picks con EV bajo son más
+# probablemente falsos positivos del modelo sobreajustado.
+#
+filters:
+  ML:
+    min_ev:        6.0      # EV mínimo de 6% para picks ML.
+                            # Sistema original: 6%. Mantenido.
+    min_prob:      0.535    # Prob blended mínima.
+                            # 53.5% = break-even para cuota ~1.91.
+    min_odds:      1.88     # Cuota mínima. Evitar favoritos extremos
+                            # donde el modelo tiene menos ventaja.
+    max_odds:      2.12     # Cuota máxima. Underdogs extremos tienen
+                            # muy baja liquidez en Pinnacle.
+    min_edge:      0.035    # Ventaja mínima sobre el mercado.
+                            # model_prob - market_prob >= 3.5%.
+    max_edge:      0.180    # Ventaja máxima. Edge > 18% casi siempre
+                            # indica datos corruptos, no valor real.
+    min_line_diff: null     # No aplica para ML.
+
+  SPREAD:                   # RL (Runline) — idéntico a ML por ahora
+    min_ev:        6.0      # Mismo umbral que ML.
+    min_prob:      0.535
+    min_odds:      1.85     # RL puede tener cuotas ligeramente menores.
+    max_odds:      2.10
+    min_edge:      0.035
+    max_edge:      0.180
+    min_line_diff: null
+
+  TOTAL:
+    min_ev:        15.0     # EV mínimo ALTO para totales.
+                            # Sistema original: 15%. El edge de TOTAL
+                            # es real pero requiere señal fuerte.
+    min_prob:      0.56     # 56% — consistente con hit_rate histórico.
+    min_odds:      1.75     # Totales MLB pueden tener cuotas más bajas.
+    max_odds:      2.20     # Techo razonable para Over/Under.
+    min_edge:      0.040    # Edge mínimo ligeramente mayor para TOTAL.
+    max_edge:      0.200    # Tolerancia mayor: modelo más informativo.
+    min_line_diff: 1.0      # Discrepancia mínima de 1 carrera entre
+                            # proyección del modelo y línea de mercado.
+                            # Evita apostar cuando el modelo y el mercado
+                            # están de acuerdo en el total.
+
+# ── Kelly fraccionado ─────────────────────────────────────────────────────────
+# Calibrado del sistema MLB: KELLY_FRACCION=0.18 (sin cambio).
+# max_fraction diferenciado por mercado según el edge histórico.
+#
+kelly:
+  ML:
+    fraction:     0.18      # 18% del Kelly completo. Conservador.
+    max_fraction: 1.00      # Techo menor para ML: sin edge confirmado.
+  SPREAD:
+    fraction:     0.18
+    max_fraction: 1.00      # Igual que ML.
+  TOTAL:
+    fraction:     0.18      # Misma fracción.
+    max_fraction: 1.25      # Mayor techo: edge confirmado en TOTAL.
+
+# ── Staking ───────────────────────────────────────────────────────────────────
+# IntegerPercentStaking calibrado con backtesting MLB 2025-2026.
+# Sistema original: 1-3% con thresholds de EV distintos por mercado.
+#
+staking:
+  ML:
+    min_pct:  1             # 1% mínimo.
+    max_pct:  2             # Máximo 2% hasta confirmar edge en ML.
+    ev_l1:    10.0          # EV >= 10% → subir a 2%.
+    prob_l1:  0.55          # Prob >= 55% para el incremento L1.
+    ev_l2:    16.0          # EV >= 16% + movimiento confirmado → 2%.
+    prob_l2:  0.57          # (max_pct=2, así que L2 no cambia nada)
+
+  SPREAD:
+    min_pct:  1
+    max_pct:  2             # Igual que ML.
+    ev_l1:    10.0
+    prob_l1:  0.55
+    ev_l2:    16.0
+    prob_l2:  0.57
+
+  TOTAL:
+    min_pct:  1             # 1% mínimo.
+    max_pct:  3             # Hasta 3%: edge confirmado en TOTAL.
+    ev_l1:    24.0          # EV >= 24% → subir a 2%.
+                            # Threshold alto porque TOTAL requiere
+                            # señal muy fuerte para incrementar stake.
+    prob_l1:  0.58          # Prob >= 58% para L1.
+    ev_l2:    34.0          # EV >= 34% + movimiento confirmado → 3%.
+    prob_l2:  0.60          # Prob >= 60% para L2.
+
+# ── Gestión de riesgo ─────────────────────────────────────────────────────────
+# Parámetros del sistema MLB original: MAX_PICKS_DIARIOS=3,
+# MAX_EXPOSICION_DIARIA_PCT=6. Sin cambios — calibrados correctamente.
+#
+risk:
+  max_picks_daily:        3   # Máximo 3 picks activos por día.
+                              # Basado en análisis de correlación:
+                              # partidos del mismo día (mismo horario)
+                              # tienen correlación en factores de clima
+                              # y pitching. 3 picks minimiza el riesgo
+                              # de correlación no modelada.
+  max_exposure_pct:       6   # Máximo 6% del bankroll en riesgo.
+                              # Con 3 picks × max 2% = 6% de techo.
+  max_stake_per_pick_pct: 3   # No más de 3% por pick individual.
+  veto_on_contradiction:  true
+
+# ── Detección de movimiento de línea ─────────────────────────────────────────
+# Thresholds MLB del sistema original.
+# Los mercados MLB son muy líquidos — movimientos pequeños son
+# estadísticamente significativos.
+#
+line_movement:
+  ml_move_threshold:     0.06  # 6 centavos de cuota en ML = señal.
+                               # Ej: 2.10 → 2.04 en 4 horas = dinero sharp.
+  juice_shift_threshold: 0.04  # 4 centavos de asimetría en juice.
+                               # Ej: Over 1.91 → 1.87, Under 1.91 → 1.95.
+  line_move_threshold:   0.50  # Media carrera de movimiento en totales.
+                               # 8.5 → 9.0 = señal de dinero en Over.
+
+# ── Modelos de simulación ─────────────────────────────────────────────────────
+# PoissonModel para MLB: mu ≈ 4.5 carreras por equipo por partido.
+# max_score=20 cubre >99.99% de la distribución real de MLB.
+#
+simulation:
+  mlb:
+    poisson:
+      max_score: 20       # Sin cambio respecto a base.yaml.
+
+# ── Odds API — mercados MLB ───────────────────────────────────────────────────
+# Configuración específica de qué mercados solicitar para MLB.
+# No sobreescribe odds_api.regions — usa el default de base.yaml.
+#
+odds_api:
+  regions: "us"            # us cubre Pinnacle (la línea sharp reference).
+
+# ── Ensemble ──────────────────────────────────────────────────────────────────
+# EnsembleModel (core/simulation/ensemble.py).
+# Parámetros calibrados del sistema MLB original (analysis/ensemble.py).
+# Ahora activado por defecto (bug de enables=False corregido).
+#
+ensemble:
+  alpha_base:           0.70   # Peso de Poisson cuando CV bajo.
+  alpha_min:            0.50   # Peso mínimo de Poisson (CV alto).
+  cv_threshold_low:     0.60   # CV <= 60% → equipo consistente.
+  cv_threshold_high:    1.00   # CV >= 100% → equipo "todo o nada".
+  proj_min:             1.5    # Mínimo de carreras proyectadas.
+  proj_max:             12.0   # Máximo de carreras proyectadas (MLB).
+                               # A diferencia de base.yaml (proj_max: null),
+                               # MLB tiene un máximo razonable de 12 carreras.
+
+# ── Parámetros específicos del modelo MLB ─────────────────────────────────────
+# Usados por MLBProjectionModel (sports/mlb/projections.py).
+# No son consumidos por el core — son de uso exclusivo del plugin.
+#
+mlb:
+  # Pesos de componentes en la proyección de carreras
+  projection:
+    era_weight:          0.35  # Peso de ERA del abridor en la proyección.
+    fip_weight:          0.35  # Peso de FIP del abridor.
+    team_offense_weight: 0.20  # Peso de OPS del equipo ofensivo.
+    bullpen_weight:      0.10  # Peso de ERA del bullpen.
+
+  # Park factors por venue_id — ajuste de proyección según estadio
+  # (pendiente de carga desde MLB Stats API en el plugin)
+  park_factor_default: 1.00    # Sin ajuste si no hay factor disponible.
+
+  # Ventana de datos recientes para ensemble y features
+  recent_games_window: 15      # Últimos 15 partidos para recent_scores.
+  min_innings_pitched: 80      # Mínimo de IP para abridor de "alta muestra"
+                               # (umbral de H2 del audit).
+
+  # Splits de bateo (vsRHP / vsLHP) — activados en la proyección
+  use_batting_splits: true     # Usa OPS vs mano del abridor rival.
+
+  # Umbral de calidad de datos para has_sufficient_sample
+  min_data_quality:    0.50    # 50% de los campos deben estar poblados.
+
+# ── Bankroll y output ─────────────────────────────────────────────────────────
+bankroll:
+  initial_bankroll: 1000.0    # Bankroll inicial para MLB.
+  currency: "USD"
+
+output:
+  ledger_dir:      "output/ledger"
+  predictions_dir: "predicciones"   # Compatibilidad con sistema original.
+
+# ── Notificaciones ────────────────────────────────────────────────────────────
+# Las credenciales van en .env — aquí solo el formato.
+telegram:
+  parse_mode:        "HTML"
+  rate_limit_delay:  0.1

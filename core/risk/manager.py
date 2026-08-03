@@ -1,413 +1,345 @@
 """
-core/bankroll/staking.py
+core/risk/manager.py
 
-StakingStrategy: interfaz y cuatro implementaciones para sizing de stake.
+RiskManager: Stage 9 del pipeline — control de exposición diaria,
+límites de picks, veto por movimiento de línea contrario.
 
-Migrado de bankroll/staking.py del sistema MLB con tres correcciones
-documentadas en SPORTS_PREDICTOR_ARCHITECTURE.md §7.2:
+Migrado de utils/risk_management.py del sistema MLB con cuatro
+correcciones documentadas en SPORTS_PREDICTOR_ARCHITECTURE.md §9:
 
-1. Opera sobre CandidatePick tipado, no sobre dict mutable.
-   El sistema MLB parseaba 'mejor_pick' (string "ML: Team") para extraer
-   el mercado y luego accedía a campos por nombre de string. Con
-   CandidatePick tipado, pick.ev, pick.blended_prob y pick.kelly_fraction
-   son campos directos — sin parseo frágil.
+1. Opera sobre list[CandidatePick] tipados, no list[dict] mutables.
+   El sistema MLB usaba partido["riesgo_estado"] = "activo". Aquí
+   pick.activate() y pick.deactivate(reason) son los métodos del
+   contrato — pick.active y pick.inactive_reason son los campos.
 
-2. movement_confirms como parámetro explícito, no campo del dict.
-   El sistema MLB leía partido.get("mov_confirma"). Aquí el caller
-   extrae esta información del pick.reasons del LineMovementDetector
-   y la pasa explícitamente — más limpio y testeable.
+2. Límites configurables por (sport, date) via RiskProfile.
+   MAX_PICKS_DIARIOS=3 y MAX_EXPOSICION_DIARIA_PCT=6 estaban
+   hardcodeados. Aquí RiskProfile es un dataclass configurable
+   y el pipeline puede crear perfiles distintos por deporte.
 
-3. Thresholds por (sport, market) en YAML via ConfigLoader.
-   Los thresholds del sistema MLB estaban hardcodeados o en atributos
-   del dataclass. Aquí IntegerPercentStaking los lee del ConfigLoader
-   por mercado, con defaults del sistema MLB como fallback.
+3. Detección de movimiento contradictorio desde pick.reasons.
+   El sistema MLB leía partido.get("mov_contradice") — un bool
+   en el dict. Aquí LineMovementDetector.annotate_pick() añade
+   reasons con "MOVEMENT[✗]" — el manager detecta esta señal
+   en el trail del pick sin acoplarse al formato del detector.
 
-Implementaciones
------------------
-IntegerPercentStaking  — migrado de MLB. Stake conservador entre min y max
-                         pct ajustado por EV, probabilidad y confirmación
-                         de movimiento de línea. Thresholds en YAML.
+4. Selección greedy correcta — el sistema MLB descartaba por orden
+   de iteración sin reconsiderar si un pick de menor prioridad
+   pudiera ceder su cupo a uno de mayor valor. Aquí se seleccionan
+   los mejores picks por score antes de aplicar límites, garantizando
+   el portfolio óptimo dentro de las restricciones.
 
-KellyStaking           — usa pick.kelly_fraction como referencia. Si
-                         kelly_fraction=0 (EV negativo), retorna 0 sin
-                         mínimo forzado. Convierte fracción a entero
-                         con multiplier configurable.
+Separación de responsabilidades
+---------------------------------
+RiskManager hace:
+    - Desactivar picks contradichos por movimiento de línea
+    - Ordenar candidatos por (confirmación, market_priority, ev)
+    - Aplicar límite máximo de picks diarios
+    - Aplicar límite máximo de exposición diaria (suma de stake_pct)
+    - Recortar stake_pct si excede el límite por pick
 
-FlatStaking            — siempre min_pct. Para backtesting sin sesgo de
-                         sizing: mide valor del sistema de filtrado puro.
+NO hace:
+    - Calcular EV, Kelly, blending (ValueEngine — Stage 6)
+    - Sizing de stake (StakingStrategy — Stage 8)
+    - Settlement de resultados (SettlementProvider)
+    - Calcular el movimiento de línea (LineMovementDetector — Stage 7)
 
-AdaptiveStaking        — ajusta entre min y max según hit_rate reciente.
-                         Más agresivo en rachas positivas. Requiere que
-                         el caller provea hit_rate desde BankrollTracker
-                         — desacopla staking del tracker.
-
-Uso típico
------------
-    from core.bankroll.staking import IntegerPercentStaking, apply_staking
-    from core.utils.config_loader import load_config
-
-    strategy = IntegerPercentStaking(config=load_config(sport='mlb'))
-    apply_staking(pick, strategy, movement_confirms=True)
-    # pick.stake_pct ahora está fijado por la estrategia
+Garantías de diseño
+---------------------
+- Todo pick en la lista de entrada queda con active=True o
+  active=False al salir — nunca en estado ambiguo.
+- El orden relativo de los picks activos en la lista de salida
+  es el mismo que en la entrada — para reproducibilidad de logs.
+- Un pick desactivado por veto de movimiento nunca se reactiva
+  aunque quepan más picks en el presupuesto.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Protocol, runtime_checkable
+from dataclasses import dataclass, field
 
 from core.contracts.pick import CandidatePick
 
 
-# ── Protocolo ─────────────────────────────────────────────────────────────────
+# ── Señal de movimiento contradictorio ───────────────────────────────────────
 
-@runtime_checkable
-class StakingStrategy(Protocol):
+# Prefijo que LineMovementDetector.annotate_pick() añade al trail
+# cuando detecta movimiento en dirección contraria al pick.
+# RiskManager busca este prefijo en pick.reasons para el veto.
+_MOVEMENT_CONTRADICTS_PREFIX = "MOVEMENT[✗]"
+
+# Prefijo para movimiento confirmatorio — útil para logging
+_MOVEMENT_CONFIRMS_PREFIX = "MOVEMENT[✓]"
+
+
+def _pick_has_contradicting_movement(pick: CandidatePick) -> bool:
+    """True si el trail del pick contiene señal de movimiento contradictorio."""
+    return any(
+        _MOVEMENT_CONTRADICTS_PREFIX in reason
+        for reason in pick.reasons
+    )
+
+
+def _pick_has_confirming_movement(pick: CandidatePick) -> bool:
+    """True si el trail del pick contiene señal de movimiento confirmatorio."""
+    return any(
+        _MOVEMENT_CONFIRMS_PREFIX in reason
+        for reason in pick.reasons
+    )
+
+
+# ── Perfil de riesgo ──────────────────────────────────────────────────────────
+
+@dataclass(frozen=True)
+class RiskProfile:
     """
-    Interfaz de estrategia de sizing de stake.
+    Parámetros de riesgo para un deporte y configuración dados.
 
-    Una implementación devuelve un entero en % del bankroll.
-    El caller (pipeline Stage 8) fija pick.stake_pct con ese valor
-    antes de pasarlo a BankrollTracker.register().
+    Inmutable: el perfil no cambia durante la aplicación del risk
+    manager en un pipeline. Si los parámetros cambian (ej. al ajustar
+    la exposición diaria), se crea un nuevo RiskProfile.
 
-    Parámetros de stake_pct
-    ------------------------
-    pick                -- CandidatePick con ev, edge, blended_prob y
-                          kelly_fraction ya calculados (Stages 6).
-    movement_confirms   -- True si LineMovementDetector marcó que el
-                          movimiento de línea va en la misma dirección
-                          que el pick. El caller extrae esto del trail
-                          de reasons del pick antes de llamar a la
-                          estrategia.
+    Campos
+    ------
+    max_picks_daily        -- Máximo de picks activos por día.
+                            Default 3 (conservador — sistema MLB).
+    max_exposure_pct       -- Máximo de exposición diaria total en %
+                            del bankroll (suma de stake_pct de picks
+                            activos). Default 6.
+    max_stake_per_pick_pct -- Techo de stake_pct por pick individual.
+                            Si StakingStrategy asigna más, se recorta.
+                            Default 3.
+    veto_on_contradiction  -- Si True, desactiva picks contradichos por
+                            movimiento de línea. Default True.
+                            Puede desactivarse para backtesting puro.
+    market_priority        -- Mapa de market → prioridad para ordenar
+                            candidatos cuando hay competencia por cupo.
+                            Menor número = mayor prioridad.
+                            Default: TOTAL=0, ML=1, SPREAD=2.
+                            Sigue el principio del sistema MLB donde
+                            TOTAL tenía prioridad estructural.
+    """
+    max_picks_daily:        int             = 3
+    max_exposure_pct:       int             = 6
+    max_stake_per_pick_pct: int             = 3
+    veto_on_contradiction:  bool            = True
+    market_priority:        dict[str, int]  = field(default_factory=lambda: {
+        "TOTAL":  0,
+        "ML":     1,
+        "SPREAD": 2,
+        "1X2":    1,
+    })
+
+    def get_market_priority(self, market: str) -> int:
+        """
+        Retorna la prioridad de un mercado.
+        Mercados no registrados reciben prioridad baja (99).
+        """
+        return self.market_priority.get(market.upper(), 99)
+
+
+# ── Resultado de la aplicación del risk manager ───────────────────────────────
+
+@dataclass(frozen=True)
+class RiskSummary:
+    """
+    Resumen de las decisiones tomadas por RiskManager.apply().
+
+    Inmutable: snapshot de lo que ocurrió en esta ejecución.
+    Útil para logging y para el dashboard de operaciones.
+
+    Campos
+    ------
+    picks_active          -- Picks marcados como activos.
+    picks_vetoed          -- Desactivados por movimiento contradictorio.
+    picks_over_exposure   -- Desactivados por límite de exposición diaria.
+    picks_over_limit      -- Desactivados por límite de picks diarios.
+    picks_stake_trimmed   -- Picks donde stake_pct fue recortado por
+                            exceder max_stake_per_pick_pct.
+    total_exposure_pct    -- Suma de stake_pct de picks activos.
+    profile_used          -- RiskProfile aplicado.
+    """
+    picks_active:         list[CandidatePick]
+    picks_vetoed:         list[CandidatePick]
+    picks_over_exposure:  list[CandidatePick]
+    picks_over_limit:     list[CandidatePick]
+    picks_stake_trimmed:  list[CandidatePick]
+    total_exposure_pct:   int
+    profile_used:         RiskProfile
+
+    def log_summary(self) -> str:
+        """Descripción compacta para logs del pipeline."""
+        return (
+            f"Risk: {len(self.picks_active)} activos | "
+            f"exposición={self.total_exposure_pct}% | "
+            f"vetados={len(self.picks_vetoed)} | "
+            f"por_límite={len(self.picks_over_limit)} | "
+            f"por_exposición={len(self.picks_over_exposure)}"
+        )
+
+
+# ── Motor principal ───────────────────────────────────────────────────────────
+
+class RiskManager:
+    """
+    Stage 9 del pipeline — control de exposición y límites diarios.
+
+    Recibe la lista completa de picks que pasaron filtros (Stage 6)
+    y staking (Stage 8), y decide cuáles quedan activos aplicando:
+
+    1. Veto por movimiento de línea contradictorio
+    2. Límite de stake por pick (max_stake_per_pick_pct)
+    3. Ordenación por score: (confirma, -prioridad_mercado, ev)
+    4. Selección greedy respetando max_picks_daily y max_exposure_pct
+
+    Parámetros
+    ----------
+    profile  -- RiskProfile con los límites configurados.
+               Default: RiskProfile() con los valores del sistema MLB.
     """
 
-    def stake_pct(
-        self,
-        pick: CandidatePick,
-        movement_confirms: bool = False,
-    ) -> int:
-        """Retorna el stake recomendado en % del bankroll (entero)."""
-        ...
+    def __init__(self, profile: RiskProfile | None = None) -> None:
+        self._profile = profile or RiskProfile()
 
+    @classmethod
+    def from_config(cls, config) -> RiskManager:
+        """
+        Factory: construye RiskManager desde un ConfigLoader.
 
-# ── IntegerPercentStaking ─────────────────────────────────────────────────────
-
-# Defaults del sistema MLB — preservados como fallback para deportes
-# sin configuración YAML. Calibrados para la distribución de EV/prob
-# observada en MLB TOTAL (el mercado más rentable del sistema original).
-_MLB_MIN_PCT:   int   = 1
-_MLB_MAX_PCT:   int   = 3
-
-# Thresholds para subir stake de min a min+1
-_EV_THRESHOLD_L1:   float = 24.0  # TOTAL: EV >= 24 y prob >= 0.58 → +1
-_PROB_THRESHOLD_L1: float = 0.58
-
-# Thresholds para subir de min+1 a min+2 (con movimiento confirmado)
-_EV_THRESHOLD_L2:   float = 34.0
-_PROB_THRESHOLD_L2: float = 0.60
-
-# Thresholds ML/RL (más conservadores que TOTAL)
-_EV_ML_L1:   float = 10.0
-_PROB_ML_L1: float = 0.55
-_EV_ML_L2:   float = 16.0
-_PROB_ML_L2: float = 0.57
-
-
-@dataclass
-class IntegerPercentStaking:
-    """
-    Stake conservador en porcentajes enteros — migrado de MLB.
-
-    Lógica: parte de min_pct y sube hasta max_pct según la calidad
-    de la señal (EV, probabilidad, confirmación de movimiento de línea).
-    Baja 1 pct si hay data_quality_flags en el pick.
-
-    Thresholds configurables por (sport, market) via ConfigLoader:
-
-        # config/mlb.yaml
-        staking:
-          TOTAL:
-            min_pct: 1
-            max_pct: 3
-            ev_l1: 24.0
-            prob_l1: 0.58
-            ev_l2: 34.0
-            prob_l2: 0.60
-          ML:
-            min_pct: 1
-            max_pct: 2
-            ev_l1: 10.0
-            prob_l1: 0.55
-
-    Si config=None, usa los defaults del sistema MLB como fallback.
-    """
-
-    min_pct: int   = _MLB_MIN_PCT
-    max_pct: int   = _MLB_MAX_PCT
-    config         = None  # ConfigLoader opcional
-
-    def __init__(
-        self,
-        min_pct: int   = _MLB_MIN_PCT,
-        max_pct: int   = _MLB_MAX_PCT,
-        config         = None,
-    ) -> None:
-        if min_pct < 0:
-            raise ValueError(f"min_pct={min_pct} debe ser >= 0.")
-        if max_pct < min_pct:
-            raise ValueError(f"max_pct={max_pct} debe ser >= min_pct={min_pct}.")
-        self.min_pct = min_pct
-        self.max_pct = max_pct
-        self.config  = config
-        self._cache: dict[str, dict] = {}
-
-    def stake_pct(
-        self,
-        pick: CandidatePick,
-        movement_confirms: bool = False,
-    ) -> int:
-        market = pick.market.upper()
-        cfg    = self._get_market_config(market)
-
-        min_pct = cfg["min_pct"]
-        max_pct = cfg["max_pct"]
-        stake   = min_pct
-
-        ev   = pick.ev
-        prob = pick.blended_prob
-
-        if market == "TOTAL":
-            if ev >= cfg["ev_l1"] and prob >= cfg["prob_l1"]:
-                stake += 1
-            if ev >= cfg["ev_l2"] and prob >= cfg["prob_l2"] and movement_confirms:
-                stake += 1
-        else:
-            # ML y SPREAD — umbrales más conservadores
-            if ev >= cfg["ev_l1"] and prob >= cfg["prob_l1"]:
-                stake += 1
-            if ev >= cfg["ev_l2"] and prob >= cfg["prob_l2"] and movement_confirms:
-                stake += 1
-
-        # Penalizar por flags de calidad de datos en el pick
-        if pick.reasons and any("fallback" in r.lower() for r in pick.reasons):
-            stake = max(min_pct, stake - 1)
-
-        return int(max(min_pct, min(stake, max_pct)))
-
-    def _get_market_config(self, market: str) -> dict:
-        """Lee thresholds del ConfigLoader por mercado, con fallback a defaults."""
-        if market in self._cache:
-            return self._cache[market]
-
+        Lee los parámetros de riesgo del YAML bajo la key 'risk':
+            risk:
+              max_picks_daily: 3
+              max_exposure_pct: 6
+              max_stake_per_pick_pct: 3
+              veto_on_contradiction: true
+        """
         def get(key: str, default):
-            if self.config is None:
-                return default
-            return self.config.get(f"staking.{market}.{key}", default=default)
+            return config.get(f"risk.{key}", default=default)
 
-        cfg = {
-            "min_pct": int(get("min_pct", self.min_pct)),
-            "max_pct": int(get("max_pct", self.max_pct)),
-            "ev_l1":   float(get("ev_l1",   _EV_THRESHOLD_L1 if market == "TOTAL" else _EV_ML_L1)),
-            "prob_l1": float(get("prob_l1", _PROB_THRESHOLD_L1 if market == "TOTAL" else _PROB_ML_L1)),
-            "ev_l2":   float(get("ev_l2",   _EV_THRESHOLD_L2 if market == "TOTAL" else _EV_ML_L2)),
-            "prob_l2": float(get("prob_l2", _PROB_THRESHOLD_L2 if market == "TOTAL" else _PROB_ML_L2)),
-        }
-        self._cache[market] = cfg
-        return cfg
+        profile = RiskProfile(
+            max_picks_daily        = int(get("max_picks_daily",        3)),
+            max_exposure_pct       = int(get("max_exposure_pct",       6)),
+            max_stake_per_pick_pct = int(get("max_stake_per_pick_pct", 3)),
+            veto_on_contradiction  = bool(get("veto_on_contradiction", True)),
+        )
+        return cls(profile=profile)
 
-    def clear_cache(self) -> None:
-        self._cache.clear()
+    def apply(self, picks: list[CandidatePick]) -> RiskSummary:
+        """
+        Aplica las reglas de riesgo a la lista de picks.
 
+        Cada pick queda con active=True o active=False al finalizar.
+        El orden de la lista de entrada se preserva en la salida
+        (para reproducibilidad de logs y tests).
 
-# ── KellyStaking ──────────────────────────────────────────────────────────────
+        Parámetros
+        ----------
+        picks  -- Picks que pasaron ValueEngine (Stage 6), fueron
+                 anotados por LineMovementDetector (Stage 7) y
+                 tienen stake_pct fijado por StakingStrategy (Stage 8).
+                 Pueden tener active=True/False de etapas anteriores —
+                 el RiskManager solo procesa los que tienen stake_pct > 0.
 
-@dataclass
-class KellyStaking:
-    """
-    Stake basado directamente en pick.kelly_fraction del modelo.
+        Retorna
+        -------
+        RiskSummary con las decisiones tomadas y listas de picks
+        por categoría de decisión.
+        """
+        profile = self._profile
 
-    Si kelly_fraction=0.0 (EV negativo o pick sin valor), retorna 0.
-    No aplica mínimo forzado cuando kelly_fraction=0 — si el modelo
-    no ve valor, no hay stake.
+        vetoed:          list[CandidatePick] = []
+        over_limit:      list[CandidatePick] = []
+        over_exposure:   list[CandidatePick] = []
+        stake_trimmed:   list[CandidatePick] = []
+        candidates:      list[CandidatePick] = []
 
-    Conversión:
-        stake = round(kelly_fraction × multiplier)
-        stake = max(min_pct, stake) si stake > 0, else 0
-        stake = min(stake, max_pct)
+        # ── Paso 1: Veto por movimiento contradictorio ────────────────
+        for pick in picks:
+            if pick.stake_pct <= 0:
+                # Sin stake asignado — desactivar silenciosamente
+                pick.deactivate("stake_pct=0 tras staking strategy")
+                continue
 
-    Ejemplo con defaults (multiplier=100):
-        kelly_fraction=0.018 → round(1.8) = 2 → stake=2%
-        kelly_fraction=0.0   → stake=0 (sin apuesta)
-        kelly_fraction=0.005 → round(0.5) = 1 → stake=max(1,1)=1%
+            if (profile.veto_on_contradiction
+                    and _pick_has_contradicting_movement(pick)):
+                pick.deactivate("movimiento de línea contradice el pick")
+                vetoed.append(pick)
+                continue
 
-    Parámetros
-    ----------
-    multiplier  -- Factor de escala para convertir la fracción a %.
-                  Default 100: kelly_fraction=0.018 → 1.8 → 2%.
-    min_pct     -- Mínimo aplicado solo cuando kelly > 0.
-    max_pct     -- Techo absoluto de stake.
-    """
+            candidates.append(pick)
 
-    multiplier: float = 100.0
-    min_pct:    int   = _MLB_MIN_PCT
-    max_pct:    int   = _MLB_MAX_PCT
+        # ── Paso 2: Recortar stake por encima del límite por pick ─────
+        for pick in candidates:
+            if pick.stake_pct > profile.max_stake_per_pick_pct:
+                original = pick.stake_pct
+                pick.stake_pct = profile.max_stake_per_pick_pct
+                pick.add_reason(
+                    f"stake recortado {original}%→{profile.max_stake_per_pick_pct}% "
+                    f"(max_stake_per_pick_pct)"
+                )
+                stake_trimmed.append(pick)
 
-    def __post_init__(self) -> None:
-        if self.multiplier <= 0:
-            raise ValueError(f"multiplier={self.multiplier} debe ser > 0.")
-        if self.max_pct < self.min_pct:
-            raise ValueError(f"max_pct={self.max_pct} debe ser >= min_pct={self.min_pct}.")
+        # ── Paso 3: Ordenar candidatos por score de selección ─────────
+        # Score: (confirmación, prioridad_mercado, ev)
+        # Mayor confirmación > menor prioridad numérica > mayor EV
+        def score(pick: CandidatePick) -> tuple:
+            confirms = 1 if _pick_has_confirming_movement(pick) else 0
+            priority = profile.get_market_priority(pick.market)
+            return (confirms, -priority, pick.ev)
 
-    def stake_pct(
-        self,
-        pick: CandidatePick,
-        movement_confirms: bool = False,
-    ) -> int:
-        kf = pick.kelly_fraction or 0.0
-        if kf <= 0.0:
-            return 0
+        ordered = sorted(candidates, key=score, reverse=True)
 
-        raw   = round(kf * self.multiplier)
-        stake = max(self.min_pct, raw)
+        # ── Paso 4: Selección greedy por límites ─────────────────────
+        active:           list[CandidatePick] = []
+        total_exposure:   int                 = 0
 
-        # Bonus por confirmación de movimiento
-        if movement_confirms:
-            stake = min(stake + 1, self.max_pct)
+        for pick in ordered:
+            if len(active) >= profile.max_picks_daily:
+                pick.deactivate(
+                    f"límite de picks diarios alcanzado "
+                    f"({profile.max_picks_daily})"
+                )
+                over_limit.append(pick)
+                continue
 
-        return int(min(stake, self.max_pct))
+            # Verificar si este pick cabe en la exposición restante
+            remaining = profile.max_exposure_pct - total_exposure
+            if pick.stake_pct > remaining:
+                if remaining > 0:
+                    # Recortar stake para caber exactamente en el presupuesto
+                    pick.stake_pct = remaining
+                    pick.add_reason(
+                        f"stake recortado a {remaining}% "
+                        f"(exposición diaria max={profile.max_exposure_pct}%)"
+                    )
+                    if pick not in stake_trimmed:
+                        stake_trimmed.append(pick)
+                else:
+                    pick.deactivate(
+                        f"exposición diaria máxima alcanzada "
+                        f"({profile.max_exposure_pct}%)"
+                    )
+                    over_exposure.append(pick)
+                    continue
 
+            if pick.stake_pct <= 0:
+                pick.deactivate("stake_pct=0 tras recorte de exposición")
+                over_exposure.append(pick)
+                continue
 
-# ── FlatStaking ───────────────────────────────────────────────────────────────
+            pick.activate()
+            active.append(pick)
+            total_exposure += pick.stake_pct
 
-@dataclass
-class FlatStaking:
-    """
-    Stake fijo — siempre retorna min_pct sin importar la señal.
+        # Los candidatos que no fueron seleccionados ya fueron
+        # desactivados en el loop anterior con su razón específica.
 
-    Uso principal: backtesting para medir el valor puro del sistema
-    de filtrado sin el sesgo de sizing. Si FlatStaking tiene ROI
-    positivo, el sistema encuentra valor real; si solo
-    IntegerPercentStaking lo tiene, el sizing puede estar sobreajustado.
-
-    También útil para entornos de producción conservadores donde se
-    quiere control total sobre el tamaño de apuesta.
-    """
-
-    min_pct: int = _MLB_MIN_PCT
-
-    def __post_init__(self) -> None:
-        if self.min_pct < 0:
-            raise ValueError(f"min_pct={self.min_pct} debe ser >= 0.")
-
-    def stake_pct(
-        self,
-        pick: CandidatePick,
-        movement_confirms: bool = False,
-    ) -> int:
-        return self.min_pct
-
-
-# ── AdaptiveStaking ───────────────────────────────────────────────────────────
-
-@dataclass
-class AdaptiveStaking:
-    """
-    Stake adaptativo ajustado por el hit rate reciente del modelo.
-
-    Más agresivo (stake alto) durante rachas positivas; más conservador
-    (stake bajo) durante rachas negativas. Implementa gestión de riesgo
-    dinámica sin tocar los filtros del ValueEngine.
-
-    El caller provee recent_hit_rate calculado desde BankrollTracker —
-    desacopla AdaptiveStaking del tracker y evita dependencias circulares.
-
-    Lógica de ajuste:
-        hit_rate >= high_threshold → max_pct
-        hit_rate <= low_threshold  → min_pct
-        En medio                   → interpolación lineal
-
-    Parámetros
-    ----------
-    recent_hit_rate  -- Hit rate reciente del modelo (0-100).
-                       Calculado por el caller desde
-                       BankrollTracker.metrics(date_from=...).hit_rate.
-    min_pct          -- Stake mínimo (en rachas negativas).
-    max_pct          -- Stake máximo (en rachas positivas).
-    low_threshold    -- Hit rate por debajo del cual se usa min_pct.
-                       Default: 45% (por debajo del breakeven ~52%).
-    high_threshold   -- Hit rate por encima del cual se usa max_pct.
-                       Default: 60% (racha claramente positiva).
-    """
-
-    recent_hit_rate:  float
-    min_pct:          int   = _MLB_MIN_PCT
-    max_pct:          int   = _MLB_MAX_PCT
-    low_threshold:    float = 45.0
-    high_threshold:   float = 60.0
-
-    def __post_init__(self) -> None:
-        if not 0.0 <= self.recent_hit_rate <= 100.0:
-            raise ValueError(
-                f"recent_hit_rate={self.recent_hit_rate} debe estar en [0, 100]."
-            )
-        if self.max_pct < self.min_pct:
-            raise ValueError(f"max_pct={self.max_pct} debe ser >= min_pct={self.min_pct}.")
-        if self.low_threshold >= self.high_threshold:
-            raise ValueError(
-                f"low_threshold={self.low_threshold} debe ser < "
-                f"high_threshold={self.high_threshold}."
-            )
-
-    def stake_pct(
-        self,
-        pick: CandidatePick,
-        movement_confirms: bool = False,
-    ) -> int:
-        hr = self.recent_hit_rate
-
-        if hr <= self.low_threshold:
-            stake = self.min_pct
-        elif hr >= self.high_threshold:
-            stake = self.max_pct
-        else:
-            # Interpolación lineal entre low y high threshold
-            t = (hr - self.low_threshold) / (self.high_threshold - self.low_threshold)
-            stake = round(self.min_pct + t * (self.max_pct - self.min_pct))
-
-        stake = int(max(self.min_pct, min(stake, self.max_pct)))
-
-        # Bonus por confirmación de movimiento cuando el modelo está en racha
-        if movement_confirms and stake < self.max_pct:
-            stake = min(stake + 1, self.max_pct)
-
-        return stake
-
-
-# ── Función pública de aplicación ─────────────────────────────────────────────
-
-def apply_staking(
-    pick: CandidatePick,
-    strategy: StakingStrategy,
-    movement_confirms: bool = False,
-) -> int:
-    """
-    Aplica la estrategia de staking al pick y fija pick.stake_pct.
-
-    Wrapper conveniente para Stage 8 del pipeline — una línea en vez
-    de dos (calcular + asignar).
-
-    Parámetros
-    ----------
-    pick               -- CandidatePick a fijar. stake_pct se actualiza
-                         directamente en el objeto.
-    strategy           -- Implementación de StakingStrategy a usar.
-    movement_confirms  -- True si LineMovementDetector confirmó la
-                         dirección del pick con movimiento de línea.
-
-    Retorna
-    -------
-    int — el stake_pct fijado, para uso en logging y trazabilidad.
-    """
-    pct = strategy.stake_pct(pick, movement_confirms=movement_confirms)
-    pick.stake_pct = pct
-    return pct
+        return RiskSummary(
+            picks_active        = active,
+            picks_vetoed        = vetoed,
+            picks_over_exposure = over_exposure,
+            picks_over_limit    = over_limit,
+            picks_stake_trimmed = stake_trimmed,
+            total_exposure_pct  = total_exposure,
+            profile_used        = profile,
+        )

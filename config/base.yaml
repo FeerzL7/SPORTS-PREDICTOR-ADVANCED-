@@ -1,0 +1,288 @@
+# config/base.yaml
+#
+# Configuración base del sistema SPORTS-PREDICTOR-ADVANCED.
+# Cargada por ConfigLoader al inicio de cada ejecución del pipeline.
+# Los archivos config/{sport}.yaml sobreescriben secciones específicas.
+#
+# Convención de path: sección.subsección.parámetro
+# Ejemplo: blending.TOTAL.model_weight
+#
+# Todos los parámetros tienen un default documentado en el módulo que
+# los consume. Este archivo centraliza los valores de producción que
+# difieren de los defaults de desarrollo/testing.
+#
+# NUNCA incluir ODDS_API_KEY aquí — va en .env o config/secrets.yaml.
+# ─────────────────────────────────────────────────────────────────────
+
+# ── The Odds API ──────────────────────────────────────────────────────────────
+# OddsAPIClient (core/odds/client.py)
+# Documentación: https://the-odds-api.com/liveapi/guides/v4/
+#
+odds_api:
+  base_url:        "https://api.the-odds-api.com/v4"
+  regions:         "us"          # us | uk | eu | au | us2
+                                 # Determina bookmakers disponibles.
+                                 # "us" cubre Pinnacle, DraftKings, FanDuel.
+  timeout_seconds: 20            # Timeout HTTP. 20s >> latencia real (~2s).
+  max_retries:     0             # Sin retry por defecto — respetar rate limits.
+                                 # Activar max_retries=2 solo para 5xx.
+  retry_backoff_base: 2.0        # Backoff exponencial en segundos.
+
+# ── Blending modelo-mercado ───────────────────────────────────────────────────
+# BlendingEngine (core/value/blending.py)
+#
+# model_weight: peso del modelo en la mezcla final. [0.0, 1.0]
+#   0.0 → 100% mercado (ignorar el modelo)
+#   1.0 → 100% modelo (ignorar el mercado)
+#
+# prob_cap: límite superior de model_prob ANTES del blend. (0.0, 1.0]
+#   Evita que el modelo tenga más del prob_cap de confianza.
+#   1.0 = sin límite.
+#   Se aplica ANTES del blend para preservar la propiedad convexa de
+#   blended_prob (corrección de bug del sistema MLB original).
+#
+# Los valores por defecto son conservadores (50/50) para deportes sin
+# backtesting. Los archivos config/{sport}.yaml sobreescriben por mercado.
+#
+blending:
+  ML:
+    model_weight: 0.50    # Neutral hasta calibrar por deporte.
+    prob_cap:     1.00    # Sin cap hasta tener historial de OCI.
+  SPREAD:
+    model_weight: 0.50
+    prob_cap:     1.00
+  TOTAL:
+    model_weight: 0.50
+    prob_cap:     1.00
+  "1X2":
+    model_weight: 0.45    # Soccer: mercado más eficiente → más peso al mercado.
+    prob_cap:     0.65
+
+# ── Kelly fraccionado ─────────────────────────────────────────────────────────
+# KellyCriterion (core/value/kelly.py)
+#
+# fraction: fracción del Kelly completo a usar. (0.0, 1.0]
+#   0.18 fue calibrado empíricamente en el sistema MLB.
+#   Valores menores → crecimiento más lento pero menor drawdown.
+#
+# max_fraction: techo duro del kelly_final en % del bankroll.
+#   1.25 = máximo 1.25% del bankroll por pick.
+#   Previene stakes excesivos aunque el EV sea muy alto.
+#
+kelly:
+  ML:
+    fraction:     0.18
+    max_fraction: 1.25
+  SPREAD:
+    fraction:     0.18
+    max_fraction: 1.25
+  TOTAL:
+    fraction:     0.18
+    max_fraction: 1.25
+  "1X2":
+    fraction:     0.15    # Soccer: mayor incertidumbre → fracción más conservadora.
+    max_fraction: 1.00
+
+# ── Filtros de mercado ────────────────────────────────────────────────────────
+# MarketFilters (core/value/filters.py)
+#
+# Todos los umbrales son opcionales: null = filtro inactivo.
+# Un pick debe cumplir TODOS los umbrales activos para ser candidato.
+#
+# min_ev:    EV mínimo en %. Picks con EV < min_ev se rechazan.
+# min_prob:  Probabilidad blended mínima.
+# min_odds:  Cuota decimal mínima (evitar favoritos extremos).
+# max_odds:  Cuota decimal máxima (evitar underdogs extremos).
+# min_edge:  Ventaja mínima sobre el mercado (model_prob - market_prob).
+# max_edge:  Ventaja máxima — picks con edge muy alto son sospechosos
+#            (posible dato corrupto más que valor real).
+# min_line_diff: Discrepancia mínima entre proyección y línea de mercado.
+#               Solo aplica cuando projected_value se provee en EvaluationRequest.
+#
+# Defaults conservadores: solo min_ev=3.0 activo por defecto.
+# Los config/{sport}.yaml sobreescriben con thresholds calibrados.
+#
+filters:
+  ML:
+    min_ev:        3.0
+    min_prob:      null
+    min_odds:      null
+    max_odds:      null
+    min_edge:      null
+    max_edge:      null
+    min_line_diff: null
+  SPREAD:
+    min_ev:        3.0
+    min_prob:      null
+    min_odds:      null
+    max_odds:      null
+    min_edge:      null
+    max_edge:      null
+    min_line_diff: null
+  TOTAL:
+    min_ev:        3.0
+    min_prob:      null
+    min_odds:      null
+    max_odds:      null
+    min_edge:      null
+    max_edge:      null
+    min_line_diff: null
+  "1X2":
+    min_ev:        3.0
+    min_prob:      null
+    min_odds:      null
+    max_odds:      null
+    min_edge:      null
+    max_edge:      null
+    min_line_diff: null
+
+# ── Staking ───────────────────────────────────────────────────────────────────
+# IntegerPercentStaking (core/bankroll/staking.py)
+#
+# min_pct: stake mínimo en % del bankroll.
+# max_pct: stake máximo en % del bankroll.
+# ev_l1/prob_l1: umbral L1 para subir stake de min a min+1.
+# ev_l2/prob_l2: umbral L2 para subir de min+1 a min+2 (con mov. confirmado).
+#
+# Defaults calibrados del sistema MLB (análisis de backtest 2025-2026).
+# TOTAL tiene thresholds más altos porque el mercado requiere mayor EV
+# para justificar el incremento de stake.
+#
+staking:
+  ML:
+    min_pct:  1
+    max_pct:  2
+    ev_l1:    10.0
+    prob_l1:  0.55
+    ev_l2:    16.0
+    prob_l2:  0.57
+  SPREAD:
+    min_pct:  1
+    max_pct:  2
+    ev_l1:    10.0
+    prob_l1:  0.55
+    ev_l2:    16.0
+    prob_l2:  0.57
+  TOTAL:
+    min_pct:  1
+    max_pct:  3
+    ev_l1:    24.0
+    prob_l1:  0.58
+    ev_l2:    34.0
+    prob_l2:  0.60
+  "1X2":
+    min_pct:  1
+    max_pct:  2
+    ev_l1:    12.0
+    prob_l1:  0.52
+    ev_l2:    20.0
+    prob_l2:  0.55
+
+# ── Gestión de riesgo ─────────────────────────────────────────────────────────
+# RiskManager (core/risk/manager.py)
+#
+# max_picks_daily: máximo de picks activos por día de ejecución.
+#   3 es el límite del sistema MLB (conservador por diseño).
+#
+# max_exposure_pct: suma máxima de stake_pct de picks activos.
+#   6 = máximo 6% del bankroll en riesgo simultáneo.
+#   Con max_picks=3 y max_stake=3%, la exposición máxima real es 9%.
+#   max_exposure_pct actúa como segundo límite de seguridad.
+#
+# max_stake_per_pick_pct: techo por pick individual.
+#   Si StakingStrategy asigna más de esto, se recorta silenciosamente.
+#   Debe ser <= max_exposure_pct / max_picks_daily para coherencia.
+#
+# veto_on_contradiction: si true, picks contradichos por movimiento de
+#   línea se desactivan automáticamente antes de aplicar límites.
+#
+risk:
+  max_picks_daily:        3
+  max_exposure_pct:       6
+  max_stake_per_pick_pct: 3
+  veto_on_contradiction:  true
+
+# ── Detección de movimiento de línea ─────────────────────────────────────────
+# LineMovementDetector (core/odds/line_movement.py)
+#
+# ml_move_threshold: cambio mínimo en precio de ML para ser señal.
+#   0.06 = debe cambiar al menos 6 centavos de cuota (ej. 2.10→2.04).
+#
+# juice_shift_threshold: movimiento asimétrico mínimo en juice con línea estable.
+#   0.04 = asimetría mínima entre Over y Under para clasificar como JUICE_SHIFT.
+#
+# line_move_threshold: cambio mínimo en la línea numérica (totales/spread).
+#   0.25 = cualquier movimiento de línea (típicamente en pasos de 0.5).
+#
+line_movement:
+  ml_move_threshold:     0.06
+  juice_shift_threshold: 0.04
+  line_move_threshold:   0.25
+
+# ── Modelos de simulación ─────────────────────────────────────────────────────
+# DistributionFactory (core/simulation/factory.py)
+# Los valores de cada deporte se leen como simulation.{sport}.{modelo}.{param}
+#
+# MLB — PoissonModel
+simulation:
+  mlb:
+    poisson:
+      max_score: 20       # Score máximo por equipo para la PMF discreta.
+                          # 20 carreras cubre >99.99% de la distribución real.
+
+  # NHL — PoissonModel (mismo modelo que MLB, parámetros distintos)
+  nhl:
+    poisson:
+      max_score: 12       # Goles máximos por equipo. Distribución más estrecha.
+
+  # NBA — SkellamModel para spread/ML, NormalModel para totales
+  nba:
+    skellam:
+      max_diff: 60        # Diferencia máxima de puntos para iteración de PMF.
+                          # Adaptada automáticamente a 6σ para mu altos (≈90).
+    normal:
+      default_sigma: 11.0 # Desviación estándar de totales NBA en puntos.
+                          # Mercado actual ronda 220-230 con σ≈11.
+
+  # NFL — NormalModel
+  nfl:
+    normal:
+      default_sigma: 10.0 # Desviación estándar de totales NFL en puntos.
+                          # Mercado actual ronda 44-48 con σ≈10.
+
+  # Soccer — BivariatePoissonModel con corrección Dixon-Coles
+  soccer:
+    bivariate:
+      rho:       -0.10   # Correlación negativa entre goles de ambos equipos.
+                          # Valor empírico Dixon-Coles para fútbol europeo.
+                          # Rango válido: [-0.3, 0.0]. Más negativo = más empates.
+      max_score: 10       # Goles máximos por equipo. Cubre >99.9% de partidos.
+
+  # Tennis — BradleyTerryModel
+  # Sin parámetros de simulación configurables — el modelo solo usa
+  # strength_home y strength_away de Projection.distribution_params.
+  tennis: {}
+
+# ── Bankroll ──────────────────────────────────────────────────────────────────
+# BankrollTracker (core/bankroll/tracker.py)
+#
+bankroll:
+  initial_bankroll: 1000.0   # Bankroll inicial del sistema en unidades monetarias.
+                              # Puede ser cualquier moneda — el sistema trabaja
+                              # en % y unidades relativas.
+  currency:         "USD"    # Solo para reporting — no afecta cálculos.
+
+# ── Output y logging ──────────────────────────────────────────────────────────
+# Rutas de output del sistema. Relativas al directorio raíz del proyecto.
+#
+output:
+  ledger_dir:       "output/ledger"          # CSVs del ledger por deporte.
+  snapshots_dir:    "output/line_snapshots"  # Snapshots de cuotas por fecha.
+  calibration_dir:  "output/calibration"     # Curvas de calibración.
+  hypotheses_dir:   "output/hypotheses"      # Estado de hipótesis.
+  predictions_dir:  "predicciones"           # Picks exportados (compatibilidad MLB).
+
+logging:
+  level:   "INFO"    # DEBUG | INFO | WARNING | ERROR
+  to_file: true
+  log_dir: "logs"
