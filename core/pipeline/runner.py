@@ -525,15 +525,28 @@ class PipelineRunner:
                 context.add_error("Stage7", f"event={event_id}: {e}")
 
     def _stage_8_staking(self, context: PipelineContext) -> None:
-        """Stage 8: fijar stake_pct en picks candidatos."""
+        """
+        Stage 8: fijar stake_pct en picks candidatos.
+
+        CORRECCIÓN DE CONTRATO (auditoría 2026-08): este import apuntaba
+        antes a `core.bankroll.staking`, módulo que nunca definió
+        `_MOVEMENT_CONFIRMS_PREFIX` — esa constante siempre vivió en
+        `core.odds.line_movement` (ahora pública, sin guion bajo). El
+        import roto producía `ImportError` garantizado en la primera
+        llamada a este stage, abortando además toda la Fase B del
+        pipeline (staking + riesgo + settlement + registro) para el día
+        completo, ya que la excepción escalaba hasta el try/except
+        genérico de `run()`.
+        """
         if 8 in self._config.skip_stages:
             return
-        from core.bankroll.staking import apply_staking, _MOVEMENT_CONFIRMS_PREFIX
+        from core.bankroll.staking import apply_staking
+        from core.odds.line_movement import MOVEMENT_CONFIRMS_PREFIX
 
         for pick in context.candidates:
             try:
                 confirms = any(
-                    _MOVEMENT_CONFIRMS_PREFIX in r
+                    MOVEMENT_CONFIRMS_PREFIX in r
                     for r in pick.reasons
                 )
                 apply_staking(pick, self._staking, movement_confirms=confirms)

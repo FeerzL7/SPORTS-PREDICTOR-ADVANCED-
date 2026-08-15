@@ -131,10 +131,42 @@ def main() -> int:
         if args.dry_run and not odds_api_key:
             skip = skip | {5}
 
+        # CORRECCIÓN (auditoría 2026-08): dos problemas en esta llamada.
+        # (1) `bankroll` se pasaba directo desde `config.get(...)` sin
+        #     forzar el tipo — su valor podía venir como dict/None según
+        #     lo que hubiera en el YAML, violando el `bankroll: float`
+        #     que espera `build_runner()`. Se envuelve en `float()`.
+        # (2) `--bankroll` estaba definido como argumento CLI pero nunca
+        #     se leía en ningún punto del script — quien lo pasara no
+        #     tenía ningún efecto. Ahora tiene prioridad sobre el YAML
+        #     si el usuario lo especifica explícitamente.
+        bankroll_cfg = config.get("bankroll.initial_bankroll", default=1000.0)
+        raw_bankroll = args.bankroll if args.bankroll is not None else bankroll_cfg
+        # isinstance en vez de try/except float(): pyright no estrecha el
+        # tipo estático de un argumento por estar dentro de un
+        # try/except — necesita un chequeo explícito de tipo para saber
+        # que `raw_bankroll` es realmente `int | float | str` antes de
+        # pasarlo a `float()`.
+        if isinstance(raw_bankroll, (int, float, str)):
+            try:
+                bankroll = float(raw_bankroll)
+            except ValueError:
+                bankroll = None
+        else:
+            bankroll = None
+
+        if bankroll is None:
+            print(
+                f"ERROR: bankroll.initial_bankroll en el YAML no es un "
+                f"número válido (valor: {bankroll_cfg!r}). Usando 1000.0 "
+                f"por defecto."
+            )
+            bankroll = 1000.0
+
         runner = build_runner(
             plugin        = plugin,
             config_loader = config,
-            bankroll      = config.get("bankroll.initial_bankroll", default=1000.0),
+            bankroll      = bankroll,
             dry_run       = args.dry_run,
         )
         # Sobrescribir config del runner con los args CLI
@@ -219,10 +251,22 @@ def _parse_args() -> argparse.Namespace:
 
 
 def _load_config(sport: str):
-    """Carga base.yaml + {sport}.yaml con deep-merge."""
+    """
+    Carga base.yaml + {sport}.yaml con deep-merge.
+
+    CORRECCIÓN DE CONTRATO (auditoría 2026-08): llamaba a
+    `ConfigLoader.load(sport=sport)` — esa clase nunca tuvo un
+    classmethod `load`; la función real es `load_config()` a nivel de
+    módulo en `core/utils/config_loader.py`. El `except ImportError` de
+    abajo tampoco habría salvado esto: el error real era `AttributeError`
+    (atributo inexistente en la clase), no `ImportError` — así que el
+    fallback a `_yaml_config_fallback` nunca se activaba y la excepción
+    subía sin capturar, tumbando `run_daily.py` en el arranque para
+    cualquier deporte, siempre.
+    """
     try:
-        from core.utils.config_loader import ConfigLoader
-        return ConfigLoader.load(sport=sport)
+        from core.utils.config_loader import load_config
+        return load_config(sport=sport)
     except ImportError:
         # Fallback: YAML directo si ConfigLoader no está disponible
         return _yaml_config_fallback(sport)

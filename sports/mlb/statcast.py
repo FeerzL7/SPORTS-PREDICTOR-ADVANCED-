@@ -51,9 +51,17 @@ from typing import Any
 
 try:
     import requests as _requests
-    _REQUESTS_AVAILABLE = True
 except ImportError:
-    _REQUESTS_AVAILABLE = False
+    _requests = None  # type: ignore[assignment]
+
+# CORRECCIÓN (auditoría 2026-08): antes _requests solo se asignaba en la
+# rama try, dejando la variable "possibly unbound" para el type checker
+# en cualquier punto donde se usara tras el try/except (Pylance/pyright
+# marcaba esto en cada uno de los ~10 archivos que repiten este patrón
+# de dependencia opcional). Ahora _requests siempre está definida (como
+# None si el import falla), y _REQUESTS_AVAILABLE se deriva de eso en
+# vez de ser una bandera independiente que podía desincronizarse.
+_REQUESTS_AVAILABLE = _requests is not None
 
 # Base URL de la MLB Stats API (oficial, estable desde 2016)
 _MLB_API_BASE = "https://statsapi.mlb.com/api/v1"
@@ -413,13 +421,25 @@ class StatcastFetcher:
         stats = _extract_stats(raw)
         ip    = _safe_float(stats.get("inningsPitched"))
 
-        # Calcular FIP si tenemos los componentes
+        # Calcular FIP si tenemos los componentes.
+        #
+        # CORRECCIÓN DE TIPADO (auditoría 2026-08): `all(x is not None
+        # for x in [...])` es seguro en runtime pero el type checker no
+        # puede propagar ese narrowing a las variables individuales
+        # (mismo patrón de falso positivo ya documentado en
+        # core/bankroll/tracker.py y core/backtesting/engine.py para
+        # list comprehensions). Con chequeos individuales encadenados
+        # por `and`, pyright sí estrecha cada variable a `float`.
         fip = None
         hr  = _safe_float(stats.get("homeRuns"))
         bb  = _safe_float(stats.get("baseOnBalls"))
         hbp = _safe_float(stats.get("hitBatsmen"), default=0.0)
         k   = _safe_float(stats.get("strikeOuts"))
-        if all(x is not None for x in [hr, bb, hbp, k]) and ip and ip > 0:
+        if (
+            hr is not None and bb is not None
+            and hbp is not None and k is not None
+            and ip and ip > 0
+        ):
             fip = fip_from_components(hr, bb, hbp, k, ip)
 
         # K/9 y BB/9
@@ -478,7 +498,7 @@ class StatcastFetcher:
         days:       int = 30,
     ) -> dict | None:
         """Fetch de estadísticas de jugador desde MLB Stats API."""
-        if not _REQUESTS_AVAILABLE:
+        if not _REQUESTS_AVAILABLE or _requests is None:
             return None
 
         params: dict = {
@@ -514,7 +534,7 @@ class StatcastFetcher:
         group:   str = "hitting",
     ) -> dict | None:
         """Fetch de estadísticas del equipo desde MLB Stats API."""
-        if not _REQUESTS_AVAILABLE:
+        if not _REQUESTS_AVAILABLE or _requests is None:
             return None
 
         url    = f"{_MLB_API_BASE}/teams/{team_id}/stats"

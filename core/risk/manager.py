@@ -59,23 +59,26 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 
 from core.contracts.pick import CandidatePick
+from core.odds.line_movement import (
+    MOVEMENT_CONFIRMS_PREFIX,
+    MOVEMENT_CONTRADICTS_PREFIX,
+)
 
 
 # ── Señal de movimiento contradictorio ───────────────────────────────────────
-
-# Prefijo que LineMovementDetector.annotate_pick() añade al trail
-# cuando detecta movimiento en dirección contraria al pick.
-# RiskManager busca este prefijo en pick.reasons para el veto.
-_MOVEMENT_CONTRADICTS_PREFIX = "MOVEMENT[✗]"
-
-# Prefijo para movimiento confirmatorio — útil para logging
-_MOVEMENT_CONFIRMS_PREFIX = "MOVEMENT[✓]"
-
+#
+# CORRECCIÓN DE CONTRATO (auditoría 2026-08): estas dos constantes vivían
+# antes como copias locales de un literal ("MOVEMENT[✗]"/"MOVEMENT[✓]")
+# también duplicado en core/odds/line_movement.py. Un tercer módulo
+# (core/pipeline/runner.py) terminó importando el nombre equivocado desde
+# un cuarto módulo que nunca lo definió — el síntoma directo de no tener
+# una única fuente de verdad. Ahora se importan desde
+# core.odds.line_movement, que es el dueño canónico del formato.
 
 def _pick_has_contradicting_movement(pick: CandidatePick) -> bool:
     """True si el trail del pick contiene señal de movimiento contradictorio."""
     return any(
-        _MOVEMENT_CONTRADICTS_PREFIX in reason
+        MOVEMENT_CONTRADICTS_PREFIX in reason
         for reason in pick.reasons
     )
 
@@ -83,7 +86,7 @@ def _pick_has_contradicting_movement(pick: CandidatePick) -> bool:
 def _pick_has_confirming_movement(pick: CandidatePick) -> bool:
     """True si el trail del pick contiene señal de movimiento confirmatorio."""
     return any(
-        _MOVEMENT_CONFIRMS_PREFIX in reason
+        MOVEMENT_CONFIRMS_PREFIX in reason
         for reason in pick.reasons
     )
 

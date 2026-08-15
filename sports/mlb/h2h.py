@@ -3,29 +3,50 @@ sports/mlb/h2h.py
 
 MLBH2HFetcher: historial de enfrentamientos directos para MLB.
 
-Migrado de analysis/h2h.py del sistema MLB. La lógica estadística
-genérica (compute_h2h_stats, filter_recent) vive en
-core/utils/h2h_base.py — este módulo solo provee los datos desde
-MLB Stats API y los convierte a H2HRecord.
+Migrado de analysis/h2h.py del sistema MLB.
+
+CORRECCIÓN DE CONTRATO (auditoría 2026-08): este módulo originalmente
+importaba `H2HRecord`, `H2HStats`, `compute_h2h_stats` y `filter_recent`
+desde `core/utils/h2h_base.py` — pero ese módulo del Core nunca definió
+esos nombres (define `H2HMetrics` y `compute_h2h`, una API más simple).
+Los dos archivos se diseñaron para trabajar juntos y nunca se
+integraron: el import fallaba en el 100% de los casos (ImportError al
+cargar el módulo, antes de ejecutar una sola línea de negocio).
+
+Decisión de diseño (Opción A del roadmap de remediación): el Core se
+queda simple y genérico (`H2HMetrics`/`compute_h2h`, sin conocer nada de
+MLB). `H2HRecord` — el partido individual crudo, con `game_id`,
+`season`, IDs de equipo — es un concepto de datos crudos específico de
+cómo MLB expone su historial, así que pasa a vivir aquí, en el plugin,
+no en el Core. La función `h2h_metadata()` de este módulo es el
+adaptador que traduce `H2HMetrics` (genérico) a las claves de
+`sport_metadata` que `MLBProjectionModel` puede llegar a consumir.
 
 Posición en el pipeline
 ------------------------
 MLBDataProvider.enrich_event(event)
     ↓
-MLBH2HFetcher.fetch(home_team_id, away_team_id, last_n=20)
-    → list[H2HRecord]
+MLBH2HFetcher.fetch(home_team_id, away_team_id)
+    → list[H2HRecord]                          (crudo, plugin-local)
     ↓
-compute_h2h_stats(records, home_team_id) → H2HStats
+MLBH2HFetcher.get_stats(home_team_id, away_team_id)
+    → core.utils.h2h_base.H2HMetrics           (agregado, genérico)
     ↓
-TeamFeatures(sport_metadata={
-    'h2h_home_win_rate': 0.55,
-    'h2h_avg_total':     9.2,
-    'h2h_weight':        0.85,
-})
+h2h_metadata(metrics) → dict apto para TeamFeatures.sport_metadata:
+    {
+        'h2h_n_meetings':     8,
+        'h2h_home_win_rate':  0.55,
+        'h2h_avg_total':      9.2,
+        'h2h_weight':         0.85,
+    }
 
-El MLBProjectionModel usa h2h_weight para determinar cuánto peso
-dar al historial H2H vs las métricas de temporada actuales.
-Con h2h_weight=0.0 (< 5 partidos en el historial), el H2H se ignora.
+`h2h_weight` es 0.0 si hay menos de `_MIN_MEETINGS_FOR_WEIGHT` encuentros
+en la muestra (historial insuficiente para confiar en él) y escala hasta
+`_MAX_H2H_WEIGHT` conforme crece la muestra. `MLBProjectionModel` puede
+usar ese peso para decidir cuánto ponderar el H2H frente a las métricas
+de temporada actuales — hoy no lo consume (ver Fase 4.3 del roadmap de
+remediación: decidir si se integra a la fórmula de proyección o se
+retira el fetch para no pagar llamadas a la API sin usarlas).
 
 Endpoint MLB Stats API
 -----------------------
@@ -38,26 +59,125 @@ rango de fechas especificado, incluyendo scores finales.
 
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from dataclasses import dataclass
+from datetime import datetime, timezone
 
-from core.utils.h2h_base import (
-    H2HRecord,
-    H2HStats,
-    compute_h2h_stats,
-    filter_recent,
-)
+from core.utils.h2h_base import H2HMetrics, compute_h2h
 
 try:
     import requests as _requests
-    _REQUESTS_AVAILABLE = True
 except ImportError:
-    _REQUESTS_AVAILABLE = False
+    _requests = None  # type: ignore[assignment]
+
+# CORRECCIÓN (auditoría 2026-08): antes _requests solo se asignaba en la
+# rama try, dejando la variable "possibly unbound" para el type checker
+# en cualquier punto donde se usara tras el try/except (Pylance/pyright
+# marcaba esto en cada uno de los ~10 archivos que repiten este patrón
+# de dependencia opcional). Ahora _requests siempre está definida (como
+# None si el import falla), y _REQUESTS_AVAILABLE se deriva de eso en
+# vez de ser una bandera independiente que podía desincronizarse.
+_REQUESTS_AVAILABLE = _requests is not None
 
 _MLB_API_BASE = "https://statsapi.mlb.com/api/v1"
 
 # Ventana histórica por defecto: últimas 3 temporadas
 _DEFAULT_SEASONS_BACK: int = 3
 _DEFAULT_LAST_N:       int = 20
+
+# Mínimo de encuentros para que h2h_weight deje de ser 0.0 — con menos
+# muestra que esto, el historial no es confiable y se ignora.
+_MIN_MEETINGS_FOR_WEIGHT: int = 5
+
+# Techo del peso h2h_weight. Nunca debe dominar por completo sobre las
+# métricas de temporada actual, sin importar cuántos encuentros haya.
+_MAX_H2H_WEIGHT: float = 0.85
+
+# Encuentros necesarios para que h2h_weight sature en _MAX_H2H_WEIGHT.
+_SATURATION_MEETINGS: int = _MIN_MEETINGS_FOR_WEIGHT * 3
+
+
+# ── Registro crudo de un encuentro (plugin-local) ─────────────────────────────
+
+@dataclass(frozen=True)
+class H2HRecord:
+    """
+    Un encuentro directo individual entre dos equipos MLB, tal como lo
+    expone MLB Stats API.
+
+    Plugin-local a propósito: `game_id`, `season` y la resolución de
+    `winner_id` son detalles de cómo MLB estructura su schedule, no
+    conceptos que el Core deba conocer. El Core (`core/utils/h2h_base.py`)
+    solo entiende `dict`s planos con `home_id/away_id/home_score/
+    away_score` — ver `to_meeting_dict()`.
+
+    Campos
+    ------
+    date          -- Fecha del partido, 'YYYY-MM-DD'.
+    home_team_id  -- ID del equipo que jugó de local ESE partido
+                    (no necesariamente el home_team_id del partido a
+                    proyectar — dos equipos que se enfrentan varias
+                    veces alternan localía).
+    away_team_id  -- ID del equipo que jugó de visitante ESE partido.
+    home_score    -- Carreras del local.
+    away_score    -- Carreras del visitante.
+    winner_id     -- ID del equipo ganador. None si no se pudo resolver.
+    season        -- Año de la temporada del encuentro.
+    game_id       -- game_pk de MLB Stats API como string. None si
+                    faltaba en la respuesta.
+    """
+    date:         str
+    home_team_id: int
+    away_team_id: int
+    home_score:   float
+    away_score:   float
+    winner_id:    int | None
+    season:       int
+    game_id:      str | None
+
+    def to_meeting_dict(self) -> dict:
+        """
+        Convierte a la forma de dict plano que
+        `core.utils.h2h_base.compute_h2h()` espera en su parámetro
+        `meetings`. Es la frontera exacta entre el modelo de datos del
+        plugin (este dataclass) y la función genérica del Core.
+        """
+        return {
+            "home_id":    self.home_team_id,
+            "away_id":    self.away_team_id,
+            "home_score": self.home_score,
+            "away_score": self.away_score,
+        }
+
+
+def h2h_metadata(metrics: H2HMetrics) -> dict:
+    """
+    Adapta `H2HMetrics` (genérico, del Core) a un dict apto para
+    `TeamFeatures.sport_metadata`.
+
+    Este es el punto único donde vive la traducción "métrica genérica →
+    clave específica que el modelo de proyección de MLB podría leer".
+    Si mañana se decide (Fase 4.3 del roadmap) incorporar H2H a la
+    fórmula de `MLBProjectionModel`, este es el dict del que debe leer.
+
+    `h2h_weight` escala linealmente de 0.0 (menos de
+    `_MIN_MEETINGS_FOR_WEIGHT` encuentros — muestra insuficiente para
+    confiar en ella) hasta `_MAX_H2H_WEIGHT` conforme crece la muestra,
+    saturando en `_SATURATION_MEETINGS` encuentros.
+    """
+    if not metrics.has_data or metrics.n_meetings < _MIN_MEETINGS_FOR_WEIGHT:
+        weight = 0.0
+    else:
+        weight = min(
+            _MAX_H2H_WEIGHT,
+            _MAX_H2H_WEIGHT * metrics.n_meetings / _SATURATION_MEETINGS,
+        )
+
+    return {
+        "h2h_n_meetings":    metrics.n_meetings,
+        "h2h_home_win_rate": metrics.win_rate_a,
+        "h2h_avg_total":     metrics.avg_total,
+        "h2h_weight":        round(weight, 4),
+    }
 
 
 class MLBH2HFetcher:
@@ -128,18 +248,27 @@ class MLBH2HFetcher:
         ]
         records = [r for r in records if r is not None]
 
-        return filter_recent(records, last_n=self._last_n)
+        # Ordenar del más antiguo al más reciente y quedarnos con los
+        # últimos `last_n` — reemplaza al `filter_recent()` que se
+        # esperaba importar del Core y que nunca existió ahí.
+        records.sort(key=lambda r: r.date)
+        if self._last_n > 0:
+            records = records[-self._last_n:]
+
+        return records
 
     def get_stats(
         self,
         home_team_id:   int,
         away_team_id:   int,
         reference_date: str | None = None,
-    ) -> H2HStats:
+    ) -> H2HMetrics:
         """
         Retorna las estadísticas H2H calculadas directamente.
 
-        Convenience method: fetch() + compute_h2h_stats() en uno.
+        Convenience method: fetch() + compute_h2h() en uno. Traduce cada
+        `H2HRecord` crudo a dict plano vía `to_meeting_dict()` antes de
+        pasarlo a la función genérica del Core.
 
         Parámetros
         ----------
@@ -149,16 +278,18 @@ class MLBH2HFetcher:
 
         Retorna
         -------
-        H2HStats — con n_games=0 si no hay historial disponible.
+        H2HMetrics — con n_meetings=0 si no hay historial disponible.
         """
-        records = self.fetch(
+        records  = self.fetch(
             home_team_id   = home_team_id,
             away_team_id   = away_team_id,
             reference_date = reference_date,
         )
-        return compute_h2h_stats(
-            records      = records,
-            home_team_id = home_team_id,
+        meetings = [r.to_meeting_dict() for r in records]
+        return compute_h2h(
+            team_a_id = home_team_id,
+            team_b_id = away_team_id,
+            meetings  = meetings,
         )
 
     # ── Helpers privados ───────────────────────────────────────────────────────
@@ -176,7 +307,7 @@ class MLBH2HFetcher:
         Usa teamId + opponentId para filtrar solo los partidos entre
         estos dos equipos específicos.
         """
-        if not _REQUESTS_AVAILABLE:
+        if not _REQUESTS_AVAILABLE or _requests is None:
             return []
 
         url    = f"{_MLB_API_BASE}/schedule"

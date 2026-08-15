@@ -26,7 +26,7 @@ Flujo de enrich_event(event)
     5. OffenseFetcher.fetch_recent_scores(team_id) → list[float]
     6. DefenseFetcher.fetch(team_id) → FieldingStats (home y away)
     7. VenueFactorProvider.get(venue_id) → float
-    8. MLBH2HFetcher.get_stats(home_id, away_id) → H2HStats
+    8. MLBH2HFetcher.get_stats(home_id, away_id) → H2HMetrics
     9. BullpenFetcher.defense_index(pitcher_era, bullpen) → float
     10. Ensamblar TeamFeatures para home y away
 
@@ -46,7 +46,9 @@ data_quality refleja qué porcentaje de campos están poblados:
 from __future__ import annotations
 
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Callable, TypeVar
+
+T = TypeVar("T")
 
 from core.contracts.event import Event, EventStatus
 from core.contracts.features import TeamFeatures
@@ -54,7 +56,7 @@ from core.contracts.features import TeamFeatures
 from sports.mlb.bullpen import BullpenFetcher, BullpenStats
 from sports.mlb.context import MLBContextFetcher
 from sports.mlb.defense import DefenseFetcher, FieldingStats
-from sports.mlb.h2h import MLBH2HFetcher
+from sports.mlb.h2h import MLBH2HFetcher, h2h_metadata
 from sports.mlb.offense import OffenseFetcher, OffenseStats
 from sports.mlb.pitching import PitchingFetcher, ProbablePitcher, _bullpen_day
 from sports.mlb.statcast import StatcastFetcher, _LEAGUE_ERA, _current_season
@@ -62,9 +64,17 @@ from sports.mlb.venue_factors import VenueFactorProvider
 
 try:
     import requests as _requests
-    _REQUESTS_AVAILABLE = True
 except ImportError:
-    _REQUESTS_AVAILABLE = False
+    _requests = None  # type: ignore[assignment]
+
+# CORRECCIÓN (auditoría 2026-08): antes _requests solo se asignaba en la
+# rama try, dejando la variable "possibly unbound" para el type checker
+# en cualquier punto donde se usara tras el try/except (Pylance/pyright
+# marcaba esto en cada uno de los ~10 archivos que repiten este patrón
+# de dependencia opcional). Ahora _requests siempre está definida (como
+# None si el import falla), y _REQUESTS_AVAILABLE se deriva de eso en
+# vez de ser una bandera independiente que podía desincronizarse.
+_REQUESTS_AVAILABLE = _requests is not None
 
 _MLB_API_BASE = "https://statsapi.mlb.com/api/v1"
 
@@ -193,7 +203,12 @@ class MLBDataProvider:
         )
 
         # ── 4. Carreras recientes (bug F1 corregido) ───────────────
-        date_str = event.date.isoformat() if hasattr(event.date, 'isoformat') else str(event.date)
+        # event.date ya es str 'YYYY-MM-DD' por contrato (Event.date) —
+        # el parche defensivo hasattr(event.date, 'isoformat') que había
+        # aquí antes era el síntoma de que _parse_game_to_event violaba
+        # ese contrato en otro punto; corregido en origen, ya no hace
+        # falta adivinar el tipo en runtime.
+        date_str = event.date
         home_recent = self._safe_fetch(
             self._offense.fetch_recent_scores, home_id, date_str,
             fallback=[]
@@ -312,10 +327,18 @@ class MLBDataProvider:
         # Offense index con split por mano del rival
         offense_idx = offense.offense_index_vs_hand(rival_pitcher_hand)
 
-        # Recent avg desde recent_scores
+        # Recent avg desde recent_scores.
+        # 0.0 en vez de None cuando no hay datos: TeamFeatures.recent_avg
+        # está tipado como float (no Optional) porque __post_init__ lo
+        # recalcula siempre desde recent_scores de todos modos — pasar
+        # None aquí violaba ese contrato sin aportar nada, ya que el
+        # valor se descarta y se recalcula igual dentro de TeamFeatures.
+        # `expected_score` de abajo sigue funcionando igual: 0.0 es
+        # falsy en Python, el fallback a runs_per_game se activa igual
+        # que antes con None.
         recent_avg = (
             round(sum(recent_scores) / len(recent_scores), 3)
-            if recent_scores else None
+            if recent_scores else 0.0
         )
 
         # expected_score: recent_avg o runs_per_game como fallback
@@ -328,7 +351,7 @@ class MLBDataProvider:
         metadata.update(offense.to_metadata())
         metadata.update(fielding.to_metadata())
         if h2h_stats is not None:
-            metadata.update(h2h_stats.to_metadata())
+            metadata.update(h2h_metadata(h2h_stats))
 
         # data_quality: proporción de campos críticos no-None
         critical_fields = [
@@ -341,8 +364,6 @@ class MLBDataProvider:
         return TeamFeatures(
             team_id        = str(team_id),
             team_name      = team_name,
-            sport          = "mlb",
-            season         = self._season,
             expected_score = round(float(expected_score), 3),
             offense_index  = round(offense_idx, 4),
             defense_index  = round(defense_index, 4),
@@ -358,7 +379,7 @@ class MLBDataProvider:
 
     def _fetch_schedule(self, date: str) -> list[dict]:
         """Fetch del schedule MLB para una fecha."""
-        if not _REQUESTS_AVAILABLE:
+        if not _REQUESTS_AVAILABLE or _requests is None:
             return []
         url    = f"{_MLB_API_BASE}/schedule"
         params = {
@@ -380,9 +401,23 @@ class MLBDataProvider:
             return []
 
     def _parse_game_to_event(self, game: dict, date: str) -> Event | None:
-        """Convierte un game del schedule MLB a un Event del contrato."""
+        """
+        Convierte un game del schedule MLB a un Event del contrato.
+
+        CORRECCIÓN DE CONTRATO (auditoría 2026-08): esta función
+        construía `season_start`/`season_end` como objetos `datetime.date`
+        y `date` como objeto `date` también, pero `Event` los tipa como
+        `int` (season_start/season_end) y `str` 'YYYY-MM-DD' (date)
+        respectivamente. El síntoma downstream era un parche defensivo
+        en `enrich_event()` (`hasattr(event.date, 'isoformat')`) que
+        adivinaba en runtime qué tipo tenía `event.date` en vez de
+        confiar en el contrato — y dos propiedades de `Event`
+        (`is_single_year_season`, `season_label`) quedaban rotas de forma
+        silenciosa porque comparar dos `date` distintos nunca da True
+        aunque el año coincida. Se corrige aquí, en el origen, para que
+        el contrato se respete desde el primer punto de construcción.
+        """
         try:
-            from datetime import date as date_type
             game_pk    = game.get("gamePk")
             teams      = game.get("teams", {})
             home       = teams.get("home", {}).get("team", {})
@@ -394,20 +429,24 @@ class MLBDataProvider:
             abstract_state = game.get("status", {}).get("abstractGameState", "")
             status_map = {
                 "Preview": EventStatus.SCHEDULED,
-                "Live":    EventStatus.IN_PROGRESS,
+                "Live":    EventStatus.LIVE,
                 "Final":   EventStatus.FINAL,
             }
             status = status_map.get(abstract_state, EventStatus.SCHEDULED)
 
-            parsed_date = datetime.strptime(date, "%Y-%m-%d").date()
+            # Validar que `date` tiene el formato esperado — si no,
+            # queremos que la excepción caiga al except Exception de
+            # abajo y el evento se descarte, no que se cuele un string
+            # malformado dentro del Event.
+            datetime.strptime(date, "%Y-%m-%d")
 
             return Event(
                 event_id      = str(game_pk),
                 sport         = "mlb",
                 league        = "MLB",
-                season_start  = datetime(self._season, 3, 1).date(),
-                season_end    = datetime(self._season, 11, 30).date(),
-                date          = parsed_date,
+                season_start  = self._season,
+                season_end    = self._season,
+                date          = date,
                 start_time    = start_time,
                 home_team_id  = str(home.get("id", "")),
                 away_team_id  = str(away.get("id", "")),
@@ -444,11 +483,29 @@ class MLBDataProvider:
             return None
 
     @staticmethod
-    def _safe_fetch(fn, *args, fallback=None):
+    def _safe_fetch(
+        fn: Callable[..., T],
+        *args,
+        fallback: T,
+    ) -> T:
         """
         Ejecuta fn(*args) y retorna fallback si lanza excepción.
 
         Garantiza que un fallo de API no propague al pipeline.
+
+        CORRECCIÓN DE TIPADO (auditoría 2026-08): antes `fn` y `fallback`
+        no tenían anotación de tipo, así que Pylance/pyright inferían el
+        retorno de cada llamada como `Unknown | None` — eso se propagaba
+        a cada sitio de uso (`home_bullpen`, `home_offense`,
+        `home_fielding`, etc.) y de ahí a `_build_features()`, generando
+        ~14 errores de tipo en cascada, todos con la misma causa raíz.
+        Con `Callable[..., T]` + `fallback: T` sin default, el tipo de
+        retorno queda ligado exactamente al tipo del `fallback` que cada
+        llamada ya provee (ej. `fallback=BullpenStats(...)` → retorno
+        `BullpenStats`, nunca `None`) — que es además la garantía real en
+        tiempo de ejecución: esta función NUNCA retorna `None` a menos
+        que el propio `fallback` pasado sea `None` (como en el caso de
+        `h2h_stats`, donde sí se pasa `fallback=None` explícitamente).
         """
         try:
             return fn(*args)

@@ -60,9 +60,17 @@ from core.tracking.protocols import SettlementResult
 
 try:
     import requests as _requests
-    _REQUESTS_AVAILABLE = True
 except ImportError:
-    _REQUESTS_AVAILABLE = False
+    _requests = None  # type: ignore[assignment]
+
+# CORRECCIÓN (auditoría 2026-08): antes _requests solo se asignaba en la
+# rama try, dejando la variable "possibly unbound" para el type checker
+# en cualquier punto donde se usara tras el try/except (Pylance/pyright
+# marcaba esto en cada uno de los ~10 archivos que repiten este patrón
+# de dependencia opcional). Ahora _requests siempre está definida (como
+# None si el import falla), y _REQUESTS_AVAILABLE se deriva de eso en
+# vez de ser una bandera independiente que podía desincronizarse.
+_REQUESTS_AVAILABLE = _requests is not None
 
 _MLB_API_BASE    = "https://statsapi.mlb.com/api/v1"
 _MLB_API_BASE_11 = "https://statsapi.mlb.com/api/v1.1"
@@ -470,7 +478,13 @@ class MLBSettlementProvider:
                 return "null"
 
         elif market == "ML_F5":
-            if game.f5_home_score is None:
+            # CORRECCIÓN (auditoría 2026-08): solo validaba
+            # `f5_home_score is None`, dejando pasar el caso donde
+            # `f5_away_score` sí es None (el partido no llegó al 5to
+            # inning para el visitante en algún escenario de datos
+            # parciales de la API) — `h > a` explotaba con
+            # `TypeError: '>' not supported between 'float' and 'None'`.
+            if game.f5_home_score is None or game.f5_away_score is None:
                 return "void"
             h, a = game.f5_home_score, game.f5_away_score
             if h == a:
@@ -500,7 +514,7 @@ class MLBSettlementProvider:
 
         Usa el endpoint live feed para obtener score y linescore completo.
         """
-        if not _REQUESTS_AVAILABLE:
+        if not _REQUESTS_AVAILABLE or _requests is None:
             return None
 
         url = f"{_MLB_API_BASE_11}/game/{game_pk}/feed/live"

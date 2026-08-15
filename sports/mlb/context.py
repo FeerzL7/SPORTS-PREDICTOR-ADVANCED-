@@ -55,9 +55,17 @@ from typing import Any
 
 try:
     import requests as _requests
-    _REQUESTS_AVAILABLE = True
 except ImportError:
-    _REQUESTS_AVAILABLE = False
+    _requests = None  # type: ignore[assignment]
+
+# CORRECCIÓN (auditoría 2026-08): antes _requests solo se asignaba en la
+# rama try, dejando la variable "possibly unbound" para el type checker
+# en cualquier punto donde se usara tras el try/except (Pylance/pyright
+# marcaba esto en cada uno de los ~10 archivos que repiten este patrón
+# de dependencia opcional). Ahora _requests siempre está definida (como
+# None si el import falla), y _REQUESTS_AVAILABLE se deriva de eso en
+# vez de ser una bandera independiente que podía desincronizarse.
+_REQUESTS_AVAILABLE = _requests is not None
 
 from core.contracts.event import Event
 
@@ -374,7 +382,7 @@ class MLBContextFetcher:
         Variables: temperature_2m, wind_speed_10m, wind_direction_10m,
                    precipitation_probability, weather_code.
         """
-        if not _REQUESTS_AVAILABLE:
+        if not _REQUESTS_AVAILABLE or _requests is None:
             return None
 
         # Extraer fecha del start_time para el forecast

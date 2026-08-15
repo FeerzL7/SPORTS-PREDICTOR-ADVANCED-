@@ -132,7 +132,14 @@ class MLBPlugin:
             from core.simulation.factory import DistributionFactory
             factory = DistributionFactory(config=self._config)
             # Retornar el modelo para MLB (Poisson con max_score configurado)
-            self._probability_model = factory.build("mlb", "ML")
+            #
+            # CORRECCIÓN DE CONTRATO (auditoría 2026-08): llamaba antes a
+            # factory.build("mlb", "ML") — DistributionFactory nunca tuvo
+            # un método build(); el método real es get_model(sport,
+            # market, projection=None). Era otro ImportError-hermano: no
+            # fallaba al importar, pero sí en la primera llamada real a
+            # get_probability_model() (Stage 4 del pipeline).
+            self._probability_model = factory.get_model("mlb", "ML")
         return self._probability_model
 
     def get_settlement_provider(self):

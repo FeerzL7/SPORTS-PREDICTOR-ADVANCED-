@@ -104,6 +104,21 @@ class TeamFeatures:
                           igual que recent_avg.
 
     Contexto de venue:
+        venue_id        -- ID canónico del estadio/sede, igual a
+                          Event.venue_id cuando aplica. AÑADIDO en la
+                          auditoría 2026-08: es un concepto universal —
+                          todo deporte con venue físico lo necesita
+                          (MLB, NBA, NFL, Soccer, NHL). Default ""
+                          para deportes sin sede fija por evento
+                          (Tennis/Golf con múltiples sedes por torneo
+                          pueden dejarlo vacío). A propósito NO se
+                          duplican aquí `sport` ni `season`: ya están
+                          disponibles vía `Event.sport` y
+                          `Event.season_start` en cualquier punto del
+                          pipeline que tenga el Event a mano — añadirlos
+                          como campos propios de TeamFeatures crearía
+                          una segunda fuente de verdad que puede
+                          desincronizarse del Event real.
         venue_factor    -- Factor de ventaja de localía/condiciones.
                           1.0 = neutral. Park factor MLB, court factor NBA,
                           surface adjustment Tennis. Default 1.0 — todo
@@ -163,6 +178,7 @@ class TeamFeatures:
     recent_n:      int   = field(default=0)
 
     # ── Contexto de venue ──────────────────────────────────────────────────────
+    venue_id:     str   = ""
     venue_factor: float = 1.0
 
     # ── Calidad del dato ───────────────────────────────────────────────────────

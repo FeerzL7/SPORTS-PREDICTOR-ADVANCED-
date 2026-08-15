@@ -47,9 +47,17 @@ from sports.mlb.statcast import StatcastFetcher, _LEAGUE_ERA, _safe_float, _extr
 
 try:
     import requests as _requests
-    _REQUESTS_AVAILABLE = True
 except ImportError:
-    _REQUESTS_AVAILABLE = False
+    _requests = None  # type: ignore[assignment]
+
+# CORRECCIÓN (auditoría 2026-08): antes _requests solo se asignaba en la
+# rama try, dejando la variable "possibly unbound" para el type checker
+# en cualquier punto donde se usara tras el try/except (Pylance/pyright
+# marcaba esto en cada uno de los ~10 archivos que repiten este patrón
+# de dependencia opcional). Ahora _requests siempre está definida (como
+# None si el import falla), y _REQUESTS_AVAILABLE se deriva de eso en
+# vez de ser una bandera independiente que podía desincronizarse.
+_REQUESTS_AVAILABLE = _requests is not None
 
 _MLB_API_BASE = "https://statsapi.mlb.com/api/v1"
 
@@ -318,7 +326,7 @@ class BullpenFetcher:
         Endpoint: /api/v1/teams/{teamId}/stats?stats=season&group=pitching
         Filtra por pitchersUsed (relevistas) en postprocessing.
         """
-        if not _REQUESTS_AVAILABLE:
+        if not _REQUESTS_AVAILABLE or _requests is None:
             return None
 
         url    = f"{_MLB_API_BASE}/teams/{team_id}/stats"

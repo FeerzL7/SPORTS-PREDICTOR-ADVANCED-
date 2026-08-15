@@ -53,9 +53,17 @@ from core.contracts.pick import CandidatePick
 
 try:
     import requests as _requests
-    _REQUESTS_AVAILABLE = True
 except ImportError:
-    _REQUESTS_AVAILABLE = False
+    _requests = None  # type: ignore[assignment]
+
+# CORRECCIÓN (auditoría 2026-08): antes _requests solo se asignaba en la
+# rama try, dejando la variable "possibly unbound" para el type checker
+# en cualquier punto donde se usara tras el try/except (Pylance/pyright
+# marcaba esto en cada uno de los ~10 archivos que repiten este patrón
+# de dependencia opcional). Ahora _requests siempre está definida (como
+# None si el import falla), y _REQUESTS_AVAILABLE se deriva de eso en
+# vez de ser una bandera independiente que podía desincronizarse.
+_REQUESTS_AVAILABLE = _requests is not None
 
 _TELEGRAM_API_BASE = "https://api.telegram.org/bot{token}/{method}"
 
@@ -417,7 +425,7 @@ class TelegramNotifier:
         Retorna True si el status code es 2xx.
         Nunca lanza excepción — errores de red retornan False.
         """
-        if not _REQUESTS_AVAILABLE:
+        if not _REQUESTS_AVAILABLE or _requests is None:
             return False
 
         url     = _TELEGRAM_API_BASE.format(

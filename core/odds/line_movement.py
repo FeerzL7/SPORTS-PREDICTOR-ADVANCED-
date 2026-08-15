@@ -105,6 +105,34 @@ class MovementDirection(Enum):
     NEUTRAL     = "neutral"
 
 
+# Símbolo que representa cada dirección en el trail de reasons legible por
+# humanos. Única fuente de verdad para el formato "MOVEMENT[<símbolo>]" —
+# `MovementSignal.to_reason()` lo usa para construir el texto, y
+# `MOVEMENT_CONFIRMS_PREFIX`/`MOVEMENT_CONTRADICTS_PREFIX` (más abajo) lo
+# usan para construir los prefijos que otros módulos necesitan detectar.
+_DIRECTION_SYMBOL: dict[MovementDirection, str] = {
+    MovementDirection.CONFIRMS:    "✓",
+    MovementDirection.CONTRADICTS: "✗",
+    MovementDirection.NEUTRAL:     "~",
+}
+
+# Prefijos públicos y canónicos del formato "MOVEMENT[...]" que aparece en
+# CandidatePick.reasons. Cualquier módulo que necesite detectar si un pick
+# fue confirmado o contradicho por movimiento de línea (RiskManager,
+# PipelineRunner, StakingStrategy) debe importar estas constantes DESDE
+# AQUÍ, nunca redefinir el literal por su cuenta.
+#
+# CORRECCIÓN DE CONTRATO (auditoría 2026-08): antes de esta corrección, el
+# literal "MOVEMENT[✓]" existía duplicado en tres sitios (aquí, en
+# core/risk/manager.py como constante propia, y en un import roto en
+# core/pipeline/runner.py que apuntaba a core.bankroll.staking — módulo que
+# nunca definió esa constante). El import roto producía un ImportError
+# garantizado en cada ejecución del Stage 8 del pipeline. Con una única
+# fuente de verdad esto deja de ser posible por construcción.
+MOVEMENT_CONFIRMS_PREFIX:    str = f"MOVEMENT[{_DIRECTION_SYMBOL[MovementDirection.CONFIRMS]}]"
+MOVEMENT_CONTRADICTS_PREFIX: str = f"MOVEMENT[{_DIRECTION_SYMBOL[MovementDirection.CONTRADICTS]}]"
+
+
 # ── Snapshot de cuotas ────────────────────────────────────────────────────────
 
 @dataclass(frozen=True)
@@ -209,12 +237,13 @@ class MovementSignal:
     def to_reason(self) -> str:
         """
         Serialización para CandidatePick.add_reason().
+
+        Usa `_DIRECTION_SYMBOL` (módulo-nivel) en vez de un dict local
+        para que el símbolo de cada dirección tenga una única fuente de
+        verdad, compartida con `MOVEMENT_CONFIRMS_PREFIX` /
+        `MOVEMENT_CONTRADICTS_PREFIX`.
         """
-        dir_symbol = {
-            MovementDirection.CONFIRMS:    "✓",
-            MovementDirection.CONTRADICTS: "✗",
-            MovementDirection.NEUTRAL:     "~",
-        }[self.direction]
+        dir_symbol = _DIRECTION_SYMBOL[self.direction]
 
         return (
             f"MOVEMENT[{dir_symbol}] {self.movement_type.name} "

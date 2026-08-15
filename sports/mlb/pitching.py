@@ -43,9 +43,17 @@ from sports.mlb.statcast import StatcastFetcher, _LEAGUE_ERA, _safe_float
 
 try:
     import requests as _requests
-    _REQUESTS_AVAILABLE = True
 except ImportError:
-    _REQUESTS_AVAILABLE = False
+    _requests = None  # type: ignore[assignment]
+
+# CORRECCIÓN (auditoría 2026-08): antes _requests solo se asignaba en la
+# rama try, dejando la variable "possibly unbound" para el type checker
+# en cualquier punto donde se usara tras el try/except (Pylance/pyright
+# marcaba esto en cada uno de los ~10 archivos que repiten este patrón
+# de dependencia opcional). Ahora _requests siempre está definida (como
+# None si el import falla), y _REQUESTS_AVAILABLE se deriva de eso en
+# vez de ser una bandera independiente que podía desincronizarse.
+_REQUESTS_AVAILABLE = _requests is not None
 
 _MLB_API_BASE = "https://statsapi.mlb.com/api/v1"
 
@@ -253,12 +261,12 @@ class PitchingFetcher:
         Endpoint: /api/v1.1/game/{gamePk}/feed/live
         Retorna {'home': {...}, 'away': {...}} o None si falla.
         """
-        if not _REQUESTS_AVAILABLE:
+        if not _REQUESTS_AVAILABLE or _requests is None:
             return None
 
         url = f"https://statsapi.mlb.com/api/v1.1/game/{game_pk}/feed/live"
         try:
-            resp = _requests.get(url, timeout=10) if _REQUESTS_AVAILABLE else None
+            resp = _requests.get(url, timeout=10)
             if not resp or resp.status_code != 200:
                 return None
 
