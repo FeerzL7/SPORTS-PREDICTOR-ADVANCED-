@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 23,
+            "gamesPlayed": 17,
+            "gamesStarted": 0,
+            "groundOuts": 32,
+            "airOuts": 29,
+            "runs": 18,
+            "doubles": 5,
+            "triples": 0,
+            "homeRuns": 2,
+            "strikeOuts": 34,
+            "baseOnBalls": 14,
+            "intentionalWalks": 1,
+            "hits": 29,
+            "hitByPitch": 0,
+            "avg": ".238",
+            "atBats": 122,
+            "obp": ".314",
+            "slg": ".328",
+            "ops": ".642",
+            "caughtStealing": 0,
+            "stolenBases": 1,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 3,
+            "numberOfPitches": 549,
+            "era": "4.41",
+            "inningsPitched": "32.2",
+            "wins": 1,
+            "losses": 4,
+            "saves": 0,
+            "saveOpportunities": 1,
+            "holds": 3,
+            "blownSaves": 1,
+            "earnedRuns": 16,
+            "whip": "1.32",
+            "battersFaced": 138,
+            "outs": 98,
+            "gamesPitched": 17,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 354,
+            "strikePercentage": ".640",
+            "hitBatsmen": 0,
+            "balks": 0,
+            "wildPitches": 1,
+            "pickoffs": 0,
+            "totalBases": 40,
+            "groundOutsToAirouts": "1.10",
+            "winPercentage": ".200",
+            "pitchesPerInning": "16.81",
+            "gamesFinished": 2,
+            "strikeoutWalkRatio": "2.43",
+            "strikeoutsPer9Inn": "9.37",
+            "walksPer9Inn": "3.86",
+            "hitsPer9Inn": "7.99",
+            "runsScoredPer9": "4.96",
+            "homeRunsPer9": "0.55",
+            "inheritedRunners": 1,
+            "inheritedRunnersScored": 1,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 1
+          },
+          "team": {
+            "id": 134,
+            "name": "Pittsburgh Pirates",
+            "link": "/api/v1/teams/134"
+          },
+          "player": {
+            "id": 696062,
+            "fullName": "Wilber Dotel",
+            "link": "/api/v1/people/696062"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

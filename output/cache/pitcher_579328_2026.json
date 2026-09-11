@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 35,
+            "gamesPlayed": 10,
+            "gamesStarted": 10,
+            "groundOuts": 41,
+            "airOuts": 52,
+            "runs": 27,
+            "doubles": 15,
+            "triples": 1,
+            "homeRuns": 7,
+            "strikeOuts": 49,
+            "baseOnBalls": 19,
+            "intentionalWalks": 0,
+            "hits": 53,
+            "hitByPitch": 2,
+            "avg": ".279",
+            "atBats": 190,
+            "obp": ".343",
+            "slg": ".479",
+            "ops": ".822",
+            "caughtStealing": 1,
+            "stolenBases": 2,
+            "stolenBasePercentage": ".667",
+            "caughtStealingPercentage": ".333",
+            "groundIntoDoublePlay": 4,
+            "numberOfPitches": 837,
+            "era": "4.96",
+            "inningsPitched": "49.0",
+            "wins": 1,
+            "losses": 5,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 27,
+            "whip": "1.47",
+            "battersFaced": 216,
+            "outs": 147,
+            "gamesPitched": 10,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 538,
+            "strikePercentage": ".640",
+            "hitBatsmen": 2,
+            "balks": 2,
+            "wildPitches": 3,
+            "pickoffs": 0,
+            "totalBases": 91,
+            "groundOutsToAirouts": "0.79",
+            "winPercentage": ".167",
+            "pitchesPerInning": "17.08",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.58",
+            "strikeoutsPer9Inn": "9.00",
+            "walksPer9Inn": "3.49",
+            "hitsPer9Inn": "9.73",
+            "runsScoredPer9": "4.96",
+            "homeRunsPer9": "1.29",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 5
+          },
+          "team": {
+            "id": 108,
+            "name": "Los Angeles Angels",
+            "link": "/api/v1/teams/108"
+          },
+          "player": {
+            "id": 579328,
+            "fullName": "Yusei Kikuchi",
+            "link": "/api/v1/people/579328"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

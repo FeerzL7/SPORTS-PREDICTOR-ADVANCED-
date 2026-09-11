@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 37,
+            "gamesPlayed": 17,
+            "gamesStarted": 15,
+            "groundOuts": 96,
+            "airOuts": 87,
+            "runs": 48,
+            "doubles": 18,
+            "triples": 0,
+            "homeRuns": 9,
+            "strikeOuts": 61,
+            "baseOnBalls": 33,
+            "intentionalWalks": 0,
+            "hits": 102,
+            "hitByPitch": 9,
+            "avg": ".298",
+            "atBats": 342,
+            "obp": ".371",
+            "slg": ".430",
+            "ops": ".801",
+            "caughtStealing": 4,
+            "stolenBases": 8,
+            "stolenBasePercentage": ".667",
+            "caughtStealingPercentage": ".333",
+            "groundIntoDoublePlay": 7,
+            "numberOfPitches": 1451,
+            "era": "4.96",
+            "inningsPitched": "85.1",
+            "wins": 6,
+            "losses": 5,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 47,
+            "whip": "1.58",
+            "battersFaced": 388,
+            "outs": 256,
+            "gamesPitched": 17,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 907,
+            "strikePercentage": ".630",
+            "hitBatsmen": 9,
+            "balks": 0,
+            "wildPitches": 2,
+            "pickoffs": 0,
+            "totalBases": 147,
+            "groundOutsToAirouts": "1.10",
+            "winPercentage": ".545",
+            "pitchesPerInning": "17.00",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "1.85",
+            "strikeoutsPer9Inn": "6.43",
+            "walksPer9Inn": "3.48",
+            "hitsPer9Inn": "10.76",
+            "runsScoredPer9": "5.06",
+            "homeRunsPer9": "0.95",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 4
+          },
+          "team": {
+            "id": 110,
+            "name": "Baltimore Orioles",
+            "link": "/api/v1/teams/110"
+          },
+          "player": {
+            "id": 605135,
+            "fullName": "Chris Bassitt",
+            "link": "/api/v1/people/605135"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

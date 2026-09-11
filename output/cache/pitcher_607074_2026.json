@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 33,
+            "gamesPlayed": 13,
+            "gamesStarted": 13,
+            "groundOuts": 44,
+            "airOuts": 76,
+            "runs": 26,
+            "doubles": 11,
+            "triples": 0,
+            "homeRuns": 6,
+            "strikeOuts": 70,
+            "baseOnBalls": 34,
+            "intentionalWalks": 0,
+            "hits": 41,
+            "hitByPitch": 2,
+            "avg": ".181",
+            "atBats": 226,
+            "obp": ".289",
+            "slg": ".310",
+            "ops": ".599",
+            "caughtStealing": 1,
+            "stolenBases": 7,
+            "stolenBasePercentage": ".875",
+            "caughtStealingPercentage": ".125",
+            "groundIntoDoublePlay": 2,
+            "numberOfPitches": 1147,
+            "era": "3.09",
+            "inningsPitched": "64.0",
+            "wins": 5,
+            "losses": 3,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 22,
+            "whip": "1.17",
+            "battersFaced": 267,
+            "outs": 192,
+            "gamesPitched": 13,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 701,
+            "strikePercentage": ".610",
+            "hitBatsmen": 2,
+            "balks": 0,
+            "wildPitches": 3,
+            "pickoffs": 0,
+            "totalBases": 70,
+            "groundOutsToAirouts": "0.58",
+            "winPercentage": ".625",
+            "pitchesPerInning": "17.92",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.06",
+            "strikeoutsPer9Inn": "9.84",
+            "walksPer9Inn": "4.78",
+            "hitsPer9Inn": "5.77",
+            "runsScoredPer9": "3.66",
+            "homeRunsPer9": "0.84",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 4
+          },
+          "team": {
+            "id": 147,
+            "name": "New York Yankees",
+            "link": "/api/v1/teams/147"
+          },
+          "player": {
+            "id": 607074,
+            "fullName": "Carlos Rod\u00f3n",
+            "link": "/api/v1/people/607074"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

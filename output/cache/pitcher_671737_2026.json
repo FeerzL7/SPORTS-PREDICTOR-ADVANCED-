@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 25,
+            "gamesPlayed": 28,
+            "gamesStarted": 28,
+            "groundOuts": 113,
+            "airOuts": 173,
+            "runs": 70,
+            "doubles": 26,
+            "triples": 1,
+            "homeRuns": 23,
+            "strikeOuts": 184,
+            "baseOnBalls": 68,
+            "intentionalWalks": 0,
+            "hits": 133,
+            "hitByPitch": 4,
+            "avg": ".222",
+            "atBats": 600,
+            "obp": ".304",
+            "slg": ".383",
+            "ops": ".687",
+            "caughtStealing": 0,
+            "stolenBases": 12,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 9,
+            "numberOfPitches": 2701,
+            "era": "3.95",
+            "inningsPitched": "159.1",
+            "wins": 11,
+            "losses": 6,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 70,
+            "whip": "1.26",
+            "battersFaced": 675,
+            "outs": 478,
+            "gamesPitched": 28,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1708,
+            "strikePercentage": ".630",
+            "hitBatsmen": 4,
+            "balks": 0,
+            "wildPitches": 6,
+            "pickoffs": 0,
+            "totalBases": 230,
+            "groundOutsToAirouts": "0.65",
+            "winPercentage": ".647",
+            "pitchesPerInning": "16.95",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.71",
+            "strikeoutsPer9Inn": "10.39",
+            "walksPer9Inn": "3.84",
+            "hitsPer9Inn": "7.51",
+            "runsScoredPer9": "3.95",
+            "homeRunsPer9": "1.30",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 2
+          },
+          "team": {
+            "id": 142,
+            "name": "Minnesota Twins",
+            "link": "/api/v1/teams/142"
+          },
+          "player": {
+            "id": 671737,
+            "fullName": "Taj Bradley",
+            "link": "/api/v1/people/671737"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 28,
+            "gamesPlayed": 27,
+            "gamesStarted": 27,
+            "groundOuts": 150,
+            "airOuts": 167,
+            "runs": 79,
+            "doubles": 35,
+            "triples": 3,
+            "homeRuns": 20,
+            "strikeOuts": 133,
+            "baseOnBalls": 37,
+            "intentionalWalks": 1,
+            "hits": 177,
+            "hitByPitch": 3,
+            "avg": ".283",
+            "atBats": 625,
+            "obp": ".326",
+            "slg": ".445",
+            "ops": ".771",
+            "caughtStealing": 5,
+            "stolenBases": 21,
+            "stolenBasePercentage": ".808",
+            "caughtStealingPercentage": ".192",
+            "groundIntoDoublePlay": 16,
+            "numberOfPitches": 2468,
+            "era": "4.18",
+            "inningsPitched": "159.1",
+            "wins": 9,
+            "losses": 11,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 74,
+            "whip": "1.34",
+            "battersFaced": 667,
+            "outs": 478,
+            "gamesPitched": 27,
+            "completeGames": 1,
+            "shutouts": 0,
+            "strikes": 1664,
+            "strikePercentage": ".670",
+            "hitBatsmen": 3,
+            "balks": 1,
+            "wildPitches": 1,
+            "pickoffs": 3,
+            "totalBases": 278,
+            "groundOutsToAirouts": "0.90",
+            "winPercentage": ".450",
+            "pitchesPerInning": "15.49",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "3.59",
+            "strikeoutsPer9Inn": "7.51",
+            "walksPer9Inn": "2.09",
+            "hitsPer9Inn": "10.00",
+            "runsScoredPer9": "4.46",
+            "homeRunsPer9": "1.13",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 1
+          },
+          "team": {
+            "id": 136,
+            "name": "Seattle Mariners",
+            "link": "/api/v1/teams/136"
+          },
+          "player": {
+            "id": 669923,
+            "fullName": "George Kirby",
+            "link": "/api/v1/people/669923"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

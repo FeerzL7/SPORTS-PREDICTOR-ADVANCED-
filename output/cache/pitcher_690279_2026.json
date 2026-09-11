@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 26,
+            "gamesPlayed": 3,
+            "gamesStarted": 3,
+            "groundOuts": 8,
+            "airOuts": 12,
+            "runs": 6,
+            "doubles": 3,
+            "triples": 0,
+            "homeRuns": 4,
+            "strikeOuts": 17,
+            "baseOnBalls": 6,
+            "intentionalWalks": 0,
+            "hits": 16,
+            "hitByPitch": 0,
+            "avg": ".302",
+            "atBats": 53,
+            "obp": ".373",
+            "slg": ".585",
+            "ops": ".958",
+            "caughtStealing": 0,
+            "stolenBases": 1,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 2,
+            "numberOfPitches": 227,
+            "era": "3.95",
+            "inningsPitched": "13.2",
+            "wins": 0,
+            "losses": 0,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 6,
+            "whip": "1.61",
+            "battersFaced": 59,
+            "outs": 41,
+            "gamesPitched": 3,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 151,
+            "strikePercentage": ".670",
+            "hitBatsmen": 0,
+            "balks": 0,
+            "wildPitches": 2,
+            "pickoffs": 1,
+            "totalBases": 31,
+            "groundOutsToAirouts": "0.67",
+            "winPercentage": ".---",
+            "pitchesPerInning": "16.61",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.83",
+            "strikeoutsPer9Inn": "11.20",
+            "walksPer9Inn": "3.95",
+            "hitsPer9Inn": "10.54",
+            "runsScoredPer9": "3.95",
+            "homeRunsPer9": "2.63",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 0
+          },
+          "team": {
+            "id": 115,
+            "name": "Colorado Rockies",
+            "link": "/api/v1/teams/115"
+          },
+          "player": {
+            "id": 690279,
+            "fullName": "Mason Adams",
+            "link": "/api/v1/people/690279"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

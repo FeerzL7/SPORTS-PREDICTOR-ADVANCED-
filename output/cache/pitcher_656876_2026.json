@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 30,
+            "gamesPlayed": 27,
+            "gamesStarted": 27,
+            "groundOuts": 146,
+            "airOuts": 150,
+            "runs": 51,
+            "doubles": 16,
+            "triples": 1,
+            "homeRuns": 14,
+            "strikeOuts": 156,
+            "baseOnBalls": 27,
+            "intentionalWalks": 0,
+            "hits": 112,
+            "hitByPitch": 7,
+            "avg": ".200",
+            "atBats": 561,
+            "obp": ".244",
+            "slg": ".307",
+            "ops": ".551",
+            "caughtStealing": 6,
+            "stolenBases": 19,
+            "stolenBasePercentage": ".760",
+            "caughtStealingPercentage": ".240",
+            "groundIntoDoublePlay": 6,
+            "numberOfPitches": 2378,
+            "era": "2.88",
+            "inningsPitched": "153.1",
+            "wins": 14,
+            "losses": 5,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 49,
+            "whip": "0.91",
+            "battersFaced": 598,
+            "outs": 460,
+            "gamesPitched": 27,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1593,
+            "strikePercentage": ".670",
+            "hitBatsmen": 7,
+            "balks": 0,
+            "wildPitches": 3,
+            "pickoffs": 0,
+            "totalBases": 172,
+            "groundOutsToAirouts": "0.97",
+            "winPercentage": ".737",
+            "pitchesPerInning": "15.51",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "5.78",
+            "strikeoutsPer9Inn": "9.16",
+            "walksPer9Inn": "1.58",
+            "hitsPer9Inn": "6.57",
+            "runsScoredPer9": "2.99",
+            "homeRunsPer9": "0.82",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 3
+          },
+          "team": {
+            "id": 139,
+            "name": "Tampa Bay Rays",
+            "link": "/api/v1/teams/139"
+          },
+          "player": {
+            "id": 656876,
+            "fullName": "Drew Rasmussen",
+            "link": "/api/v1/people/656876"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

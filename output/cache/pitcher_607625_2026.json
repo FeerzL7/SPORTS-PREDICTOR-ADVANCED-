@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 36,
+            "gamesPlayed": 29,
+            "gamesStarted": 29,
+            "groundOuts": 151,
+            "airOuts": 179,
+            "runs": 97,
+            "doubles": 43,
+            "triples": 5,
+            "homeRuns": 18,
+            "strikeOuts": 119,
+            "baseOnBalls": 51,
+            "intentionalWalks": 0,
+            "hits": 178,
+            "hitByPitch": 7,
+            "avg": ".289",
+            "atBats": 616,
+            "obp": ".346",
+            "slg": ".463",
+            "ops": ".809",
+            "caughtStealing": 4,
+            "stolenBases": 6,
+            "stolenBasePercentage": ".600",
+            "caughtStealingPercentage": ".400",
+            "groundIntoDoublePlay": 18,
+            "numberOfPitches": 2615,
+            "era": "5.04",
+            "inningsPitched": "159.0",
+            "wins": 6,
+            "losses": 8,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 89,
+            "whip": "1.44",
+            "battersFaced": 685,
+            "outs": 477,
+            "gamesPitched": 29,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1668,
+            "strikePercentage": ".640",
+            "hitBatsmen": 7,
+            "balks": 1,
+            "wildPitches": 2,
+            "pickoffs": 4,
+            "totalBases": 285,
+            "groundOutsToAirouts": "0.84",
+            "winPercentage": ".429",
+            "pitchesPerInning": "16.45",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.33",
+            "strikeoutsPer9Inn": "6.74",
+            "walksPer9Inn": "2.89",
+            "hitsPer9Inn": "10.08",
+            "runsScoredPer9": "5.49",
+            "homeRunsPer9": "1.02",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 3,
+            "sacFlies": 8
+          },
+          "team": {
+            "id": 118,
+            "name": "Kansas City Royals",
+            "link": "/api/v1/teams/118"
+          },
+          "player": {
+            "id": 607625,
+            "fullName": "Seth Lugo",
+            "link": "/api/v1/people/607625"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

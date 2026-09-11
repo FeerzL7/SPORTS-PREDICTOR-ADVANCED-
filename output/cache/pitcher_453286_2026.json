@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 41,
+            "gamesPlayed": 14,
+            "gamesStarted": 14,
+            "groundOuts": 49,
+            "airOuts": 88,
+            "runs": 42,
+            "doubles": 9,
+            "triples": 0,
+            "homeRuns": 13,
+            "strikeOuts": 48,
+            "baseOnBalls": 27,
+            "intentionalWalks": 0,
+            "hits": 58,
+            "hitByPitch": 2,
+            "avg": ".241",
+            "atBats": 241,
+            "obp": ".321",
+            "slg": ".440",
+            "ops": ".761",
+            "caughtStealing": 0,
+            "stolenBases": 6,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 2,
+            "numberOfPitches": 1098,
+            "era": "6.03",
+            "inningsPitched": "62.2",
+            "wins": 2,
+            "losses": 7,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 42,
+            "whip": "1.36",
+            "battersFaced": 272,
+            "outs": 188,
+            "gamesPitched": 14,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 704,
+            "strikePercentage": ".640",
+            "hitBatsmen": 2,
+            "balks": 1,
+            "wildPitches": 3,
+            "pickoffs": 0,
+            "totalBases": 106,
+            "groundOutsToAirouts": "0.56",
+            "winPercentage": ".222",
+            "pitchesPerInning": "17.52",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "1.78",
+            "strikeoutsPer9Inn": "6.89",
+            "walksPer9Inn": "3.88",
+            "hitsPer9Inn": "8.33",
+            "runsScoredPer9": "6.03",
+            "homeRunsPer9": "1.87",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 1
+          },
+          "team": {
+            "id": 141,
+            "name": "Toronto Blue Jays",
+            "link": "/api/v1/teams/141"
+          },
+          "player": {
+            "id": 453286,
+            "fullName": "Max Scherzer",
+            "link": "/api/v1/people/453286"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

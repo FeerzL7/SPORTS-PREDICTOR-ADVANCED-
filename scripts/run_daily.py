@@ -58,6 +58,34 @@ _PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(_PROJECT_ROOT))
 
 
+# ── Cargar .env desde la raíz del proyecto ────────────────────────────────────
+# Sin dependencia obligatoria: usa python-dotenv si está instalado,
+# o parsea el .env manualmente como fallback.
+def _load_dotenv() -> None:
+    env_path = _PROJECT_ROOT / ".env"
+    if not env_path.exists():
+        return
+    try:
+        from dotenv import load_dotenv
+        load_dotenv(env_path, override=False)
+        return
+    except ImportError:
+        pass
+    # Fallback manual sin dependencias externas
+    with open(env_path, encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line or line.startswith("#") or "=" not in line:
+                continue
+            key, _, val = line.partition("=")
+            key = key.strip()
+            val = val.strip().strip('"').strip("'")
+            if key and key not in os.environ:
+                os.environ[key] = val
+
+_load_dotenv()
+
+
 # ── Registro de plugins disponibles ──────────────────────────────────────────
 
 _AVAILABLE_SPORTS: dict[str, str] = {

@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 24,
+            "gamesPlayed": 5,
+            "gamesStarted": 0,
+            "groundOuts": 2,
+            "airOuts": 9,
+            "runs": 3,
+            "doubles": 1,
+            "triples": 0,
+            "homeRuns": 2,
+            "strikeOuts": 10,
+            "baseOnBalls": 1,
+            "intentionalWalks": 0,
+            "hits": 5,
+            "hitByPitch": 0,
+            "avg": ".192",
+            "atBats": 26,
+            "obp": ".222",
+            "slg": ".462",
+            "ops": ".684",
+            "caughtStealing": 0,
+            "stolenBases": 1,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 0,
+            "numberOfPitches": 106,
+            "era": "3.86",
+            "inningsPitched": "7.0",
+            "wins": 0,
+            "losses": 0,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 3,
+            "whip": "0.86",
+            "battersFaced": 27,
+            "outs": 21,
+            "gamesPitched": 5,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 71,
+            "strikePercentage": ".670",
+            "hitBatsmen": 0,
+            "balks": 0,
+            "wildPitches": 0,
+            "pickoffs": 0,
+            "totalBases": 12,
+            "groundOutsToAirouts": "0.22",
+            "winPercentage": ".---",
+            "pitchesPerInning": "15.14",
+            "gamesFinished": 3,
+            "strikeoutWalkRatio": "10.00",
+            "strikeoutsPer9Inn": "12.86",
+            "walksPer9Inn": "1.29",
+            "hitsPer9Inn": "6.43",
+            "runsScoredPer9": "3.86",
+            "homeRunsPer9": "2.57",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 0
+          },
+          "team": {
+            "id": 117,
+            "name": "Houston Astros",
+            "link": "/api/v1/teams/117"
+          },
+          "player": {
+            "id": 699044,
+            "fullName": "Miguel Ullola",
+            "link": "/api/v1/people/699044"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 25,
+            "gamesPlayed": 28,
+            "gamesStarted": 28,
+            "groundOuts": 158,
+            "airOuts": 157,
+            "runs": 51,
+            "doubles": 27,
+            "triples": 4,
+            "homeRuns": 16,
+            "strikeOuts": 173,
+            "baseOnBalls": 45,
+            "intentionalWalks": 2,
+            "hits": 128,
+            "hitByPitch": 2,
+            "avg": ".210",
+            "atBats": 610,
+            "obp": ".265",
+            "slg": ".346",
+            "ops": ".611",
+            "caughtStealing": 0,
+            "stolenBases": 2,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 7,
+            "numberOfPitches": 2607,
+            "era": "2.53",
+            "inningsPitched": "167.0",
+            "wins": 11,
+            "losses": 9,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 47,
+            "whip": "1.04",
+            "battersFaced": 663,
+            "outs": 501,
+            "gamesPitched": 28,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1668,
+            "strikePercentage": ".640",
+            "hitBatsmen": 2,
+            "balks": 1,
+            "wildPitches": 6,
+            "pickoffs": 2,
+            "totalBases": 211,
+            "groundOutsToAirouts": "1.01",
+            "winPercentage": ".550",
+            "pitchesPerInning": "15.61",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "3.84",
+            "strikeoutsPer9Inn": "9.32",
+            "walksPer9Inn": "2.43",
+            "hitsPer9Inn": "6.90",
+            "runsScoredPer9": "2.75",
+            "homeRunsPer9": "0.86",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 3,
+            "sacFlies": 3
+          },
+          "team": {
+            "id": 114,
+            "name": "Cleveland Guardians",
+            "link": "/api/v1/teams/114"
+          },
+          "player": {
+            "id": 800048,
+            "fullName": "Parker Messick",
+            "link": "/api/v1/people/800048"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

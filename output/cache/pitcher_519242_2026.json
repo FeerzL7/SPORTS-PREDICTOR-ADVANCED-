@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 37,
+            "gamesPlayed": 25,
+            "gamesStarted": 25,
+            "groundOuts": 121,
+            "airOuts": 132,
+            "runs": 40,
+            "doubles": 20,
+            "triples": 1,
+            "homeRuns": 9,
+            "strikeOuts": 184,
+            "baseOnBalls": 29,
+            "intentionalWalks": 0,
+            "hits": 122,
+            "hitByPitch": 13,
+            "avg": ".219",
+            "atBats": 556,
+            "obp": ".273",
+            "slg": ".308",
+            "ops": ".581",
+            "caughtStealing": 2,
+            "stolenBases": 7,
+            "stolenBasePercentage": ".778",
+            "caughtStealingPercentage": ".222",
+            "groundIntoDoublePlay": 12,
+            "numberOfPitches": 2383,
+            "era": "2.10",
+            "inningsPitched": "150.0",
+            "wins": 14,
+            "losses": 9,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 35,
+            "whip": "1.01",
+            "battersFaced": 601,
+            "outs": 450,
+            "gamesPitched": 25,
+            "completeGames": 1,
+            "shutouts": 1,
+            "strikes": 1626,
+            "strikePercentage": ".680",
+            "hitBatsmen": 13,
+            "balks": 1,
+            "wildPitches": 0,
+            "pickoffs": 1,
+            "totalBases": 171,
+            "groundOutsToAirouts": "0.92",
+            "winPercentage": ".609",
+            "pitchesPerInning": "15.89",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "6.34",
+            "strikeoutsPer9Inn": "11.04",
+            "walksPer9Inn": "1.74",
+            "hitsPer9Inn": "7.32",
+            "runsScoredPer9": "2.40",
+            "homeRunsPer9": "0.54",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 2
+          },
+          "team": {
+            "id": 144,
+            "name": "Atlanta Braves",
+            "link": "/api/v1/teams/144"
+          },
+          "player": {
+            "id": 519242,
+            "fullName": "Chris Sale",
+            "link": "/api/v1/people/519242"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

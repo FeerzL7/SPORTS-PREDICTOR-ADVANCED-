@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 33,
+            "gamesPlayed": 26,
+            "gamesStarted": 26,
+            "groundOuts": 113,
+            "airOuts": 164,
+            "runs": 94,
+            "doubles": 22,
+            "triples": 4,
+            "homeRuns": 33,
+            "strikeOuts": 104,
+            "baseOnBalls": 52,
+            "intentionalWalks": 0,
+            "hits": 136,
+            "hitByPitch": 3,
+            "avg": ".266",
+            "atBats": 511,
+            "obp": ".334",
+            "slg": ".519",
+            "ops": ".853",
+            "caughtStealing": 3,
+            "stolenBases": 5,
+            "stolenBasePercentage": ".625",
+            "caughtStealingPercentage": ".375",
+            "groundIntoDoublePlay": 8,
+            "numberOfPitches": 2220,
+            "era": "6.02",
+            "inningsPitched": "130.0",
+            "wins": 4,
+            "losses": 13,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 87,
+            "whip": "1.45",
+            "battersFaced": 572,
+            "outs": 390,
+            "gamesPitched": 26,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1396,
+            "strikePercentage": ".630",
+            "hitBatsmen": 3,
+            "balks": 3,
+            "wildPitches": 0,
+            "pickoffs": 4,
+            "totalBases": 265,
+            "groundOutsToAirouts": "0.69",
+            "winPercentage": ".235",
+            "pitchesPerInning": "17.08",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.00",
+            "strikeoutsPer9Inn": "7.20",
+            "walksPer9Inn": "3.60",
+            "hitsPer9Inn": "9.42",
+            "runsScoredPer9": "6.51",
+            "homeRunsPer9": "2.28",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 6
+          },
+          "team": {
+            "id": 133,
+            "name": "Athletics",
+            "link": "/api/v1/teams/133"
+          },
+          "player": {
+            "id": 605488,
+            "fullName": "Jeffrey Springs",
+            "link": "/api/v1/people/605488"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

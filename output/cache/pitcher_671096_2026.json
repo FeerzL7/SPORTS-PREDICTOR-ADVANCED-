@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 27,
+            "gamesPlayed": 29,
+            "gamesStarted": 29,
+            "groundOuts": 140,
+            "airOuts": 185,
+            "runs": 80,
+            "doubles": 25,
+            "triples": 2,
+            "homeRuns": 22,
+            "strikeOuts": 120,
+            "baseOnBalls": 70,
+            "intentionalWalks": 0,
+            "hits": 147,
+            "hitByPitch": 0,
+            "avg": ".251",
+            "atBats": 585,
+            "obp": ".328",
+            "slg": ".414",
+            "ops": ".742",
+            "caughtStealing": 4,
+            "stolenBases": 22,
+            "stolenBasePercentage": ".846",
+            "caughtStealingPercentage": ".154",
+            "groundIntoDoublePlay": 7,
+            "numberOfPitches": 2628,
+            "era": "4.43",
+            "inningsPitched": "152.1",
+            "wins": 6,
+            "losses": 10,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 75,
+            "whip": "1.42",
+            "battersFaced": 664,
+            "outs": 457,
+            "gamesPitched": 29,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1649,
+            "strikePercentage": ".630",
+            "hitBatsmen": 0,
+            "balks": 0,
+            "wildPitches": 0,
+            "pickoffs": 2,
+            "totalBases": 242,
+            "groundOutsToAirouts": "0.76",
+            "winPercentage": ".375",
+            "pitchesPerInning": "17.25",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "1.71",
+            "strikeoutsPer9Inn": "7.09",
+            "walksPer9Inn": "4.14",
+            "hitsPer9Inn": "8.68",
+            "runsScoredPer9": "4.73",
+            "homeRunsPer9": "1.30",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 2,
+            "sacBunts": 1,
+            "sacFlies": 6
+          },
+          "team": {
+            "id": 113,
+            "name": "Cincinnati Reds",
+            "link": "/api/v1/teams/113"
+          },
+          "player": {
+            "id": 671096,
+            "fullName": "Andrew Abbott",
+            "link": "/api/v1/people/671096"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

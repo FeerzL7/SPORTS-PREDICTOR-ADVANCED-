@@ -379,7 +379,9 @@ class PipelineRunner:
         Una sola request a la API cubre todos los eventos del deporte.
         """
         t     = time.monotonic()
-        sport = self._plugin.sport_id
+        # Usar odds_api_sport_id si el plugin lo declara (ej: "baseball_mlb"),
+        # fallback a sport_id genérico (ej: "mlb") si no existe.
+        sport = getattr(self._plugin, "odds_api_sport_id", self._plugin.sport_id)
         mkt   = self._plugin.get_market_definitions()
 
         try:

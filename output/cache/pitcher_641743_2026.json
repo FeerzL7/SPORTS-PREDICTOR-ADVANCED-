@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 31,
+            "gamesPlayed": 29,
+            "gamesStarted": 27,
+            "groundOuts": 154,
+            "airOuts": 148,
+            "runs": 75,
+            "doubles": 25,
+            "triples": 4,
+            "homeRuns": 20,
+            "strikeOuts": 116,
+            "baseOnBalls": 50,
+            "intentionalWalks": 0,
+            "hits": 142,
+            "hitByPitch": 23,
+            "avg": ".259",
+            "atBats": 549,
+            "obp": ".343",
+            "slg": ".428",
+            "ops": ".771",
+            "caughtStealing": 3,
+            "stolenBases": 8,
+            "stolenBasePercentage": ".727",
+            "caughtStealingPercentage": ".273",
+            "groundIntoDoublePlay": 8,
+            "numberOfPitches": 2516,
+            "era": "4.47",
+            "inningsPitched": "141.0",
+            "wins": 9,
+            "losses": 8,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 70,
+            "whip": "1.36",
+            "battersFaced": 633,
+            "outs": 423,
+            "gamesPitched": 29,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1572,
+            "strikePercentage": ".620",
+            "hitBatsmen": 23,
+            "balks": 2,
+            "wildPitches": 5,
+            "pickoffs": 0,
+            "totalBases": 235,
+            "groundOutsToAirouts": "1.04",
+            "winPercentage": ".529",
+            "pitchesPerInning": "17.84",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.32",
+            "strikeoutsPer9Inn": "7.40",
+            "walksPer9Inn": "3.19",
+            "hitsPer9Inn": "9.06",
+            "runsScoredPer9": "4.79",
+            "homeRunsPer9": "1.28",
+            "inheritedRunners": 1,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 6,
+            "sacFlies": 5
+          },
+          "team": {
+            "id": 145,
+            "name": "Chicago White Sox",
+            "link": "/api/v1/teams/145"
+          },
+          "player": {
+            "id": 641743,
+            "fullName": "Anthony Kay",
+            "link": "/api/v1/people/641743"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

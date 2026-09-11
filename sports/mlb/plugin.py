@@ -28,8 +28,9 @@ class MLBPlugin:
     include_props  -- Si True, incluye prop markets. Default True.
     """
 
-    sport_id:  str = "mlb"
-    league_id: str = "MLB"
+    sport_id:          str = "mlb"
+    league_id:         str = "MLB"
+    odds_api_sport_id: str = "baseball_mlb"  # identificador en The Odds API
 
     def __init__(
         self,

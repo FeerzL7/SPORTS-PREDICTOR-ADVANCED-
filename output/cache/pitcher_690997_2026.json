@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 24,
+            "gamesPlayed": 28,
+            "gamesStarted": 28,
+            "groundOuts": 161,
+            "airOuts": 131,
+            "runs": 67,
+            "doubles": 25,
+            "triples": 0,
+            "homeRuns": 15,
+            "strikeOuts": 179,
+            "baseOnBalls": 65,
+            "intentionalWalks": 0,
+            "hits": 120,
+            "hitByPitch": 15,
+            "avg": ".205",
+            "atBats": 584,
+            "obp": ".299",
+            "slg": ".325",
+            "ops": ".624",
+            "caughtStealing": 2,
+            "stolenBases": 5,
+            "stolenBasePercentage": ".714",
+            "caughtStealingPercentage": ".286",
+            "groundIntoDoublePlay": 9,
+            "numberOfPitches": 2649,
+            "era": "3.06",
+            "inningsPitched": "161.2",
+            "wins": 11,
+            "losses": 8,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 55,
+            "whip": "1.14",
+            "battersFaced": 671,
+            "outs": 485,
+            "gamesPitched": 28,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1666,
+            "strikePercentage": ".630",
+            "hitBatsmen": 15,
+            "balks": 0,
+            "wildPitches": 2,
+            "pickoffs": 3,
+            "totalBases": 190,
+            "groundOutsToAirouts": "1.23",
+            "winPercentage": ".579",
+            "pitchesPerInning": "16.39",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.75",
+            "strikeoutsPer9Inn": "9.96",
+            "walksPer9Inn": "3.62",
+            "hitsPer9Inn": "6.68",
+            "runsScoredPer9": "3.73",
+            "homeRunsPer9": "0.84",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 3,
+            "sacFlies": 4
+          },
+          "team": {
+            "id": 121,
+            "name": "New York Mets",
+            "link": "/api/v1/teams/121"
+          },
+          "player": {
+            "id": 690997,
+            "fullName": "Nolan McLean",
+            "link": "/api/v1/people/690997"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

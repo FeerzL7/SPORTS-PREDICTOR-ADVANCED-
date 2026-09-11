@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 27,
+            "gamesPlayed": 30,
+            "gamesStarted": 30,
+            "groundOuts": 160,
+            "airOuts": 117,
+            "runs": 66,
+            "doubles": 22,
+            "triples": 0,
+            "homeRuns": 17,
+            "strikeOuts": 185,
+            "baseOnBalls": 46,
+            "intentionalWalks": 0,
+            "hits": 141,
+            "hitByPitch": 14,
+            "avg": ".236",
+            "atBats": 598,
+            "obp": ".304",
+            "slg": ".358",
+            "ops": ".662",
+            "caughtStealing": 2,
+            "stolenBases": 8,
+            "stolenBasePercentage": ".800",
+            "caughtStealingPercentage": ".200",
+            "groundIntoDoublePlay": 14,
+            "numberOfPitches": 2608,
+            "era": "3.12",
+            "inningsPitched": "158.2",
+            "wins": 12,
+            "losses": 5,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 55,
+            "whip": "1.18",
+            "battersFaced": 663,
+            "outs": 476,
+            "gamesPitched": 30,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1707,
+            "strikePercentage": ".650",
+            "hitBatsmen": 14,
+            "balks": 1,
+            "wildPitches": 4,
+            "pickoffs": 1,
+            "totalBases": 214,
+            "groundOutsToAirouts": "1.37",
+            "winPercentage": ".706",
+            "pitchesPerInning": "16.44",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "4.02",
+            "strikeoutsPer9Inn": "10.49",
+            "walksPer9Inn": "2.61",
+            "hitsPer9Inn": "8.00",
+            "runsScoredPer9": "3.74",
+            "homeRunsPer9": "0.96",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 4
+          },
+          "team": {
+            "id": 120,
+            "name": "Washington Nationals",
+            "link": "/api/v1/teams/120"
+          },
+          "player": {
+            "id": 676917,
+            "fullName": "Cade Cavalli",
+            "link": "/api/v1/people/676917"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

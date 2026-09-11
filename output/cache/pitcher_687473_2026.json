@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 27,
+            "gamesPlayed": 20,
+            "gamesStarted": 15,
+            "groundOuts": 77,
+            "airOuts": 76,
+            "runs": 37,
+            "doubles": 15,
+            "triples": 2,
+            "homeRuns": 9,
+            "strikeOuts": 62,
+            "baseOnBalls": 22,
+            "intentionalWalks": 0,
+            "hits": 80,
+            "hitByPitch": 5,
+            "avg": ".272",
+            "atBats": 294,
+            "obp": ".332",
+            "slg": ".429",
+            "ops": ".761",
+            "caughtStealing": 2,
+            "stolenBases": 3,
+            "stolenBasePercentage": ".600",
+            "caughtStealingPercentage": ".400",
+            "groundIntoDoublePlay": 4,
+            "numberOfPitches": 1178,
+            "era": "4.23",
+            "inningsPitched": "72.1",
+            "wins": 1,
+            "losses": 4,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 1,
+            "blownSaves": 0,
+            "earnedRuns": 34,
+            "whip": "1.41",
+            "battersFaced": 322,
+            "outs": 217,
+            "gamesPitched": 20,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 805,
+            "strikePercentage": ".680",
+            "hitBatsmen": 5,
+            "balks": 0,
+            "wildPitches": 0,
+            "pickoffs": 0,
+            "totalBases": 126,
+            "groundOutsToAirouts": "1.01",
+            "winPercentage": ".200",
+            "pitchesPerInning": "16.29",
+            "gamesFinished": 2,
+            "strikeoutWalkRatio": "2.82",
+            "strikeoutsPer9Inn": "7.71",
+            "walksPer9Inn": "2.74",
+            "hitsPer9Inn": "9.95",
+            "runsScoredPer9": "4.60",
+            "homeRunsPer9": "1.12",
+            "inheritedRunners": 1,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 1
+          },
+          "team": {
+            "id": 146,
+            "name": "Miami Marlins",
+            "link": "/api/v1/teams/146"
+          },
+          "player": {
+            "id": 687473,
+            "fullName": "Ryan Gusto",
+            "link": "/api/v1/people/687473"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}
