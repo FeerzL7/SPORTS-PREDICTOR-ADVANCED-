@@ -10,13 +10,14 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
 
 import pytest
 from datetime import date
+from typing import Any
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
 
 def make_event(**kwargs):
     from core.contracts.event import Event, EventStatus
-    defaults = dict(
+    defaults: dict[str, Any] = dict(
         event_id='e001', sport='mlb', league='MLB',
         season_start=2026, season_end=2026,
         date='2026-07-15', start_time='2026-07-15T18:05:00Z',
@@ -31,7 +32,7 @@ def make_event(**kwargs):
 
 def make_features(**kwargs):
     from core.contracts.features import TeamFeatures
-    defaults = dict(
+    defaults: dict[str, Any] = dict(
         team_id='147', team_name='New York Yankees',
         expected_score=4.8, offense_index=1.12, defense_index=1.05,
         recent_scores=[3,5,7,4,6,5,8,4,3,6], recent_avg=5.1,
@@ -44,7 +45,7 @@ def make_features(**kwargs):
 
 def make_pick(**kwargs):
     from core.contracts.pick import CandidatePick
-    defaults = dict(
+    defaults: dict[str, Any] = dict(
         event=make_event(), market='TOTAL', selection='over', line=8.5,
         price=1.91, model_prob_raw=0.58, market_prob=0.524, blended_prob=0.555,
     )
@@ -54,7 +55,7 @@ def make_pick(**kwargs):
 
 def make_ledger_entry(**kwargs):
     from core.contracts.ledger import BetLedgerEntry
-    defaults = dict(
+    defaults: dict[str, Any] = dict(
         entry_id='e001_TOTAL_over', sport='mlb', league='MLB',
         date='2026-07-15', event='BOS @ NYY', market='TOTAL',
         selection='over', price=1.91, model_prob=0.555, ev=6.01,
@@ -95,7 +96,7 @@ class TestEvent:
     def test_immutability(self):
         e = make_event()
         with pytest.raises((AttributeError, TypeError)):
-            e.sport = 'nba'
+            e.sport = 'nba'  # type: ignore[misc]  # intencional: verifica frozen=True
 
     def test_season_as_int(self):
         e = make_event()
@@ -147,7 +148,7 @@ class TestTeamFeatures:
 class TestProjection:
     def make_proj(self, **kwargs):
         from core.contracts.projection import Projection
-        defaults = dict(
+        defaults: dict[str, Any] = dict(
             event_id='e001', sport='mlb',
             expected_home=4.8, expected_away=4.1,
             home_win_prob=0.54, away_win_prob=0.46, draw_prob=0.0,
@@ -200,7 +201,7 @@ class TestProjection:
 class TestMarketOdds:
     def make_odds(self, **kwargs):
         from core.contracts.market_odds import MarketOdds
-        defaults = dict(
+        defaults: dict[str, Any] = dict(
             event_id='e001', market='TOTAL', selection='over',
             line=8.5, price=1.91, bookmaker='pinnacle', timestamp='',
         )
@@ -237,7 +238,7 @@ class TestMarketOdds:
     def test_immutability(self):
         o = self.make_odds()
         with pytest.raises((AttributeError, TypeError)):
-            o.price = 2.00
+            o.price = 2.00  # type: ignore[misc]  # intencional: verifica frozen=True
 
 
 # ── Tests: CandidatePick ──────────────────────────────────────────────────────

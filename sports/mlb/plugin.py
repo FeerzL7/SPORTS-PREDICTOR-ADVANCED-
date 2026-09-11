@@ -5,30 +5,9 @@ MLBPlugin: punto de entrada del plugin MLB para el PipelineRunner.
 
 Implementa core/pipeline/stage.py:SportPlugin.
 
-El PipelineRunner solo interactúa con esta clase — nunca importa
-directamente desde sports/mlb/provider.py, projections.py, etc.
-MLBPlugin provee todos los componentes via factory methods.
-
-Ensamblaje
------------
-MLBPlugin
-    ├── get_data_provider()      → MLBDataProvider (8.13)
-    ├── get_projection_model()   → MLBProjectionModel (8.10)
-    ├── get_probability_model()  → DistributionFactory → PoissonModel (2.2)
-    ├── get_settlement_provider()→ MLBSettlementProvider (8.11)
-    ├── get_market_definitions() → MLBMarketDefinitions (8.12)
-    └── get_config()             → dict desde mlb.yaml
-
-Uso típico
------------
-    from sports.mlb.plugin import MLBPlugin
-    from core.pipeline.runner import build_runner
-    from core.utils.config_loader import load_config
-
-    config = load_config(sport='mlb')
-    plugin = MLBPlugin(config_loader=config)
-    runner = build_runner(plugin=plugin, config_loader=config)
-    result = runner.run(date='2026-07-15')
+FIX B2: get_probability_model() usaba factory.build() que no existe.
+Corregido a factory.get_model(sport, market) — método real de
+DistributionFactory (core/simulation/factory.py).
 """
 
 from __future__ import annotations
@@ -39,16 +18,14 @@ class MLBPlugin:
     Punto de entrada del plugin MLB.
 
     Implementa SportPlugin Protocol. El PipelineRunner obtiene todos
-    los componentes de este objeto — nunca instancia módulos MLB
+    los componentes de este objeto — nunca importa desde sports/mlb/*
     directamente.
 
     Parámetros
     ----------
     config_loader  -- ConfigLoader con base.yaml + mlb.yaml merged.
-                     Si None, usa defaults hardcodeados de cada módulo.
     season         -- Temporada MLB. Default: año actual.
-    include_props  -- Si True, incluye prop markets en el catálogo.
-                     Default True.
+    include_props  -- Si True, incluye prop markets. Default True.
     """
 
     sport_id:  str = "mlb"
@@ -64,9 +41,7 @@ class MLBPlugin:
         self._season        = season
         self._include_props = include_props
 
-        # Componentes compartidos entre módulos (instancia única)
-        # StatcastFetcher y VenueFactorProvider son costosos de crear
-        # y usados por múltiples submódulos — se crean una sola vez.
+        # Singletons — instanciados lazy en los factory methods
         self._statcast_fetcher  = None
         self._venue_provider    = None
         self._data_provider     = None
@@ -78,12 +53,7 @@ class MLBPlugin:
     # ── SportPlugin Protocol ──────────────────────────────────────────────────
 
     def get_data_provider(self):
-        """
-        Retorna MLBDataProvider.
-
-        Singleton por instancia — el mismo provider se reutiliza
-        para todos los eventos del día (comparte caché de statcast).
-        """
+        """Retorna MLBDataProvider (singleton por instancia)."""
         if self._data_provider is None:
             from sports.mlb.provider import MLBDataProvider
             self._data_provider = MLBDataProvider(
@@ -95,11 +65,7 @@ class MLBPlugin:
         return self._data_provider
 
     def get_projection_model(self):
-        """
-        Retorna MLBProjectionModel.
-
-        Comparte StatcastFetcher y VenueFactorProvider con el DataProvider.
-        """
+        """Retorna MLBProjectionModel (singleton por instancia)."""
         if self._projection_model is None:
             from sports.mlb.projections import MLBProjectionModel
             from sports.mlb.bullpen import BullpenFetcher
@@ -125,32 +91,24 @@ class MLBPlugin:
         """
         Retorna PoissonModel para MLB via DistributionFactory.
 
-        El core resuelve PoissonModel para (sport='mlb', market='*').
-        La factory lee simulation.mlb.poisson.max_score del config.
+        FIX B2: usa factory.get_model() — no factory.build() que no existe.
         """
         if self._probability_model is None:
             from core.simulation.factory import DistributionFactory
             factory = DistributionFactory(config=self._config)
-            # Retornar el modelo para MLB (Poisson con max_score configurado)
-            #
-            # CORRECCIÓN DE CONTRATO (auditoría 2026-08): llamaba antes a
-            # factory.build("mlb", "ML") — DistributionFactory nunca tuvo
-            # un método build(); el método real es get_model(sport,
-            # market, projection=None). Era otro ImportError-hermano: no
-            # fallaba al importar, pero sí en la primera llamada real a
-            # get_probability_model() (Stage 4 del pipeline).
+            # get_model(sport, market) — firma correcta del factory
             self._probability_model = factory.get_model("mlb", "ML")
         return self._probability_model
 
     def get_settlement_provider(self):
-        """Retorna MLBSettlementProvider."""
+        """Retorna MLBSettlementProvider (singleton)."""
         if self._settlement is None:
             from sports.mlb.settlement import MLBSettlementProvider
             self._settlement = MLBSettlementProvider()
         return self._settlement
 
     def get_market_definitions(self):
-        """Retorna MLBMarketDefinitions."""
+        """Retorna MLBMarketDefinitions (singleton)."""
         if self._market_defs is None:
             from sports.mlb.markets import MLBMarketDefinitions
             self._market_defs = MLBMarketDefinitions(
@@ -159,22 +117,13 @@ class MLBPlugin:
         return self._market_defs
 
     def get_config(self) -> dict:
-        """
-        Retorna la configuración MLB como dict.
-
-        El runner puede pasarla a subsistemas del Core que no tienen
-        acceso directo al ConfigLoader del deporte.
-        """
+        """Retorna configuración MLB como dict para subsistemas del Core."""
         if self._config is None:
             return {}
         try:
-            # Retornar las secciones relevantes del YAML como dict plano
-            sections = [
-                "blending", "kelly", "filters", "staking",
-                "risk", "line_movement", "ensemble", "mlb",
-            ]
             result = {}
-            for section in sections:
+            for section in ("blending", "kelly", "filters", "staking",
+                            "risk", "line_movement", "ensemble", "mlb"):
                 val = self._config.get(section, default=None)
                 if val is not None:
                     result[section] = val
@@ -189,7 +138,7 @@ class MLBPlugin:
         if self._statcast_fetcher is None:
             from sports.mlb.statcast import StatcastFetcher
             self._statcast_fetcher = StatcastFetcher(
-                config_loader = self._config,
+                config_loader=self._config,
             )
         return self._statcast_fetcher
 
@@ -198,12 +147,12 @@ class MLBPlugin:
         if self._venue_provider is None:
             from sports.mlb.venue_factors import VenueFactorProvider
             self._venue_provider = VenueFactorProvider(
-                config_loader=self._config
+                config_loader=self._config,
             )
         return self._venue_provider
 
     def _cfg(self, key: str, default):
-        """Lee un valor del ConfigLoader con fallback a default."""
+        """Lee valor del ConfigLoader con fallback a default."""
         if self._config is None:
             return default
         try:

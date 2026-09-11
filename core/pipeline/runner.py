@@ -673,8 +673,19 @@ def build_runner(
     sport = plugin.sport_id
 
     # Odds
+    # En dry_run sin API key configurada usamos un placeholder: Stage 5
+    # (ingesta de cuotas) se omite de todos modos en ese modo, pero
+    # OddsAPIConfig valida la key en __post_init__ y abortaría la
+    # construcción del runner antes de llegar a ejecutar nada. El
+    # placeholder permite validar el resto del pipeline sin credenciales
+    # — nunca se usa para hacer requests reales porque dry_run salta
+    # el stage que las dispara.
+    api_key = config_loader.get("ODDS_API_KEY")
+    if not api_key and dry_run:
+        api_key = "dry-run-placeholder"
+
     odds_client = OddsAPIClient(OddsAPIConfig(
-        api_key = config_loader.get("ODDS_API_KEY"),
+        api_key = api_key,
         regions = config_loader.get("odds_api.regions", default="us"),
     ))
     normalizer    = OddsNormalizer()

@@ -122,9 +122,7 @@ class MLBDataProvider:
         self._pitching  = pitching_fetcher or PitchingFetcher(
             statcast_fetcher=self._statcast
         )
-        self._bullpen   = bullpen_fetcher  or BullpenFetcher(
-            statcast_fetcher=self._statcast, config_loader=cfg
-        )
+        self._bullpen   = bullpen_fetcher  or BullpenFetcher()
         self._offense   = offense_fetcher  or OffenseFetcher()
         self._defense   = defense_fetcher  or DefenseFetcher()
         self._context   = context_fetcher  or MLBContextFetcher()
