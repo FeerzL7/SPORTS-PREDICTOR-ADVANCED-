@@ -328,8 +328,20 @@ _UNIVERSAL_CORE: list[MarketDefinition] = [
         api_key="h2h_3_way",
         internal_name="1X2",
         tier=MarketTier.CORE,
-        sports=frozenset(),
-        description="1X2 con empate. Principal para Soccer.",
+        # NO es universal pese a estar en la sección de universales:
+        # solo tiene sentido en deportes donde el empate es un
+        # resultado frecuente y el book lo cotiza como tercera opción.
+        #
+        # NFL puede empatar (~0.5% de partidos tras OT) pero The Odds
+        # API no ofrece h2h_3_way para NFL — pedirlo desperdicia
+        # créditos y contamina get_core_markets('nfl') con un mercado
+        # que nunca devolverá datos.
+        #
+        # Hockey lo incluye porque el mercado europeo cotiza el empate
+        # en tiempo reglamentario (60 min) como opción separada.
+        sports=frozenset({"soccer", "nhl"}),
+        description="1X2 con empate. Principal para Soccer, aplica a NHL "
+                    "en mercados de tiempo reglamentario.",
     ),
 ]
 
@@ -436,22 +448,131 @@ _NBA_MARKETS: list[MarketDefinition] = [
         api_key="player_points",
         internal_name="PLAYER_PTS",
         tier=MarketTier.EXTENDED,
-        sports=frozenset({"basketball_nba"}),
+        sports=frozenset({"nba"}),
         description="Prop: puntos del jugador (NBA).",
     ),
     MarketDefinition(
         api_key="player_rebounds",
         internal_name="PLAYER_REB",
         tier=MarketTier.EXTENDED,
-        sports=frozenset({"basketball_nba"}),
+        sports=frozenset({"nba"}),
         description="Prop: rebotes del jugador (NBA).",
     ),
     MarketDefinition(
         api_key="player_assists",
         internal_name="PLAYER_AST",
         tier=MarketTier.EXTENDED,
-        sports=frozenset({"basketball_nba"}),
+        sports=frozenset({"nba"}),
         description="Prop: asistencias del jugador (NBA).",
+    ),
+]
+
+
+# Mercados NFL-específicos
+#
+# Nota sobre la clave de `sports`: se usa el sport_id INTERNO ("nfl"),
+# no el identificador de The Odds API ("americanfootball_nfl"). El
+# sport_id es el concepto del dominio; la traducción al identificador
+# del proveedor la hace el plugin vía odds_api_sport_id. Mezclar ambos
+# rompería el filtrado de get_core_markets(sport) — que es exactamente
+# lo que ocurría con los mercados NBA antes de esta corrección.
+#
+# Los props de jugador son los más valiosos en NFL porque el mercado
+# los precia con menos eficiencia que los mercados principales: hay
+# menos volumen y los books ajustan más lento.
+_NFL_MARKETS: list[MarketDefinition] = [
+    # ── Mercados de periodo ────────────────────────────────────
+    MarketDefinition(
+        api_key="spreads_h1",
+        internal_name="SPREAD_H1",
+        tier=MarketTier.EXTENDED,
+        sports=frozenset({"nfl"}),
+        description="Spread primera mitad (NFL).",
+    ),
+    MarketDefinition(
+        api_key="totals_h1",
+        internal_name="TOTAL_H1",
+        tier=MarketTier.EXTENDED,
+        sports=frozenset({"nfl"}),
+        description="Total primera mitad (NFL).",
+    ),
+    MarketDefinition(
+        api_key="h2h_h1",
+        internal_name="ML_H1",
+        tier=MarketTier.EXTENDED,
+        sports=frozenset({"nfl"}),
+        description="Moneyline primera mitad (NFL).",
+    ),
+
+    # ── Props de quarterback ───────────────────────────────────
+    # El QB es el jugador más determinante de NFL — sus props
+    # tienen la relación señal/ruido más alta del deporte.
+    MarketDefinition(
+        api_key="player_pass_yds",
+        internal_name="PLAYER_PASS_YDS",
+        tier=MarketTier.EXTENDED,
+        sports=frozenset({"nfl"}),
+        description="Prop: yardas de pase del QB (NFL).",
+    ),
+    MarketDefinition(
+        api_key="player_pass_tds",
+        internal_name="PLAYER_PASS_TDS",
+        tier=MarketTier.EXTENDED,
+        sports=frozenset({"nfl"}),
+        description="Prop: touchdowns de pase del QB (NFL).",
+    ),
+    MarketDefinition(
+        api_key="player_pass_completions",
+        internal_name="PLAYER_PASS_COMP",
+        tier=MarketTier.EXTENDED,
+        sports=frozenset({"nfl"}),
+        description="Prop: pases completos del QB (NFL).",
+    ),
+    MarketDefinition(
+        api_key="player_pass_interceptions",
+        internal_name="PLAYER_PASS_INT",
+        tier=MarketTier.EXTENDED,
+        sports=frozenset({"nfl"}),
+        description="Prop: intercepciones lanzadas por el QB (NFL).",
+    ),
+
+    # ── Props de corredores y receptores ───────────────────────
+    MarketDefinition(
+        api_key="player_rush_yds",
+        internal_name="PLAYER_RUSH_YDS",
+        tier=MarketTier.EXTENDED,
+        sports=frozenset({"nfl"}),
+        description="Prop: yardas terrestres del corredor (NFL).",
+    ),
+    MarketDefinition(
+        api_key="player_rush_attempts",
+        internal_name="PLAYER_RUSH_ATT",
+        tier=MarketTier.EXTENDED,
+        sports=frozenset({"nfl"}),
+        description="Prop: acarreos del corredor (NFL).",
+    ),
+    MarketDefinition(
+        api_key="player_reception_yds",
+        internal_name="PLAYER_REC_YDS",
+        tier=MarketTier.EXTENDED,
+        sports=frozenset({"nfl"}),
+        description="Prop: yardas de recepción del receptor (NFL).",
+    ),
+    MarketDefinition(
+        api_key="player_receptions",
+        internal_name="PLAYER_REC",
+        tier=MarketTier.EXTENDED,
+        sports=frozenset({"nfl"}),
+        description="Prop: recepciones del receptor (NFL).",
+    ),
+
+    # ── Props de anotación ─────────────────────────────────────
+    MarketDefinition(
+        api_key="player_anytime_td",
+        internal_name="PLAYER_ANYTIME_TD",
+        tier=MarketTier.EXTENDED,
+        sports=frozenset({"nfl"}),
+        description="Prop: el jugador anota TD en cualquier momento (NFL).",
     ),
 ]
 
@@ -461,7 +582,7 @@ _NBA_MARKETS: list[MarketDefinition] = [
 def default_registry() -> MarketRegistry:
     """
     Crea y retorna un MarketRegistry pre-poblado con todos los mercados
-    definidos en este módulo: universales + MLB + Soccer + NBA.
+    definidos en este módulo: universales + MLB + NFL + Soccer + NBA.
 
     Los sport plugins pueden registrar mercados adicionales sobre este
     registry base, o crear uno vacío con MarketRegistry() y registrar
@@ -475,6 +596,7 @@ def default_registry() -> MarketRegistry:
     registry.register_many(_UNIVERSAL_CORE)
     registry.register_many(_UNIVERSAL_EXTENDED)
     registry.register_many(_MLB_MARKETS)
+    registry.register_many(_NFL_MARKETS)
     registry.register_many(_SOCCER_MARKETS)
     registry.register_many(_NBA_MARKETS)
     return registry

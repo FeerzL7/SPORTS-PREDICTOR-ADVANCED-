@@ -33,6 +33,20 @@ Uso típico
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import TypeVar
+
+# ID de equipo. El Core no impone el tipo: MLB usa enteros de MLB Stats
+# API, NFL usa abreviaciones ("KC", "SF"), y Event.home_team_id está
+# documentado como "ID canónico" sin restringir la representación.
+#
+# La anotación previa era `int`, lo que contradecía el propio contrato
+# Event y obligaba a los plugins con IDs de texto a convertirlos a
+# entero solo para satisfacer al type checker. El cuerpo de compute_h2h
+# nunca usa el ID como número: solo compara identidad con `==`.
+#
+# Con TypeVar la firma dice la verdad: hacen falta IDs comparables y
+# del mismo tipo entre sí, nada más.
+TeamId = TypeVar("TeamId")
 
 
 @dataclass(frozen=True)
@@ -70,8 +84,8 @@ class H2HMetrics:
 
 
 def compute_h2h(
-    team_a_id: int,
-    team_b_id: int,
+    team_a_id: TeamId,
+    team_b_id: TeamId,
     meetings:  list[dict],
 ) -> H2HMetrics:
     """
@@ -81,6 +95,12 @@ def compute_h2h(
     ----------
     team_a_id  -- ID del equipo A (home en el partido a proyectar).
     team_b_id  -- ID del equipo B (away en el partido a proyectar).
+
+                  Ambos deben ser del MISMO tipo que los campos
+                  home_id/away_id de `meetings`: la función compara
+                  identidad, así que mezclar 147 (int) con "147" (str)
+                  no encontraría ninguna coincidencia y devolvería
+                  métricas vacías sin error visible.
     meetings   -- Lista de dicts con los encuentros pasados.
                   Cada dict debe tener:
                       home_id:    int — ID del equipo local

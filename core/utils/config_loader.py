@@ -1,40 +1,5 @@
-"""
-core/utils/config_loader.py
+#core/utils/config_loader.py
 
-Cargador de configuración YAML con herencia base → sport.
-
-Externaliza los parámetros del modelo que en el sistema MLB original
-estaban hardcodeados directamente en los módulos Python (value.py,
-projections.py, staking.py, etc.), permitiendo que cada sport plugin
-tenga su propia configuración sin modificar código del Core.
-
-Decisión de diseño central:
-    load(sport=None)  → carga solo config/base.yaml (scripts de
-                        migración, tests del Core, uso genérico)
-    load(sport="mlb") → carga base.yaml + config/mlb.yaml con deep
-                        merge. Si mlb.yaml NO existe, falla inmediato
-                        con FileNotFoundError — no silenciosamente con
-                        defaults del Core, lo que contaminaría picks
-                        reales con parámetros no calibrados para el
-                        deporte sin ninguna advertencia visible.
-
-    Tolerancia silenciosa a la ausencia de sport.yaml fue descartada
-    porque reproduce el mismo patrón de bug que produjo el hallazgo
-    F4 de CRITICAL_FINDINGS_VALIDATION.md: un sistema que parece
-    funcionar usando defaults cuando debería usar valores calibrados.
-
-Uso típico:
-    from core.utils.config_loader import load_config
-
-    config = load_config(sport="mlb")
-
-    # acceso por dot-notation (más seguro que chained dict access)
-    weight = config.get("value.blending.ML.model_weight", default=0.35)
-    min_ev = config.get("filters.MLB.TOTAL.min_ev", default=15)
-
-    # acceso dict raw cuando se necesita un sub-árbol completo
-    blending_cfg = config.raw("value.blending")
-"""
 
 from __future__ import annotations
 
@@ -123,11 +88,12 @@ class ConfigLoader:
         """
         Classmethod alias de load_config().
 
-        Permite usar ConfigLoader.load(sport='mlb') además de la
-        función libre load_config(sport='mlb'). Ambas formas son
-        equivalentes — el classmethod delega en load_config().
+        Permite ConfigLoader.load(sport='nfl') además de la función
+        libre load_config(sport='nfl'). Ambas son equivalentes.
         """
-        return load_config(sport=sport, base_dir=base_dir, force_reload=force_reload)
+        return load_config(
+            sport=sport, base_dir=base_dir, force_reload=force_reload
+        )
 
 
 # ── Merge recursivo ────────────────────────────────────────────────────────────
@@ -233,8 +199,8 @@ def load_config(
         sport_data = _read_yaml(sport_path)
         merged = _deep_merge(merged, sport_data)
 
-    # Inyectar variables de entorno con prioridad sobre YAML
-    # Solo se inyectan keys conocidas para no contaminar el namespace
+    # Inyectar variables de entorno con prioridad sobre YAML.
+    # Solo keys conocidas para no contaminar el namespace de configuración.
     _ENV_KEYS = (
         "ODDS_API_KEY",
         "TELEGRAM_BOT_TOKEN",

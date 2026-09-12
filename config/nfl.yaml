@@ -1,0 +1,359 @@
+# config/nfl.yaml
+#
+# Configuración específica para NFL — sobreescribe config/base.yaml.
+# Cargado por ConfigLoader con deep-merge:
+#   load_config(sport='nfl') → base.yaml ← nfl.yaml
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+# ADVERTENCIA SOBRE EL ORIGEN DE ESTOS VALORES
+# ═══════════════════════════════════════════════════════════════════════════════
+#
+# A diferencia de config/mlb.yaml — cuyos parámetros vienen del backtesting
+# real del sistema MLB-PREDICTOR-ADVANCED sobre 302 picks — estos valores NO
+# están calibrados con historial propio. Provienen de:
+#
+#   1. Literatura pública sobre eficiencia del mercado NFL
+#   2. Propiedades estadísticas conocidas de la distribución de puntuación
+#   3. Extrapolación conservadora desde los umbrales MLB
+#
+# TODOS los umbrales de filtro están deliberadamente en el lado CONSERVADOR.
+# Es preferible perder picks marginales que registrar picks sin edge real
+# mientras el sistema acumula historial.
+#
+# RECALIBRACIÓN OBLIGATORIA: revisar estos valores cuando el ledger tenga
+# n >= 150 picks resueltos por mercado. Hasta entonces, tratar cualquier
+# ROI observado como ruido estadístico, no como señal.
+#
+# ═══════════════════════════════════════════════════════════════════════════════
+
+
+# ── Diferencias estructurales NFL vs MLB (contexto para los valores) ──────────
+#
+#   Partidos/temporada:     17 por equipo (vs 162 en MLB)
+#   → Estadísticas de temporada con ruido enorme. El modelo debe apoyarse
+#     en EPA acumulado, no en promedios de puntos recientes.
+#
+#   Distribución:           Normal μ≈22, σ≈10 por equipo (vs Poisson λ≈4.5)
+#   → NormalModel, no PoissonModel. σ de margen ≈13.5, σ de total ≈10.0
+#
+#   Mercado principal:      SPREAD (vs TOTAL en MLB)
+#   → El spread es el mercado más líquido y con más volumen sharp.
+#
+#   Spread estándar:        Variable (-3.0, -7.0, múltiplos de FG/TD)
+#   → preferred_line = null. No hay línea fija como el runline ±1.5.
+#
+#   Factor dominante:       QB + líneas O/D (vs abridor en MLB)
+#   → Lesión del QB titular = swing de ±7 puntos en el spread.
+#
+#   Empates:                Posibles (~0.5% de partidos, tras OT)
+#   → draw_prob > 0 en Projection. Push en spreads enteros.
+#
+#   Eficiencia del mercado: ALTA — el mercado NFL es de los más eficientes
+#   → Un EV de 15% (umbral de MLB TOTAL) casi siempre indica datos corruptos,
+#     no valor real. Por eso los min_ev de NFL son MÁS BAJOS que los de MLB.
+
+
+# ── Blending modelo-mercado ───────────────────────────────────────────────────
+# Pesos iniciales conservadores: el mercado NFL es muy eficiente y el modelo
+# aún no tiene historial que justifique confiar en él por encima del mercado.
+#
+# Con 17 partidos por temporada, el modelo trabaja con muestras pequeñas —
+# razón adicional para dar peso alto al mercado en la fase inicial.
+#
+blending:
+  SPREAD:
+    model_weight: 0.40      # 40% modelo, 60% mercado.
+                            # Mercado principal NFL — el más líquido y con
+                            # más dinero sharp. Peso del modelo moderado.
+    prob_cap:     0.62      # El spread está diseñado para dar ~50/50.
+                            # Un modelo que proyecta >62% de cobertura casi
+                            # siempre está sobreajustado.
+
+  ML:
+    model_weight: 0.35      # Menor que SPREAD: el ML de favoritos fuertes
+                            # (-300 o más) tiene poco margen de error y el
+                            # mercado lo precia muy eficientemente.
+    prob_cap:     0.60
+
+  TOTAL:
+    model_weight: 0.45      # Peso ligeramente mayor: los totales dependen
+                            # de ritmo ofensivo y clima, factores que el
+                            # modelo puede capturar con EPA + condiciones.
+    prob_cap:     0.60
+
+
+# ── Filtros de mercado ────────────────────────────────────────────────────────
+# Umbrales MÁS BAJOS que MLB porque el mercado NFL es más eficiente.
+#
+# Racional del cambio de escala:
+#   En MLB, un EV de 15% en TOTAL era alcanzable porque el modelo tenía
+#   información real que el mercado no incorporaba (park factors, splits
+#   vsRHP/vsLHP, bullpen fatigue). En NFL el mercado incorpora casi todo
+#   públicamente disponible — un EV de 15% indicaría que nuestros datos
+#   están corruptos, no que encontramos valor.
+#
+# Los rangos de cuota son estrechos porque el mercado NFL opera casi
+# siempre en -110/-110 (1.91/1.91) para spreads y totales.
+#
+filters:
+  SPREAD:
+    min_ev:        4.0      # 4% — mercado principal, umbral más permisivo.
+    min_prob:      0.525    # 52.5% = break-even a cuota 1.91 más margen.
+    min_odds:      1.83     # -120. Evitar spreads con juice excesivo.
+    max_odds:      2.05     # +105. El spread rara vez sale de este rango.
+    min_edge:      0.025    # 2.5% de ventaja sobre el mercado.
+    max_edge:      0.120    # Edge > 12% = señal de datos corruptos.
+                            # (En MLB el techo era 18% — aquí más estricto
+                            #  porque el mercado NFL deja menos margen real.)
+    min_line_diff: 1.5      # El modelo debe diferir del spread de mercado
+                            # en al menos 1.5 puntos. Diferencias menores
+                            # están dentro del ruido del propio modelo.
+
+  TOTAL:
+    min_ev:        6.0      # Umbral mayor que SPREAD: los totales tienen
+                            # más varianza no modelada (ritmo, garbage time).
+    min_prob:      0.53
+    min_odds:      1.83
+    max_odds:      2.05
+    min_edge:      0.030
+    max_edge:      0.130
+    min_line_diff: 3.0      # 3 puntos = casi un field goal. Diferencias
+                            # menores en un total de ~45 son ruido.
+
+  ML:
+    min_ev:        8.0      # El más restrictivo: sin historial propio y
+                            # con el mercado priciando muy eficientemente
+                            # los favoritos, solo picks con señal muy fuerte.
+    min_prob:      0.54
+    min_odds:      1.60     # Permite favoritos moderados (-165).
+    max_odds:      3.50     # Permite underdogs vivos (+250).
+                            # Rango más amplio que SPREAD porque el ML de
+                            # NFL sí tiene dispersión real de cuotas.
+    min_edge:      0.035
+    max_edge:      0.150
+    min_line_diff: null     # No aplica para ML.
+
+
+# ── Kelly fraccionado ─────────────────────────────────────────────────────────
+# Fracción MÁS conservadora que MLB (0.15 vs 0.18) por dos razones:
+#   1. Sin historial propio que valide la calibración del modelo
+#   2. Solo 17 partidos/temporada → menos oportunidades de recuperación
+#      tras una racha adversa
+#
+kelly:
+  SPREAD:
+    fraction:     0.15      # 15% del Kelly completo (MLB usa 18%).
+    max_fraction: 1.00
+  TOTAL:
+    fraction:     0.15
+    max_fraction: 1.00
+  ML:
+    fraction:     0.12      # Aún más conservador: mayor varianza en ML.
+    max_fraction: 0.85      # Techo reducido hasta confirmar edge.
+
+
+# ── Staking ───────────────────────────────────────────────────────────────────
+# Todos los mercados topan en 2% hasta que haya historial suficiente.
+# En MLB, TOTAL llegaba a 3% porque el edge estaba confirmado con n=92.
+# Aquí ningún mercado tiene esa validación todavía.
+#
+staking:
+  SPREAD:
+    min_pct:  1
+    max_pct:  2             # Techo 2% — se subirá a 3% si el backtest
+                            # confirma edge con n >= 150.
+    ev_l1:    8.0           # EV >= 8% → subir a 2%.
+    prob_l1:  0.545
+    ev_l2:    14.0          # (max_pct=2, así que L2 no cambia nada aún.
+    prob_l2:  0.565         #  Queda documentado para cuando suba el techo.)
+
+  TOTAL:
+    min_pct:  1
+    max_pct:  2
+    ev_l1:    10.0
+    prob_l1:  0.55
+    ev_l2:    16.0
+    prob_l2:  0.57
+
+  ML:
+    min_pct:  1
+    max_pct:  2
+    ev_l1:    12.0          # El más exigente para incrementar stake.
+    prob_l1:  0.56
+    ev_l2:    20.0
+    prob_l2:  0.58
+
+
+# ── Gestión de riesgo ─────────────────────────────────────────────────────────
+# Diferencia estructural clave vs MLB: la concentración temporal.
+#
+# En MLB hay 15 partidos repartidos en distintos horarios cada día, y el
+# ledger se resuelve diariamente. En NFL, 13 de los 16 partidos semanales
+# se juegan el domingo — la mayoría en dos ventanas horarias (13:00 y 16:25
+# ET). Eso significa exposición simultánea concentrada y correlación real
+# entre picks (mismo clima regional, mismos árbitros, mismo día).
+#
+# Por eso max_picks_daily es 5 (no 3 como MLB): hay más partidos que evaluar
+# en un solo día. Pero max_exposure_pct sube solo a 8% (no proporcionalmente)
+# precisamente por esa correlación temporal.
+#
+risk:
+  max_picks_daily:        5   # Domingo NFL = 13 partidos simultáneos.
+                              # 5 picks × 2% = 10% de exposición teórica,
+                              # limitada a 8% por max_exposure_pct.
+  max_exposure_pct:       8   # Menor que 5×2%=10 deliberadamente: la
+                              # correlación temporal del domingo NFL hace
+                              # que la exposición efectiva sea mayor que
+                              # la suma nominal de los stakes.
+  max_stake_per_pick_pct: 2   # Ningún pick individual supera 2%.
+  veto_on_contradiction:  true
+
+
+# ── Detección de movimiento de línea ─────────────────────────────────────────
+# Los mercados NFL son MÁS líquidos que MLB — movimientos pequeños tienen
+# más significado estadístico porque hay más volumen detrás.
+#
+# La ventana temporal también difiere: en MLB la línea se mueve en las horas
+# previas al partido. En NFL se mueve durante toda la semana, con los picos
+# de información los miércoles (injury report) y domingo temprano (inactivos).
+#
+line_movement:
+  ml_move_threshold:     0.05  # 5 centavos en el ML. Más sensible que MLB
+                               # (0.06) por el mayor volumen del mercado.
+  juice_shift_threshold: 0.03  # 3 centavos de asimetría en el juice.
+                               # Ej: Over 1.91 → 1.87 con Under 1.91 → 1.95
+                               # indica dinero entrando en el Over.
+  line_move_threshold:   0.50  # Medio punto de movimiento en spread/total.
+                               # Cruzar números clave (3, 7) es más
+                               # significativo que medio punto genérico —
+                               # el modelo de movimiento lo pondera aparte.
+
+
+# ── Modelos de simulación ─────────────────────────────────────────────────────
+# NormalModel para NFL. Dos sigmas distintas porque modelan cosas distintas:
+#
+#   default_sigma (13.5) → σ del MARGEN de victoria (home_score - away_score)
+#                          Usado para SPREAD y ML.
+#                          Valor empírico: la distribución de márgenes NFL
+#                          tiene σ≈13.5 puntos históricamente.
+#
+#   total_sigma   (10.0) → σ de la SUMA de puntos (home + away)
+#                          Usado para TOTAL.
+#                          Hereda el valor de base.yaml.
+#
+# Que la σ del margen sea MAYOR que la del total es contraintuitivo pero
+# correcto: los errores de proyección de ambos equipos se cancelan
+# parcialmente en la suma, pero se amplifican en la diferencia.
+#
+simulation:
+  nfl:
+    normal:
+      default_sigma: 13.5   # σ del margen. Sobreescribe el 10.0 de base.yaml
+                            # que estaba pensado para totales.
+      total_sigma:   10.0   # σ de la suma de puntos.
+      min_sigma:      8.0   # Piso: nunca proyectar con menos incertidumbre.
+      max_sigma:     18.0   # Techo: partidos con QB backup o clima extremo.
+
+
+# ── Ensemble ──────────────────────────────────────────────────────────────────
+# Ventana más corta que MLB (5 vs 15 partidos) por necesidad estructural:
+# con 17 partidos por temporada, una ventana de 15 abarcaría casi toda la
+# temporada y perdería la señal de forma reciente.
+#
+# proj_min/max reflejan el rango realista de puntuación de un equipo NFL.
+#
+ensemble:
+  alpha_base:           0.65   # Peso del modelo base cuando el CV es bajo.
+                               # Menor que MLB (0.70): más peso a la
+                               # regresión sobre recent_scores porque el
+                               # modelo NFL tiene menos validación.
+  alpha_min:            0.45
+  cv_threshold_low:     0.35   # Umbrales de CV más bajos que MLB (0.60/1.00)
+  cv_threshold_high:    0.60   # porque la puntuación NFL es menos dispersa
+                               # en términos relativos: un equipo que anota
+                               # 17-31-24 tiene CV≈0.27, mientras que en MLB
+                               # 2-8-5 tiene CV≈0.60 con la misma
+                               # inconsistencia percibida.
+  proj_min:             6.0    # Mínimo realista: 2 field goals.
+  proj_max:            45.0    # Máximo realista sin garbage time extremo.
+
+
+# ── Parámetros específicos del modelo NFL ─────────────────────────────────────
+# Consumidos exclusivamente por NFLProjectionModel (sports/nfl/projections.py).
+# El Core nunca lee esta sección.
+#
+nfl:
+  # Pesos de componentes en la proyección de puntos.
+  # EPA domina porque es la métrica más predictiva de NFL:
+  # correlaciona ~0.65 con resultados futuros, contra ~0.35 de
+  # yardas por juego o win percentage.
+  projection:
+    epa_offense_weight:   0.40  # EPA/play ofensivo del equipo.
+    epa_defense_weight:   0.30  # EPA/play permitido por la defensa rival.
+    success_rate_weight:  0.15  # % de jugadas exitosas (down-adjusted).
+    recent_form_weight:   0.15  # Puntos anotados en partidos recientes.
+                                # Peso bajo deliberadamente: con 17 partidos,
+                                # los promedios recientes son muy ruidosos.
+    # Suma: 0.40 + 0.30 + 0.15 + 0.15 = 1.00
+
+  # Ventana de partidos recientes.
+  # 5 y no 15 (como MLB) porque 15 partidos = casi toda una temporada NFL.
+  recent_games_window: 5
+
+  # Ajustes por lesión — el factor más impactante en NFL.
+  # Un QB titular fuera cambia el spread en ~7 puntos, el mayor swing
+  # de cualquier deporte por una sola lesión.
+  injuries:
+    qb_out_penalty:       7.0   # Puntos de penalización si el QB titular
+                                # está 'Out'. Valor de consenso del mercado.
+    qb_questionable_pct:  0.35  # Si está 'Questionable', aplicar el 35%
+                                # de la penalización (probabilidad de que
+                                # juegue limitado o no juegue).
+    skill_out_penalty:    1.5   # RB1/WR1/TE1 fuera: impacto mucho menor.
+    ol_out_penalty:       0.8   # Por titular de línea ofensiva ausente.
+    max_injury_penalty:  10.0   # Techo: más allá de esto el partido es
+                                # demasiado impredecible — mejor no apostar.
+
+  # Descanso — feature de primer orden en NFL, irrelevante en MLB.
+  rest:
+    bye_week_bonus:       1.5   # Equipo saliendo de bye: +1.5 puntos.
+                                # Semana extra de preparación y descanso.
+    short_week_penalty:  -1.0   # Thursday Night tras domingo: 4 días.
+    long_rest_bonus:      0.5   # Más de 8 días de descanso.
+    # Nota: el efecto del bye week está bien documentado y es estable
+    # históricamente. El de short week es más discutido — valor conservador.
+
+  # Ventaja de campo local.
+  # Ha declinado históricamente: de ~3.0 puntos en los 90s a ~1.8 actual.
+  # Post-2020 (sin público) el efecto cayó aún más y no se ha recuperado
+  # del todo.
+  home_field_advantage:   1.8
+
+  # Umbral de calidad de datos para incluir el evento.
+  min_data_quality:       0.50
+
+  # Divisional games: los rivales de división se conocen bien y los
+  # partidos tienden a ser más cerrados de lo que sugieren los ratings.
+  divisional_spread_compression: 0.85  # Comprimir el spread proyectado
+                                       # al 85% en juegos divisionales.
+
+
+# ── Bankroll y output ─────────────────────────────────────────────────────────
+bankroll:
+  initial_bankroll: 1000.0
+  currency: "USD"
+
+output:
+  ledger_dir:      "output/ledger"
+  predictions_dir: "predicciones"
+
+
+# ── Odds API ──────────────────────────────────────────────────────────────────
+odds_api:
+  regions: "us"            # us cubre Pinnacle, DraftKings, FanDuel.
+
+
+# ── Notificaciones ────────────────────────────────────────────────────────────
+telegram:
+  parse_mode:        "HTML"
+  rate_limit_delay:  0.1
