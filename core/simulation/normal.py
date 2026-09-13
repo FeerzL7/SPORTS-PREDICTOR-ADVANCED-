@@ -154,6 +154,88 @@ class NormalModel:
 
         return sigma_h, sigma_a
 
+    def _get_sigma_margin(self, projection: Projection) -> float:
+        """
+        σ del MARGEN (home - away), con tres niveles de prioridad.
+
+            1. distribution_params['sigma_margin'] — valor empírico
+               directo. Es la vía preferente.
+            2. √(σ_h² + σ_a²) desde las sigmas por equipo.
+            3. √2 · default_sigma.
+
+        Por qué el valor directo tiene prioridad
+        -----------------------------------------
+        Los niveles 2 y 3 asumen Cov(home, away) = 0, es decir, que las
+        anotaciones de ambos equipos son independientes. En NFL esa
+        suposición es falsa y el error es cuantificable.
+
+        Partiendo de los valores empíricos de config/nfl.yaml
+        (σ_margen = 13.5, σ_total = 10.0) y de las identidades
+
+            Var(H+A) = Var(H) + Var(A) + 2·Cov
+            Var(H-A) = Var(H) + Var(A) - 2·Cov
+
+        se obtiene σ por equipo ≈ 8.40 y Cov ≈ -20.6, esto es, una
+        correlación de -0.29. La causa es el game script: el equipo que
+        va ganando corre el balón y consume reloj, lo que suprime la
+        anotación de AMBOS equipos.
+
+        El coste de ignorarlo no es cosmético. La fórmula de
+        independencia produce √(2·70.6) = 11.88 tanto para el margen
+        como para el total — es estructuralmente incapaz de
+        distinguirlos, cuando los valores reales son 13.5 y 10.0.
+        Eso son 12% de error en el margen y 19% en el total, en
+        direcciones opuestas.
+
+        Sobre el mercado de totales el efecto es grave: inflar σ_total
+        un 19% acerca artificialmente las probabilidades de over/under
+        al 50% y anula casi todo el EV que el modelo podría detectar.
+
+        Los deportes donde la independencia sí es razonable (o donde no
+        hay calibración empírica del margen) siguen funcionando por los
+        niveles 2 y 3 sin cambio alguno.
+        """
+        params = projection.distribution_params or {}
+
+        direct = params.get('sigma_margin')
+        if direct is not None:
+            try:
+                value = float(direct)
+                if value > 0:
+                    return value
+            except (TypeError, ValueError):
+                pass
+
+        sigma_h, sigma_a = self._get_sigmas(projection)
+        return math.sqrt(sigma_h ** 2 + sigma_a ** 2)
+
+    def _get_sigma_total(self, projection: Projection) -> float:
+        """
+        σ del TOTAL (home + away), con la misma jerarquía de prioridad.
+
+            1. distribution_params['sigma_total'] — valor empírico.
+            2. √(σ_h² + σ_a²) asumiendo independencia.
+            3. √2 · default_sigma.
+
+        Ver la nota de _get_sigma_margin sobre por qué el valor directo
+        importa: en NFL la correlación negativa entre anotaciones hace
+        que σ_total real (10.0) sea sensiblemente menor que el 11.88
+        que produce la fórmula de independencia.
+        """
+        params = projection.distribution_params or {}
+
+        direct = params.get('sigma_total')
+        if direct is not None:
+            try:
+                value = float(direct)
+                if value > 0:
+                    return value
+            except (TypeError, ValueError):
+                pass
+
+        sigma_h, sigma_a = self._get_sigmas(projection)
+        return math.sqrt(sigma_h ** 2 + sigma_a ** 2)
+
     # ── ProbabilityModel interface ─────────────────────────────────────────────
 
     def win_probabilities(
@@ -176,9 +258,8 @@ class NormalModel:
         P(empate exacto)=0 matemáticamente, consistente con la realidad
         deportiva (overtime existe precisamente para evitar empate).
         """
-        sigma_h, sigma_a = self._get_sigmas(projection)
-        mu_diff  = projection.expected_home - projection.expected_away
-        sigma_diff = math.sqrt(sigma_h ** 2 + sigma_a ** 2)
+        mu_diff    = projection.expected_home - projection.expected_away
+        sigma_diff = self._get_sigma_margin(projection)
 
         p_home = _norm_cdf(mu_diff / sigma_diff)
         p_away = 1.0 - p_home
@@ -198,41 +279,64 @@ class NormalModel:
         """
         P(equipo cubre el spread) modelando la diferencia como Normal.
 
-        Convención de line: es el handicap para el equipo seleccionado,
-        igual que MarketOdds.line. Ejemplo NFL spread home -7.5:
-            side='home', line=-7.5  → P(home - away > 7.5)
-            side='away', line=-7.5  → P(away cubre +7.5) = P(away - home > -7.5)
-                                     = P(Diff < 7.5) = CDF((7.5 - mu_diff) / σ)
+        Convención de line: es el handicap PROPIO del equipo
+        seleccionado, igual que MarketOdds.line. Ejemplo NFL con el
+        local favorito por 7.5:
+            side='home', line=-7.5  → P(Diff >  7.5)
+            side='away', line=+7.5  → P(Diff <  7.5)
 
-        Propiedad garantizada: spread_home(line) + spread_away(line) = 1.0
-        porque los eventos son complementarios (empate tiene prob=0 con
-        distribución continua).
+        Propiedad garantizada: para las líneas OPUESTAS del mismo
+        mercado (las que realmente cotiza el book),
+            spread_probability(L,  'home') +
+            spread_probability(-L, 'away') = 1.0
+        porque los eventos son complementarios (el empate tiene
+        probabilidad 0 con distribución continua).
 
-        Derivación para side='home', line=L (negativo para favorito):
-            P(home - away > -L) = P(Diff > -L) = SF((-L - mu_diff) / σ)
+        Es la misma convención que SkellamModel. Pasar la MISMA línea a
+        ambos lados no suma 1.0 y no corresponde a ningún mercado real:
+        si el local es -3.5, el visitante es +3.5.
 
-        Derivación para side='away', line=L (mismo L negativo):
-            away recibe +(-L) puntos de ventaja
-            P(away - home > -(-L)) = P(-Diff > -L) = P(Diff < -L)
-                                   = CDF((-L - mu_diff) / σ)
-                                   = 1 - SF((-L - mu_diff) / σ)
+        Derivación, con Diff = home - away:
+            side='home', line=L → home cubre si Diff > -L
+                                → SF((-L - mu_diff) / σ)
+            side='away', line=L → away cubre si Diff <  L
+                                → CDF((L - mu_diff) / σ)
         """
-        sigma_h, sigma_a = self._get_sigmas(projection)
         mu_diff    = projection.expected_home - projection.expected_away
-        sigma_diff = math.sqrt(sigma_h ** 2 + sigma_a ** 2)
+        sigma_diff = self._get_sigma_margin(projection)
 
-        # threshold: margen que el equipo debe superar
-        # Para home con line=-3.5: threshold = 3.5 (home debe ganar por más de 3.5)
-        # Para away con line=-3.5: away recibe +3.5, threshold = -3.5 desde perspectiva Diff
-        threshold = -line  # = 3.5 cuando line=-3.5
-
-        z = (threshold - mu_diff) / sigma_diff
-
+        # `line` es el handicap PROPIO de la selección, tal como llega
+        # en MarketOdds.line: negativo para el favorito, positivo para
+        # el underdog. El pipeline (core/pipeline/runner.py) lo pasa sin
+        # transformar, así que una selección visitante con +3.5 llega
+        # aquí como line=+3.5.
+        #
+        # CORRECCIÓN (auditoría NFL, tarea 10.11): la versión anterior
+        # calculaba `threshold = -line` para AMBOS lados. Eso es correcto
+        # para el local pero invierte el signo para el visitante:
+        #
+        #     visitante +3.5, local favorito por 7, σ=13.5
+        #       correcto : P(margen < +3.5) = 0.3977
+        #       anterior : P(margen < -3.5) = 0.2184   ← 18 pp de error
+        #
+        # El efecto era sistemático: subestimaba a todo underdog
+        # visitante, descartando picks con valor real y sesgando el
+        # libro hacia favoritos locales. A cuota 1.91 el EV calculado
+        # se desviaba 34 puntos porcentuales del real.
+        #
+        # SkellamModel (NBA) ya usaba la convención correcta; eran dos
+        # modelos del mismo Protocol con semánticas opuestas.
+        #
+        # Umbral expresado sobre Diff = home - away:
+        #     home con line=L  → cubre si Diff > -L
+        #     away con line=L  → cubre si Diff <  L
         if side == 'home':
-            # P(Diff > threshold)
+            threshold = -line
+            z = (threshold - mu_diff) / sigma_diff
             prob = _norm_sf(z)
         else:
-            # P(Diff < threshold) = complemento exacto
+            threshold = line
+            z = (threshold - mu_diff) / sigma_diff
             prob = _norm_cdf(z)
 
         return round(float(prob), 4)
@@ -248,15 +352,20 @@ class NormalModel:
 
         Total = X_home + X_away ~ N(μ_total, σ_total)
         μ_total = μ_h + μ_a
-        σ_total = √(σ_h² + σ_a²)  (independencia asumida)
+        σ_total = distribution_params['sigma_total'] si el plugin lo
+                  provee; en su defecto √(σ_h² + σ_a²), que asume
+                  independencia entre las anotaciones de ambos equipos.
+
+        La independencia NO se sostiene en NFL: el game script
+        correlaciona negativamente las anotaciones (r ≈ -0.29) y la
+        fórmula sobreestima σ_total un 19%. Ver _get_sigma_total().
 
         Over + Under = 1.0 siempre: con distribución continua no existe
         push (P(Total = line_exacto) = 0), a diferencia de PoissonModel
         donde líneas enteras producen masa de probabilidad en el push.
         """
-        sigma_h, sigma_a = self._get_sigmas(projection)
         mu_total    = projection.expected_home + projection.expected_away
-        sigma_total = math.sqrt(sigma_h ** 2 + sigma_a ** 2)
+        sigma_total = self._get_sigma_total(projection)
 
         z = (line - mu_total) / sigma_total
 
@@ -266,7 +375,7 @@ class NormalModel:
             return round(float(_norm_cdf(z)), 4)
 
     def model_version(self) -> str:
-        return f'normal-v1.0-sigma{self.default_sigma}'
+        return f'normal-v1.2-sigma{self.default_sigma}'
 
     # ── Método de conveniencia ─────────────────────────────────────────────────
 
@@ -283,12 +392,20 @@ class NormalModel:
         """
         win_probs = self.win_probabilities(projection)
 
+        # `spread_line` es la línea del LOCAL. La del visitante es su
+        # negación: si el local es -3.5, el visitante es +3.5. Pasar la
+        # misma línea a ambos lados calcularía dos veces el mismo lado
+        # del mercado y la suma no daría 1.0.
+        #
+        # (El simulate() de SkellamModel arrastra este mismo defecto;
+        #  queda pendiente de corregir en su propia tarea, ya que NBA
+        #  no está aún en producción.)
         spread_home = (
             self.spread_probability(projection, spread_line, 'home')
             if spread_line is not None else None
         )
         spread_away = (
-            self.spread_probability(projection, spread_line, 'away')
+            self.spread_probability(projection, -spread_line, 'away')
             if spread_line is not None else None
         )
         over_prob = (

@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 23,
+            "gamesPlayed": 19,
+            "gamesStarted": 19,
+            "groundOuts": 74,
+            "airOuts": 98,
+            "runs": 57,
+            "doubles": 22,
+            "triples": 1,
+            "homeRuns": 10,
+            "strikeOuts": 106,
+            "baseOnBalls": 45,
+            "intentionalWalks": 2,
+            "hits": 99,
+            "hitByPitch": 3,
+            "avg": ".266",
+            "atBats": 372,
+            "obp": ".346",
+            "slg": ".411",
+            "ops": ".757",
+            "caughtStealing": 3,
+            "stolenBases": 12,
+            "stolenBasePercentage": ".800",
+            "caughtStealingPercentage": ".200",
+            "groundIntoDoublePlay": 10,
+            "numberOfPitches": 1712,
+            "era": "5.12",
+            "inningsPitched": "96.2",
+            "wins": 6,
+            "losses": 10,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 55,
+            "whip": "1.49",
+            "battersFaced": 425,
+            "outs": 290,
+            "gamesPitched": 19,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1105,
+            "strikePercentage": ".650",
+            "hitBatsmen": 3,
+            "balks": 0,
+            "wildPitches": 7,
+            "pickoffs": 1,
+            "totalBases": 153,
+            "groundOutsToAirouts": "0.76",
+            "winPercentage": ".375",
+            "pitchesPerInning": "17.71",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.36",
+            "strikeoutsPer9Inn": "9.87",
+            "walksPer9Inn": "4.19",
+            "hitsPer9Inn": "9.22",
+            "runsScoredPer9": "5.31",
+            "homeRunsPer9": "0.93",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 5
+          },
+          "team": {
+            "id": 133,
+            "name": "Athletics",
+            "link": "/api/v1/teams/133"
+          },
+          "player": {
+            "id": 695611,
+            "fullName": "Gage Jump",
+            "link": "/api/v1/people/695611"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

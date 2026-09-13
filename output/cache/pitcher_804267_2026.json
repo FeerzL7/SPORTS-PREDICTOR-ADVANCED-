@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 24,
+            "gamesPlayed": 12,
+            "gamesStarted": 12,
+            "groundOuts": 63,
+            "airOuts": 72,
+            "runs": 27,
+            "doubles": 8,
+            "triples": 0,
+            "homeRuns": 11,
+            "strikeOuts": 51,
+            "baseOnBalls": 15,
+            "intentionalWalks": 0,
+            "hits": 64,
+            "hitByPitch": 2,
+            "avg": ".258",
+            "atBats": 248,
+            "obp": ".305",
+            "slg": ".423",
+            "ops": ".728",
+            "caughtStealing": 1,
+            "stolenBases": 3,
+            "stolenBasePercentage": ".750",
+            "caughtStealingPercentage": ".250",
+            "groundIntoDoublePlay": 10,
+            "numberOfPitches": 1006,
+            "era": "3.53",
+            "inningsPitched": "66.1",
+            "wins": 3,
+            "losses": 5,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 26,
+            "whip": "1.19",
+            "battersFaced": 267,
+            "outs": 199,
+            "gamesPitched": 12,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 671,
+            "strikePercentage": ".670",
+            "hitBatsmen": 2,
+            "balks": 0,
+            "wildPitches": 1,
+            "pickoffs": 1,
+            "totalBases": 105,
+            "groundOutsToAirouts": "0.88",
+            "winPercentage": ".375",
+            "pitchesPerInning": "15.17",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "3.40",
+            "strikeoutsPer9Inn": "6.92",
+            "walksPer9Inn": "2.04",
+            "hitsPer9Inn": "8.68",
+            "runsScoredPer9": "3.66",
+            "homeRunsPer9": "1.49",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 1
+          },
+          "team": {
+            "id": 121,
+            "name": "New York Mets",
+            "link": "/api/v1/teams/121"
+          },
+          "player": {
+            "id": 804267,
+            "fullName": "Zac Thornton",
+            "link": "/api/v1/people/804267"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

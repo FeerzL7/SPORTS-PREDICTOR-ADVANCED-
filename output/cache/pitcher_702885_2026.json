@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 24,
+            "gamesPlayed": 2,
+            "gamesStarted": 1,
+            "groundOuts": 10,
+            "airOuts": 9,
+            "runs": 1,
+            "doubles": 1,
+            "triples": 0,
+            "homeRuns": 1,
+            "strikeOuts": 8,
+            "baseOnBalls": 2,
+            "intentionalWalks": 0,
+            "hits": 6,
+            "hitByPitch": 0,
+            "avg": ".182",
+            "atBats": 33,
+            "obp": ".229",
+            "slg": ".303",
+            "ops": ".532",
+            "caughtStealing": 1,
+            "stolenBases": 0,
+            "stolenBasePercentage": ".000",
+            "caughtStealingPercentage": "1.000",
+            "groundIntoDoublePlay": 2,
+            "numberOfPitches": 141,
+            "era": "0.90",
+            "inningsPitched": "10.0",
+            "wins": 0,
+            "losses": 0,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 1,
+            "whip": "0.80",
+            "battersFaced": 35,
+            "outs": 30,
+            "gamesPitched": 2,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 88,
+            "strikePercentage": ".620",
+            "hitBatsmen": 0,
+            "balks": 0,
+            "wildPitches": 0,
+            "pickoffs": 0,
+            "totalBases": 10,
+            "groundOutsToAirouts": "1.11",
+            "winPercentage": ".---",
+            "pitchesPerInning": "14.10",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "4.00",
+            "strikeoutsPer9Inn": "7.20",
+            "walksPer9Inn": "1.80",
+            "hitsPer9Inn": "5.40",
+            "runsScoredPer9": "0.90",
+            "homeRunsPer9": "0.90",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 0
+          },
+          "team": {
+            "id": 137,
+            "name": "San Francisco Giants",
+            "link": "/api/v1/teams/137"
+          },
+          "player": {
+            "id": 702885,
+            "fullName": "Cesar Perdomo",
+            "link": "/api/v1/people/702885"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

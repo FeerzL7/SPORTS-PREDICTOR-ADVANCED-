@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 29,
+            "gamesPlayed": 27,
+            "gamesStarted": 27,
+            "groundOuts": 133,
+            "airOuts": 121,
+            "runs": 50,
+            "doubles": 31,
+            "triples": 1,
+            "homeRuns": 14,
+            "strikeOuts": 124,
+            "baseOnBalls": 38,
+            "intentionalWalks": 0,
+            "hits": 137,
+            "hitByPitch": 5,
+            "avg": ".268",
+            "atBats": 512,
+            "obp": ".324",
+            "slg": ".414",
+            "ops": ".738",
+            "caughtStealing": 5,
+            "stolenBases": 7,
+            "stolenBasePercentage": ".583",
+            "caughtStealingPercentage": ".417",
+            "groundIntoDoublePlay": 13,
+            "numberOfPitches": 2192,
+            "era": "3.41",
+            "inningsPitched": "132.0",
+            "wins": 10,
+            "losses": 4,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 50,
+            "whip": "1.33",
+            "battersFaced": 559,
+            "outs": 396,
+            "gamesPitched": 27,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1387,
+            "strikePercentage": ".630",
+            "hitBatsmen": 5,
+            "balks": 0,
+            "wildPitches": 4,
+            "pickoffs": 0,
+            "totalBases": 212,
+            "groundOutsToAirouts": "1.10",
+            "winPercentage": ".714",
+            "pitchesPerInning": "16.61",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "3.26",
+            "strikeoutsPer9Inn": "8.45",
+            "walksPer9Inn": "2.59",
+            "hitsPer9Inn": "9.34",
+            "runsScoredPer9": "3.41",
+            "homeRunsPer9": "0.95",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 1,
+            "sacBunts": 2,
+            "sacFlies": 1
+          },
+          "team": {
+            "id": 138,
+            "name": "St. Louis Cardinals",
+            "link": "/api/v1/teams/138"
+          },
+          "player": {
+            "id": 681517,
+            "fullName": "Kyle Leahy",
+            "link": "/api/v1/people/681517"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

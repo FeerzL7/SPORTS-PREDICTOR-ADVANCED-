@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 22,
+            "gamesPlayed": 26,
+            "gamesStarted": 24,
+            "groundOuts": 149,
+            "airOuts": 112,
+            "runs": 47,
+            "doubles": 17,
+            "triples": 0,
+            "homeRuns": 9,
+            "strikeOuts": 124,
+            "baseOnBalls": 65,
+            "intentionalWalks": 1,
+            "hits": 94,
+            "hitByPitch": 8,
+            "avg": ".198",
+            "atBats": 475,
+            "obp": ".303",
+            "slg": ".291",
+            "ops": ".594",
+            "caughtStealing": 3,
+            "stolenBases": 7,
+            "stolenBasePercentage": ".700",
+            "caughtStealingPercentage": ".300",
+            "groundIntoDoublePlay": 12,
+            "numberOfPitches": 2208,
+            "era": "2.74",
+            "inningsPitched": "131.1",
+            "wins": 9,
+            "losses": 10,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 1,
+            "blownSaves": 0,
+            "earnedRuns": 40,
+            "whip": "1.21",
+            "battersFaced": 552,
+            "outs": 394,
+            "gamesPitched": 26,
+            "completeGames": 1,
+            "shutouts": 0,
+            "strikes": 1374,
+            "strikePercentage": ".620",
+            "hitBatsmen": 8,
+            "balks": 1,
+            "wildPitches": 6,
+            "pickoffs": 1,
+            "totalBases": 138,
+            "groundOutsToAirouts": "1.33",
+            "winPercentage": ".474",
+            "pitchesPerInning": "16.81",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "1.91",
+            "strikeoutsPer9Inn": "8.50",
+            "walksPer9Inn": "4.45",
+            "hitsPer9Inn": "6.44",
+            "runsScoredPer9": "3.22",
+            "homeRunsPer9": "0.62",
+            "inheritedRunners": 1,
+            "inheritedRunnersScored": 1,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 3
+          },
+          "team": {
+            "id": 108,
+            "name": "Los Angeles Angels",
+            "link": "/api/v1/teams/108"
+          },
+          "player": {
+            "id": 700712,
+            "fullName": "Walbert Ure\u00f1a",
+            "link": "/api/v1/people/700712"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

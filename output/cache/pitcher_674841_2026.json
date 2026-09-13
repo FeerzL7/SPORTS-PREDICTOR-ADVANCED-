@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 27,
+            "gamesPlayed": 22,
+            "gamesStarted": 14,
+            "groundOuts": 105,
+            "airOuts": 77,
+            "runs": 38,
+            "doubles": 18,
+            "triples": 3,
+            "homeRuns": 5,
+            "strikeOuts": 91,
+            "baseOnBalls": 43,
+            "intentionalWalks": 0,
+            "hits": 82,
+            "hitByPitch": 3,
+            "avg": ".233",
+            "atBats": 352,
+            "obp": ".320",
+            "slg": ".344",
+            "ops": ".664",
+            "caughtStealing": 4,
+            "stolenBases": 7,
+            "stolenBasePercentage": ".636",
+            "caughtStealingPercentage": ".364",
+            "groundIntoDoublePlay": 8,
+            "numberOfPitches": 1567,
+            "era": "3.60",
+            "inningsPitched": "95.0",
+            "wins": 2,
+            "losses": 6,
+            "saves": 1,
+            "saveOpportunities": 1,
+            "holds": 2,
+            "blownSaves": 0,
+            "earnedRuns": 38,
+            "whip": "1.32",
+            "battersFaced": 401,
+            "outs": 285,
+            "gamesPitched": 22,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 960,
+            "strikePercentage": ".610",
+            "hitBatsmen": 3,
+            "balks": 0,
+            "wildPitches": 5,
+            "pickoffs": 1,
+            "totalBases": 121,
+            "groundOutsToAirouts": "1.36",
+            "winPercentage": ".250",
+            "pitchesPerInning": "16.49",
+            "gamesFinished": 2,
+            "strikeoutWalkRatio": "2.12",
+            "strikeoutsPer9Inn": "8.62",
+            "walksPer9Inn": "4.07",
+            "hitsPer9Inn": "7.77",
+            "runsScoredPer9": "3.60",
+            "homeRunsPer9": "0.47",
+            "inheritedRunners": 3,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 2
+          },
+          "team": {
+            "id": 120,
+            "name": "Washington Nationals",
+            "link": "/api/v1/teams/120"
+          },
+          "player": {
+            "id": 674841,
+            "fullName": "Andrew Alvarez",
+            "link": "/api/v1/people/674841"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 26,
+            "gamesPlayed": 27,
+            "gamesStarted": 27,
+            "groundOuts": 126,
+            "airOuts": 177,
+            "runs": 75,
+            "doubles": 25,
+            "triples": 3,
+            "homeRuns": 18,
+            "strikeOuts": 158,
+            "baseOnBalls": 33,
+            "intentionalWalks": 1,
+            "hits": 132,
+            "hitByPitch": 7,
+            "avg": ".224",
+            "atBats": 589,
+            "obp": ".272",
+            "slg": ".368",
+            "ops": ".640",
+            "caughtStealing": 2,
+            "stolenBases": 7,
+            "stolenBasePercentage": ".778",
+            "caughtStealingPercentage": ".222",
+            "groundIntoDoublePlay": 8,
+            "numberOfPitches": 2395,
+            "era": "4.03",
+            "inningsPitched": "156.1",
+            "wins": 11,
+            "losses": 9,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 70,
+            "whip": "1.06",
+            "battersFaced": 633,
+            "outs": 469,
+            "gamesPitched": 27,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1619,
+            "strikePercentage": ".680",
+            "hitBatsmen": 7,
+            "balks": 1,
+            "wildPitches": 3,
+            "pickoffs": 1,
+            "totalBases": 217,
+            "groundOutsToAirouts": "0.71",
+            "winPercentage": ".550",
+            "pitchesPerInning": "15.32",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "4.79",
+            "strikeoutsPer9Inn": "9.10",
+            "walksPer9Inn": "1.90",
+            "hitsPer9Inn": "7.60",
+            "runsScoredPer9": "4.32",
+            "homeRunsPer9": "1.04",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 4
+          },
+          "team": {
+            "id": 136,
+            "name": "Seattle Mariners",
+            "link": "/api/v1/teams/136"
+          },
+          "player": {
+            "id": 693433,
+            "fullName": "Bryan Woo",
+            "link": "/api/v1/people/693433"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

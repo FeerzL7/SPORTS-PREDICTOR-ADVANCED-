@@ -121,6 +121,36 @@ class NFLGameInfo:
     away_score: float | None = None
     overtime:   bool = False
 
+    # ── Clima observado ──────────────────────────────────────────
+    # nflverse registra la temperatura y el viento medidos en el
+    # estadio para partidos ya jugados. Es el dato REAL, no un
+    # pronóstico, así que NFLContextFetcher lo prefiere sobre
+    # Open-Meteo: usar un forecast donde existe la medición metería
+    # en el backtest un error de predicción que no ocurrió.
+    temp: float | None = None
+    wind: float | None = None
+
+    # ── Líneas de cierre del mercado ─────────────────────────────
+    # nflverse incluye las líneas históricas en el schedule. Son de
+    # CIERRE — el punto de máxima eficiencia del mercado — y son lo
+    # que hace posible un backtest de apuestas sin pagar por datos
+    # históricos de odds.
+    #
+    # Convención de spread_line: handicap desde la perspectiva del
+    # LOCAL, positivo cuando el local es favorito. Un valor de 3.5
+    # significa local favorito por 3.5, que en notación de mercado
+    # es local -3.5 y visitante +3.5.
+    #
+    # Los moneylines vienen en formato americano (-150, +130).
+    spread_line:      float | None = None
+    total_line:       float | None = None
+    home_moneyline:   float | None = None
+    away_moneyline:   float | None = None
+    home_spread_odds: float | None = None
+    away_spread_odds: float | None = None
+    over_odds:        float | None = None
+    under_odds:       float | None = None
+
     @property
     def is_postseason(self) -> bool:
         """True si es partido de playoffs."""
@@ -147,6 +177,21 @@ class NFLGameInfo:
         return False
 
     @property
+    def has_market_lines(self) -> bool:
+        """
+        True si nflverse trae líneas de cierre para este partido.
+
+        El backtest omite los partidos sin líneas: sin precio de
+        mercado no hay EV que calcular ni apuesta que simular.
+        """
+        return self.spread_line is not None or self.total_line is not None
+
+    @property
+    def has_observed_weather(self) -> bool:
+        """True si hay mediciones reales de clima (partido ya jugado)."""
+        return self.temp is not None or self.wind is not None
+
+    @property
     def is_final(self) -> bool:
         """True si el partido ya terminó (tiene marcador registrado)."""
         return self.home_score is not None and self.away_score is not None
@@ -170,6 +215,8 @@ class NFLGameInfo:
             "surface":      self.surface,
             "home_rest":    self.home_rest,
             "away_rest":    self.away_rest,
+            "spread_line":  self.spread_line,
+            "total_line":   self.total_line,
         }
 
 
@@ -447,6 +494,18 @@ class NFLScheduleFetcher:
             home_score = _safe_float(getattr(row, "home_score", None)),
             away_score = _safe_float(getattr(row, "away_score", None)),
             overtime   = bool(getattr(row, "overtime", 0) or 0),
+            # Clima observado
+            temp = _safe_float(getattr(row, "temp", None)),
+            wind = _safe_float(getattr(row, "wind", None)),
+            # Líneas de cierre
+            spread_line      = _safe_float(getattr(row, "spread_line", None)),
+            total_line       = _safe_float(getattr(row, "total_line", None)),
+            home_moneyline   = _safe_float(getattr(row, "home_moneyline", None)),
+            away_moneyline   = _safe_float(getattr(row, "away_moneyline", None)),
+            home_spread_odds = _safe_float(getattr(row, "home_spread_odds", None)),
+            away_spread_odds = _safe_float(getattr(row, "away_spread_odds", None)),
+            over_odds        = _safe_float(getattr(row, "over_odds", None)),
+            under_odds       = _safe_float(getattr(row, "under_odds", None)),
         )
 
     # ── Nombres de equipo ─────────────────────────────────────────────────────

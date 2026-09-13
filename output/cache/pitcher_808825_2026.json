@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 23,
+            "gamesPlayed": 3,
+            "gamesStarted": 1,
+            "groundOuts": 7,
+            "airOuts": 20,
+            "runs": 6,
+            "doubles": 5,
+            "triples": 0,
+            "homeRuns": 1,
+            "strikeOuts": 8,
+            "baseOnBalls": 3,
+            "intentionalWalks": 0,
+            "hits": 12,
+            "hitByPitch": 1,
+            "avg": ".255",
+            "atBats": 47,
+            "obp": ".314",
+            "slg": ".426",
+            "ops": ".740",
+            "caughtStealing": 0,
+            "stolenBases": 0,
+            "stolenBasePercentage": ".---",
+            "caughtStealingPercentage": ".---",
+            "groundIntoDoublePlay": 0,
+            "numberOfPitches": 209,
+            "era": "4.38",
+            "inningsPitched": "12.1",
+            "wins": 0,
+            "losses": 1,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 6,
+            "whip": "1.22",
+            "battersFaced": 51,
+            "outs": 37,
+            "gamesPitched": 3,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 126,
+            "strikePercentage": ".600",
+            "hitBatsmen": 1,
+            "balks": 0,
+            "wildPitches": 0,
+            "pickoffs": 0,
+            "totalBases": 20,
+            "groundOutsToAirouts": "0.35",
+            "winPercentage": ".000",
+            "pitchesPerInning": "16.95",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.67",
+            "strikeoutsPer9Inn": "5.84",
+            "walksPer9Inn": "2.19",
+            "hitsPer9Inn": "8.76",
+            "runsScoredPer9": "4.38",
+            "homeRunsPer9": "0.73",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 0
+          },
+          "team": {
+            "id": 116,
+            "name": "Detroit Tigers",
+            "link": "/api/v1/teams/116"
+          },
+          "player": {
+            "id": 808825,
+            "fullName": "Andrew Sears",
+            "link": "/api/v1/people/808825"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

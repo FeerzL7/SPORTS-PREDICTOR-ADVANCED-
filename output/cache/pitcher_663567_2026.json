@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 29,
+            "gamesPlayed": 25,
+            "gamesStarted": 25,
+            "groundOuts": 101,
+            "airOuts": 173,
+            "runs": 59,
+            "doubles": 19,
+            "triples": 0,
+            "homeRuns": 14,
+            "strikeOuts": 137,
+            "baseOnBalls": 56,
+            "intentionalWalks": 0,
+            "hits": 116,
+            "hitByPitch": 12,
+            "avg": ".223",
+            "atBats": 521,
+            "obp": ".311",
+            "slg": ".340",
+            "ops": ".651",
+            "caughtStealing": 4,
+            "stolenBases": 12,
+            "stolenBasePercentage": ".750",
+            "caughtStealingPercentage": ".250",
+            "groundIntoDoublePlay": 8,
+            "numberOfPitches": 2368,
+            "era": "3.67",
+            "inningsPitched": "139.2",
+            "wins": 8,
+            "losses": 8,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 57,
+            "whip": "1.23",
+            "battersFaced": 595,
+            "outs": 419,
+            "gamesPitched": 25,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1509,
+            "strikePercentage": ".640",
+            "hitBatsmen": 12,
+            "balks": 0,
+            "wildPitches": 6,
+            "pickoffs": 0,
+            "totalBases": 177,
+            "groundOutsToAirouts": "0.58",
+            "winPercentage": ".500",
+            "pitchesPerInning": "16.95",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.45",
+            "strikeoutsPer9Inn": "8.83",
+            "walksPer9Inn": "3.61",
+            "hitsPer9Inn": "7.47",
+            "runsScoredPer9": "3.80",
+            "homeRunsPer9": "0.90",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 3,
+            "sacFlies": 3
+          },
+          "team": {
+            "id": 117,
+            "name": "Houston Astros",
+            "link": "/api/v1/teams/117"
+          },
+          "player": {
+            "id": 663567,
+            "fullName": "Peter Lambert",
+            "link": "/api/v1/people/663567"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

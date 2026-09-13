@@ -95,9 +95,56 @@ blending:
 # Los rangos de cuota son estrechos porque el mercado NFL opera casi
 # siempre en -110/-110 (1.91/1.91) para spreads y totales.
 #
+# ── CALIBRACIÓN DE min_ev: la interacción con model_weight y max_edge ────────
+#
+# Estos tres parámetros NO son independientes. El dry run de la tarea
+# 10.18 reveló que la combinación original dejaba una ventana de
+# operación prácticamente nula.
+#
+# La cadena es:
+#
+#   1. El modelo produce una probabilidad cruda (model_prob_raw).
+#   2. El blending la amortigua:  blended = w·model + (1-w)·mercado
+#   3. El EV se calcula sobre `blended`.
+#   4. Pero max_edge se evalúa sobre model_prob_raw, SIN amortiguar.
+#
+# Con model_weight=0.40, alcanzar un EV del 4% a cuota 1.91 exigía una
+# probabilidad cruda de 0.6113 — es decir, que el modelo discrepara del
+# mercado en 3.8 puntos de spread. Y max_edge=0.12 rechazaba cualquier
+# discrepancia superior a 4.1 puntos.
+#
+#   Ventana resultante: [0.6113, 0.6200] → 0.87 puntos porcentuales.
+#   Traducido: el modelo solo generaba pick si discrepaba entre 3.82 y
+#   4.12 puntos. Una franja de 0.3 puntos: en la práctica, nunca.
+#
+# Cuál de los dos parámetros estaba mal
+# --------------------------------------
+# max_edge NO. Un edge crudo de 0.12 equivale a ~4 puntos de
+# discrepancia, que es justo el límite de lo plausible: por encima de
+# eso, en un mercado tan eficiente como el de NFL, lo más probable es
+# que se equivoque el modelo y no el mercado. Frenarlo es su función.
+#
+# min_ev SÍ. Estaba fijado sin tener en cuenta que el blending
+# amortigua la opinión del modelo un 60%. Un umbral de EV del 4% sobre
+# la probabilidad YA amortiguada equivale a exigir una discrepancia
+# bruta que el propio max_edge considera implausible.
+#
+# Los valores actuales dejan una ventana de 3.5 a 8 puntos
+# porcentuales, con discrepancias mínimas de 2 a 3 puntos — el rango
+# donde una diferencia con el mercado es defendible.
+#
+# Nota sobre prob_cap: con esta configuración el cap queda inactivo.
+# Se activa cuando model_prob_raw supera 0.62, que es exactamente
+# donde max_edge ya rechaza. Se conserva como red de seguridad por si
+# una recalibración futura relaja max_edge.
+#
 filters:
   SPREAD:
-    min_ev:        4.0      # 4% — mercado principal, umbral más permisivo.
+    min_ev:        2.0      # Ver la nota de calibración de arriba.
+                            # Con weight=0.40 exige una discrepancia
+                            # bruta de 2.9 pts, dentro de lo plausible.
+                            # (Antes 4.0: exigía 3.8 pts y dejaba una
+                            #  ventana de 0.87 pp con max_edge.)
     min_prob:      0.525    # 52.5% = break-even a cuota 1.91 más margen.
     min_odds:      1.83     # -120. Evitar spreads con juice excesivo.
     max_odds:      2.05     # +105. El spread rara vez sale de este rango.
@@ -110,8 +157,10 @@ filters:
                             # están dentro del ruido del propio modelo.
 
   TOTAL:
-    min_ev:        6.0      # Umbral mayor que SPREAD: los totales tienen
-                            # más varianza no modelada (ritmo, garbage time).
+    min_ev:        3.0      # Mayor que SPREAD: los totales tienen más
+                            # varianza no modelada (ritmo, garbage time).
+                            # Exige 3.0 pts de discrepancia bruta.
+                            # (Antes 6.0: ventana de 0.78 pp.)
     min_prob:      0.53
     min_odds:      1.83
     max_odds:      2.05
@@ -121,9 +170,12 @@ filters:
                             # menores en un total de ~45 son ruido.
 
   ML:
-    min_ev:        8.0      # El más restrictivo: sin historial propio y
-                            # con el mercado priciando muy eficientemente
-                            # los favoritos, solo picks con señal muy fuerte.
+    min_ev:        5.0      # El más restrictivo de los tres: sin historial
+                            # propio y con el mercado priciando los
+                            # favoritos con mucha eficiencia.
+                            # (Antes 8.0. La ventana de ML era la menos
+                            #  afectada — 3.6 pp — porque su max_edge es
+                            #  más holgado, pero seguía siendo estrecha.)
     min_prob:      0.54
     min_odds:      1.60     # Permite favoritos moderados (-165).
     max_odds:      3.50     # Permite underdogs vivos (+250).

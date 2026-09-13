@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 28,
+            "gamesPlayed": 21,
+            "gamesStarted": 9,
+            "groundOuts": 75,
+            "airOuts": 120,
+            "runs": 58,
+            "doubles": 30,
+            "triples": 2,
+            "homeRuns": 17,
+            "strikeOuts": 76,
+            "baseOnBalls": 17,
+            "intentionalWalks": 2,
+            "hits": 116,
+            "hitByPitch": 2,
+            "avg": ".304",
+            "atBats": 381,
+            "obp": ".335",
+            "slg": ".528",
+            "ops": ".863",
+            "caughtStealing": 1,
+            "stolenBases": 3,
+            "stolenBasePercentage": ".750",
+            "caughtStealingPercentage": ".250",
+            "groundIntoDoublePlay": 7,
+            "numberOfPitches": 1423,
+            "era": "5.40",
+            "inningsPitched": "93.1",
+            "wins": 1,
+            "losses": 4,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 56,
+            "whip": "1.43",
+            "battersFaced": 406,
+            "outs": 280,
+            "gamesPitched": 21,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 976,
+            "strikePercentage": ".690",
+            "hitBatsmen": 2,
+            "balks": 2,
+            "wildPitches": 1,
+            "pickoffs": 0,
+            "totalBases": 201,
+            "groundOutsToAirouts": "0.63",
+            "winPercentage": ".200",
+            "pitchesPerInning": "15.25",
+            "gamesFinished": 8,
+            "strikeoutWalkRatio": "4.47",
+            "strikeoutsPer9Inn": "7.33",
+            "walksPer9Inn": "1.64",
+            "hitsPer9Inn": "11.19",
+            "runsScoredPer9": "5.59",
+            "homeRunsPer9": "1.64",
+            "inheritedRunners": 8,
+            "inheritedRunnersScored": 1,
+            "catchersInterference": 0,
+            "sacBunts": 3,
+            "sacFlies": 3
+          },
+          "team": {
+            "id": 115,
+            "name": "Colorado Rockies",
+            "link": "/api/v1/teams/115"
+          },
+          "player": {
+            "id": 685299,
+            "fullName": "Tanner Gordon",
+            "link": "/api/v1/people/685299"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

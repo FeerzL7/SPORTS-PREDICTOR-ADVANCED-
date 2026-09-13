@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 25,
+            "gamesPlayed": 9,
+            "gamesStarted": 0,
+            "groundOuts": 7,
+            "airOuts": 5,
+            "runs": 3,
+            "doubles": 1,
+            "triples": 0,
+            "homeRuns": 1,
+            "strikeOuts": 18,
+            "baseOnBalls": 4,
+            "intentionalWalks": 0,
+            "hits": 9,
+            "hitByPitch": 0,
+            "avg": ".231",
+            "atBats": 39,
+            "obp": ".302",
+            "slg": ".333",
+            "ops": ".635",
+            "caughtStealing": 0,
+            "stolenBases": 3,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 0,
+            "numberOfPitches": 178,
+            "era": "2.70",
+            "inningsPitched": "10.0",
+            "wins": 0,
+            "losses": 0,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 3,
+            "whip": "1.30",
+            "battersFaced": 43,
+            "outs": 30,
+            "gamesPitched": 9,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 112,
+            "strikePercentage": ".630",
+            "hitBatsmen": 0,
+            "balks": 0,
+            "wildPitches": 0,
+            "pickoffs": 0,
+            "totalBases": 13,
+            "groundOutsToAirouts": "1.40",
+            "winPercentage": ".---",
+            "pitchesPerInning": "17.80",
+            "gamesFinished": 3,
+            "strikeoutWalkRatio": "4.50",
+            "strikeoutsPer9Inn": "16.20",
+            "walksPer9Inn": "3.60",
+            "hitsPer9Inn": "8.10",
+            "runsScoredPer9": "2.70",
+            "homeRunsPer9": "0.90",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 0
+          },
+          "team": {
+            "id": 114,
+            "name": "Cleveland Guardians",
+            "link": "/api/v1/teams/114"
+          },
+          "player": {
+            "id": 682982,
+            "fullName": "Daniel Espino",
+            "link": "/api/v1/people/682982"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

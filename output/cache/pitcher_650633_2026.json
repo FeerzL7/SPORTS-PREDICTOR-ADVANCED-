@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 31,
+            "gamesPlayed": 29,
+            "gamesStarted": 29,
+            "groundOuts": 165,
+            "airOuts": 168,
+            "runs": 58,
+            "doubles": 19,
+            "triples": 1,
+            "homeRuns": 18,
+            "strikeOuts": 144,
+            "baseOnBalls": 66,
+            "intentionalWalks": 0,
+            "hits": 130,
+            "hitByPitch": 12,
+            "avg": ".215",
+            "atBats": 604,
+            "obp": ".305",
+            "slg": ".339",
+            "ops": ".644",
+            "caughtStealing": 8,
+            "stolenBases": 6,
+            "stolenBasePercentage": ".429",
+            "caughtStealingPercentage": ".571",
+            "groundIntoDoublePlay": 19,
+            "numberOfPitches": 2700,
+            "era": "3.00",
+            "inningsPitched": "168.0",
+            "wins": 10,
+            "losses": 9,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 56,
+            "whip": "1.17",
+            "battersFaced": 686,
+            "outs": 504,
+            "gamesPitched": 29,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1707,
+            "strikePercentage": ".630",
+            "hitBatsmen": 12,
+            "balks": 1,
+            "wildPitches": 2,
+            "pickoffs": 0,
+            "totalBases": 205,
+            "groundOutsToAirouts": "0.98",
+            "winPercentage": ".526",
+            "pitchesPerInning": "16.07",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.18",
+            "strikeoutsPer9Inn": "7.71",
+            "walksPer9Inn": "3.54",
+            "hitsPer9Inn": "6.96",
+            "runsScoredPer9": "3.11",
+            "homeRunsPer9": "0.96",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 1,
+            "sacBunts": 2,
+            "sacFlies": 1
+          },
+          "team": {
+            "id": 135,
+            "name": "San Diego Padres",
+            "link": "/api/v1/teams/135"
+          },
+          "player": {
+            "id": 650633,
+            "fullName": "Michael King",
+            "link": "/api/v1/people/650633"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

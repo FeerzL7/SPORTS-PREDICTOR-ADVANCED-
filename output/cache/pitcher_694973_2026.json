@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 24,
+            "gamesPlayed": 29,
+            "gamesStarted": 29,
+            "groundOuts": 120,
+            "airOuts": 150,
+            "runs": 74,
+            "doubles": 32,
+            "triples": 2,
+            "homeRuns": 15,
+            "strikeOuts": 181,
+            "baseOnBalls": 45,
+            "intentionalWalks": 0,
+            "hits": 133,
+            "hitByPitch": 10,
+            "avg": ".231",
+            "atBats": 576,
+            "obp": ".296",
+            "slg": ".372",
+            "ops": ".668",
+            "caughtStealing": 3,
+            "stolenBases": 3,
+            "stolenBasePercentage": ".500",
+            "caughtStealingPercentage": ".500",
+            "groundIntoDoublePlay": 9,
+            "numberOfPitches": 2623,
+            "era": "3.83",
+            "inningsPitched": "155.0",
+            "wins": 10,
+            "losses": 11,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 66,
+            "whip": "1.15",
+            "battersFaced": 640,
+            "outs": 465,
+            "gamesPitched": 29,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1688,
+            "strikePercentage": ".640",
+            "hitBatsmen": 10,
+            "balks": 0,
+            "wildPitches": 2,
+            "pickoffs": 2,
+            "totalBases": 214,
+            "groundOutsToAirouts": "0.80",
+            "winPercentage": ".476",
+            "pitchesPerInning": "16.92",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "4.02",
+            "strikeoutsPer9Inn": "10.51",
+            "walksPer9Inn": "2.61",
+            "hitsPer9Inn": "7.72",
+            "runsScoredPer9": "4.30",
+            "homeRunsPer9": "0.87",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 1,
+            "sacBunts": 3,
+            "sacFlies": 5
+          },
+          "team": {
+            "id": 134,
+            "name": "Pittsburgh Pirates",
+            "link": "/api/v1/teams/134"
+          },
+          "player": {
+            "id": 694973,
+            "fullName": "Paul Skenes",
+            "link": "/api/v1/people/694973"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

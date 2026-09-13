@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 32,
+            "gamesPlayed": 10,
+            "gamesStarted": 10,
+            "groundOuts": 43,
+            "airOuts": 55,
+            "runs": 20,
+            "doubles": 8,
+            "triples": 1,
+            "homeRuns": 5,
+            "strikeOuts": 70,
+            "baseOnBalls": 17,
+            "intentionalWalks": 1,
+            "hits": 34,
+            "hitByPitch": 0,
+            "avg": ".171",
+            "atBats": 199,
+            "obp": ".233",
+            "slg": ".296",
+            "ops": ".529",
+            "caughtStealing": 3,
+            "stolenBases": 11,
+            "stolenBasePercentage": ".786",
+            "caughtStealingPercentage": ".214",
+            "groundIntoDoublePlay": 3,
+            "numberOfPitches": 869,
+            "era": "3.12",
+            "inningsPitched": "57.2",
+            "wins": 4,
+            "losses": 0,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 20,
+            "whip": "0.88",
+            "battersFaced": 219,
+            "outs": 173,
+            "gamesPitched": 10,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 546,
+            "strikePercentage": ".630",
+            "hitBatsmen": 0,
+            "balks": 0,
+            "wildPitches": 2,
+            "pickoffs": 1,
+            "totalBases": 59,
+            "groundOutsToAirouts": "0.78",
+            "winPercentage": "1.000",
+            "pitchesPerInning": "15.07",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "4.12",
+            "strikeoutsPer9Inn": "10.92",
+            "walksPer9Inn": "2.65",
+            "hitsPer9Inn": "5.31",
+            "runsScoredPer9": "3.12",
+            "homeRunsPer9": "0.78",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 3
+          },
+          "team": {
+            "id": 119,
+            "name": "Los Angeles Dodgers",
+            "link": "/api/v1/teams/119"
+          },
+          "player": {
+            "id": 607192,
+            "fullName": "Tyler Glasnow",
+            "link": "/api/v1/people/607192"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

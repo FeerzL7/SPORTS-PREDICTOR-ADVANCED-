@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 25,
+            "gamesPlayed": 45,
+            "gamesStarted": 6,
+            "groundOuts": 98,
+            "airOuts": 78,
+            "runs": 29,
+            "doubles": 9,
+            "triples": 1,
+            "homeRuns": 5,
+            "strikeOuts": 81,
+            "baseOnBalls": 21,
+            "intentionalWalks": 1,
+            "hits": 71,
+            "hitByPitch": 1,
+            "avg": ".218",
+            "atBats": 326,
+            "obp": ".266",
+            "slg": ".298",
+            "ops": ".564",
+            "caughtStealing": 4,
+            "stolenBases": 9,
+            "stolenBasePercentage": ".692",
+            "caughtStealingPercentage": ".308",
+            "groundIntoDoublePlay": 2,
+            "numberOfPitches": 1350,
+            "era": "2.77",
+            "inningsPitched": "87.2",
+            "wins": 6,
+            "losses": 2,
+            "saves": 2,
+            "saveOpportunities": 2,
+            "holds": 4,
+            "blownSaves": 0,
+            "earnedRuns": 27,
+            "whip": "1.05",
+            "battersFaced": 350,
+            "outs": 263,
+            "gamesPitched": 45,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 901,
+            "strikePercentage": ".670",
+            "hitBatsmen": 1,
+            "balks": 0,
+            "wildPitches": 1,
+            "pickoffs": 0,
+            "totalBases": 97,
+            "groundOutsToAirouts": "1.26",
+            "winPercentage": ".750",
+            "pitchesPerInning": "15.40",
+            "gamesFinished": 9,
+            "strikeoutWalkRatio": "3.86",
+            "strikeoutsPer9Inn": "8.32",
+            "walksPer9Inn": "2.16",
+            "hitsPer9Inn": "7.29",
+            "runsScoredPer9": "2.98",
+            "homeRunsPer9": "0.51",
+            "inheritedRunners": 20,
+            "inheritedRunnersScored": 4,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 1
+          },
+          "team": {
+            "id": 141,
+            "name": "Toronto Blue Jays",
+            "link": "/api/v1/teams/141"
+          },
+          "player": {
+            "id": 693686,
+            "fullName": "Spencer Miles",
+            "link": "/api/v1/people/693686"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

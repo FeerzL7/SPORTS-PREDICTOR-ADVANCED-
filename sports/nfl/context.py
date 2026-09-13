@@ -493,19 +493,23 @@ def _weather_from_game(game: NFLGameInfo | None) -> NFLWeather | None:
     """
     Extrae el clima observado desde los metadatos de nflverse.
 
-    NFLGameInfo no expone `temp` ni `wind` como campos propios, así que
-    se leen dinámicamente: el dataclass podría extenderse en el futuro
-    sin romper este módulo, y si no están presentes se cae al
-    pronóstico sin error.
-
     Retorna None si no hay ninguna medición, para que el llamador pueda
     distinguir "no hay dato observado" de "hay dato y es neutro".
+
+    CORRECCIÓN: la versión anterior leía estos campos con
+    `getattr(game, "temp", None)` asumiendo que NFLGameInfo podría
+    tenerlos "en una versión futura". No los tenía, así que el getattr
+    devolvía None siempre y esta función nunca retornaba nada — el
+    pronóstico de Open-Meteo se usaba incluso para partidos ya jugados,
+    metiendo en el backtest un error de predicción que no existió en la
+    realidad. El acceso directo hace que un campo ausente sea un error
+    visible en vez de una degradación silenciosa.
     """
     if game is None:
         return None
 
-    temp = _safe_float(getattr(game, "temp", None))
-    wind = _safe_float(getattr(game, "wind", None))
+    temp = _safe_float(game.temp)
+    wind = _safe_float(game.wind)
 
     if temp is None and wind is None:
         return None

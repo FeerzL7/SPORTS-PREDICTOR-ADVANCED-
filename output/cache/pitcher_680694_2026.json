@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 29,
+            "gamesPlayed": 28,
+            "gamesStarted": 28,
+            "groundOuts": 157,
+            "airOuts": 136,
+            "runs": 78,
+            "doubles": 29,
+            "triples": 5,
+            "homeRuns": 18,
+            "strikeOuts": 140,
+            "baseOnBalls": 68,
+            "intentionalWalks": 1,
+            "hits": 148,
+            "hitByPitch": 3,
+            "avg": ".257",
+            "atBats": 576,
+            "obp": ".336",
+            "slg": ".418",
+            "ops": ".754",
+            "caughtStealing": 4,
+            "stolenBases": 3,
+            "stolenBasePercentage": ".429",
+            "caughtStealingPercentage": ".571",
+            "groundIntoDoublePlay": 17,
+            "numberOfPitches": 2573,
+            "era": "3.91",
+            "inningsPitched": "152.0",
+            "wins": 7,
+            "losses": 13,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 66,
+            "whip": "1.42",
+            "battersFaced": 652,
+            "outs": 456,
+            "gamesPitched": 28,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1594,
+            "strikePercentage": ".620",
+            "hitBatsmen": 3,
+            "balks": 0,
+            "wildPitches": 9,
+            "pickoffs": 1,
+            "totalBases": 241,
+            "groundOutsToAirouts": "1.15",
+            "winPercentage": ".350",
+            "pitchesPerInning": "16.93",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.06",
+            "strikeoutsPer9Inn": "8.29",
+            "walksPer9Inn": "4.03",
+            "hitsPer9Inn": "8.76",
+            "runsScoredPer9": "4.62",
+            "homeRunsPer9": "1.07",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 5
+          },
+          "team": {
+            "id": 110,
+            "name": "Baltimore Orioles",
+            "link": "/api/v1/teams/110"
+          },
+          "player": {
+            "id": 680694,
+            "fullName": "Kyle Bradish",
+            "link": "/api/v1/people/680694"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

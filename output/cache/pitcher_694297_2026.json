@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 27,
+            "gamesPlayed": 26,
+            "gamesStarted": 16,
+            "groundOuts": 128,
+            "airOuts": 137,
+            "runs": 50,
+            "doubles": 20,
+            "triples": 2,
+            "homeRuns": 13,
+            "strikeOuts": 77,
+            "baseOnBalls": 29,
+            "intentionalWalks": 1,
+            "hits": 106,
+            "hitByPitch": 5,
+            "avg": ".238",
+            "atBats": 445,
+            "obp": ".290",
+            "slg": ".380",
+            "ops": ".670",
+            "caughtStealing": 0,
+            "stolenBases": 1,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 11,
+            "numberOfPitches": 1764,
+            "era": "3.53",
+            "inningsPitched": "117.1",
+            "wins": 7,
+            "losses": 2,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 2,
+            "blownSaves": 0,
+            "earnedRuns": 46,
+            "whip": "1.15",
+            "battersFaced": 482,
+            "outs": 352,
+            "gamesPitched": 26,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1153,
+            "strikePercentage": ".650",
+            "hitBatsmen": 5,
+            "balks": 1,
+            "wildPitches": 2,
+            "pickoffs": 0,
+            "totalBases": 169,
+            "groundOutsToAirouts": "0.93",
+            "winPercentage": ".778",
+            "pitchesPerInning": "15.03",
+            "gamesFinished": 2,
+            "strikeoutWalkRatio": "2.66",
+            "strikeoutsPer9Inn": "5.91",
+            "walksPer9Inn": "2.22",
+            "hitsPer9Inn": "8.13",
+            "runsScoredPer9": "3.84",
+            "homeRunsPer9": "1.00",
+            "inheritedRunners": 2,
+            "inheritedRunnersScored": 1,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 3
+          },
+          "team": {
+            "id": 109,
+            "name": "Arizona Diamondbacks",
+            "link": "/api/v1/teams/109"
+          },
+          "player": {
+            "id": 694297,
+            "fullName": "Brandon Pfaadt",
+            "link": "/api/v1/people/694297"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

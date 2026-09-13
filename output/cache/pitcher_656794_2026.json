@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 33,
+            "gamesPlayed": 53,
+            "gamesStarted": 4,
+            "groundOuts": 85,
+            "airOuts": 79,
+            "runs": 29,
+            "doubles": 9,
+            "triples": 5,
+            "homeRuns": 2,
+            "strikeOuts": 74,
+            "baseOnBalls": 29,
+            "intentionalWalks": 3,
+            "hits": 65,
+            "hitByPitch": 7,
+            "avg": ".217",
+            "atBats": 300,
+            "obp": ".300",
+            "slg": ".300",
+            "ops": ".600",
+            "caughtStealing": 2,
+            "stolenBases": 7,
+            "stolenBasePercentage": ".778",
+            "caughtStealingPercentage": ".222",
+            "groundIntoDoublePlay": 7,
+            "numberOfPitches": 1322,
+            "era": "2.71",
+            "inningsPitched": "83.0",
+            "wins": 2,
+            "losses": 4,
+            "saves": 4,
+            "saveOpportunities": 5,
+            "holds": 11,
+            "blownSaves": 1,
+            "earnedRuns": 25,
+            "whip": "1.13",
+            "battersFaced": 339,
+            "outs": 249,
+            "gamesPitched": 53,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 859,
+            "strikePercentage": ".650",
+            "hitBatsmen": 7,
+            "balks": 0,
+            "wildPitches": 0,
+            "pickoffs": 1,
+            "totalBases": 90,
+            "groundOutsToAirouts": "1.08",
+            "winPercentage": ".333",
+            "pitchesPerInning": "15.93",
+            "gamesFinished": 8,
+            "strikeoutWalkRatio": "2.55",
+            "strikeoutsPer9Inn": "8.02",
+            "walksPer9Inn": "3.14",
+            "hitsPer9Inn": "7.05",
+            "runsScoredPer9": "3.14",
+            "homeRunsPer9": "0.22",
+            "inheritedRunners": 32,
+            "inheritedRunnersScored": 3,
+            "catchersInterference": 0,
+            "sacBunts": 2,
+            "sacFlies": 1
+          },
+          "team": {
+            "id": 145,
+            "name": "Chicago White Sox",
+            "link": "/api/v1/teams/145"
+          },
+          "player": {
+            "id": 656794,
+            "fullName": "Sean Newcomb",
+            "link": "/api/v1/people/656794"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

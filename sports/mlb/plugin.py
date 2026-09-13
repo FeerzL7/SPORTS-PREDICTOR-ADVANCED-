@@ -12,6 +12,19 @@ DistributionFactory (core/simulation/factory.py).
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    # Solo para anotaciones: el plugin usa imports diferidos en cada
+    # factory method y este bloque no se ejecuta en runtime.
+    from core.pipeline.stage import (
+        MarketDefinitions,
+        ProbabilityModel,
+        ProjectionModel,
+        SettlementProvider,
+        SportDataProvider,
+    )
+
 
 class MLBPlugin:
     """
@@ -45,11 +58,20 @@ class MLBPlugin:
         # Singletons — instanciados lazy en los factory methods
         self._statcast_fetcher  = None
         self._venue_provider    = None
-        self._data_provider     = None
-        self._projection_model  = None
-        self._probability_model = None
-        self._settlement        = None
-        self._market_defs       = None
+        # Anotados con los PROTOCOLS del Core, no con las clases
+        # concretas del plugin. Sin la anotación, Pyright infiere el
+        # tipo de las asignaciones —MLBDataProvider | None— y rechaza
+        # cualquier otra implementación aunque cumpla el contrato:
+        # dobles de prueba, un provider con caché offline o un backend
+        # alternativo.
+        #
+        # Lo que el PipelineRunner necesita es el Protocol; es también
+        # lo único que este plugin garantiza.
+        self._data_provider:     SportDataProvider | None  = None
+        self._projection_model:  ProjectionModel | None    = None
+        self._probability_model: ProbabilityModel | None   = None
+        self._settlement:        SettlementProvider | None = None
+        self._market_defs:       MarketDefinitions | None  = None
 
     # ── SportPlugin Protocol ──────────────────────────────────────────────────
 

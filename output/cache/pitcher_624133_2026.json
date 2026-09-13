@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 30,
+            "gamesPlayed": 25,
+            "gamesStarted": 25,
+            "groundOuts": 124,
+            "airOuts": 131,
+            "runs": 53,
+            "doubles": 23,
+            "triples": 1,
+            "homeRuns": 8,
+            "strikeOuts": 122,
+            "baseOnBalls": 40,
+            "intentionalWalks": 0,
+            "hits": 119,
+            "hitByPitch": 7,
+            "avg": ".242",
+            "atBats": 491,
+            "obp": ".306",
+            "slg": ".342",
+            "ops": ".648",
+            "caughtStealing": 2,
+            "stolenBases": 6,
+            "stolenBasePercentage": ".750",
+            "caughtStealingPercentage": ".250",
+            "groundIntoDoublePlay": 11,
+            "numberOfPitches": 2104,
+            "era": "3.44",
+            "inningsPitched": "130.2",
+            "wins": 6,
+            "losses": 4,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 50,
+            "whip": "1.22",
+            "battersFaced": 543,
+            "outs": 392,
+            "gamesPitched": 25,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1332,
+            "strikePercentage": ".630",
+            "hitBatsmen": 7,
+            "balks": 0,
+            "wildPitches": 0,
+            "pickoffs": 1,
+            "totalBases": 168,
+            "groundOutsToAirouts": "0.95",
+            "winPercentage": ".600",
+            "pitchesPerInning": "16.10",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "3.05",
+            "strikeoutsPer9Inn": "8.40",
+            "walksPer9Inn": "2.76",
+            "hitsPer9Inn": "8.20",
+            "runsScoredPer9": "3.65",
+            "homeRunsPer9": "0.55",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 4
+          },
+          "team": {
+            "id": 111,
+            "name": "Boston Red Sox",
+            "link": "/api/v1/teams/111"
+          },
+          "player": {
+            "id": 624133,
+            "fullName": "Ranger Suarez",
+            "link": "/api/v1/people/624133"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}
