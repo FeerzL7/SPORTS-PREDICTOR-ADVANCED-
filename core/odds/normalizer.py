@@ -90,9 +90,28 @@ from core.odds.client import RawOddsEvent
 
 # ── Normalización de nombres de mercado ───────────────────────────────────────
 
-# Mapa de API key → nombre convencional interno.
+# Mapa POR DEFECTO de API key → nombre convencional interno.
+#
 # Permite que el resto del sistema use nombres estables independientes
 # de la API de odds utilizada.
+#
+# Por qué es un default y no una verdad absoluta
+# -----------------------------------------------
+# El mismo api_key significa cosas distintas según el deporte. El caso
+# que lo obliga es `h2h`:
+#
+#     MLB, NFL, NBA   dos resultados → mercado ML
+#     Fútbol          TRES resultados, empate incluido → mercado 1X2
+#
+# Con un mapa global, el h2h de fútbol se normalizaría a 'ML' y el
+# pipeline buscaría filters.ML — umbrales calibrados para mercados de
+# dos vías, aplicados a uno de tres. El empate ronda el 27% de
+# probabilidad, así que un min_prob pensado para ML lo descartaría
+# siempre, y precisamente el empate es donde los books aplican más
+# margen.
+#
+# OddsNormalizer acepta `market_names` para sobreescribirlo por
+# deporte, igual que ya acepta `strategies`.
 MARKET_NAME_MAP: dict[str, str] = {
     "h2h":          "ML",
     "spreads":      "SPREAD",
@@ -104,16 +123,29 @@ MARKET_NAME_MAP: dict[str, str] = {
 }
 
 
-def normalize_market_name(api_key: str) -> str:
+def normalize_market_name(
+    api_key:   str,
+    overrides: dict[str, str] | None = None,
+) -> str:
     """
-    Convierte un market key de The Odds API al nombre convencional
-    interno del sistema.
+    Convierte un market key de The Odds API al nombre interno.
 
-    Si el key no está en MARKET_NAME_MAP, retorna api_key.upper().
-    Esto preserva mercados desconocidos de forma legible sin forzar
-    un mapeo exhaustivo que requeriría mantenimiento constante.
+    Parámetros
+    ----------
+    api_key   -- Clave de mercado tal como la devuelve la API.
+    overrides -- Mapeo específico del deporte, con prioridad sobre
+                 MARKET_NAME_MAP. El plugin de fútbol pasa
+                 {"h2h": "1X2"} porque su h2h tiene tres resultados.
+
+    Si el key no aparece en ninguno de los dos mapas, retorna
+    api_key.upper(). Eso preserva mercados desconocidos de forma
+    legible sin forzar un mapeo exhaustivo que exigiría mantenimiento
+    constante.
     """
-    return MARKET_NAME_MAP.get(api_key.lower(), api_key.upper())
+    key = api_key.lower()
+    if overrides and key in overrides:
+        return overrides[key]
+    return MARKET_NAME_MAP.get(key, api_key.upper())
 
 
 # ── Protocolo de estrategia de mejor precio ───────────────────────────────────
@@ -374,9 +406,20 @@ class OddsNormalizer:
 
     def __init__(
         self,
-        strategies: dict[str, BestPriceStrategy] | None = None,
+        strategies:   dict[str, BestPriceStrategy] | None = None,
+        market_names: dict[str, str] | None = None,
     ) -> None:
-        self._strategies = strategies or dict(_DEFAULT_STRATEGIES)
+        """
+        Parámetros
+        ----------
+        strategies   -- Estrategias de selección de precio por mercado.
+        market_names -- Mapeo api_key → nombre interno específico del
+                        deporte, con prioridad sobre MARKET_NAME_MAP.
+                        El plugin de fútbol pasa {"h2h": "1X2"}: su
+                        h2h devuelve tres resultados, no dos.
+        """
+        self._strategies   = strategies or dict(_DEFAULT_STRATEGIES)
+        self._market_names = dict(market_names or {})
 
     # ── API pública ────────────────────────────────────────────────────────────
 
@@ -425,7 +468,7 @@ class OddsNormalizer:
 
             strategy  = self._strategies.get(api_key.lower(), SimpleBestPrice())
             selected  = strategy.select_best(outcomes, preferred_line)
-            market_name = normalize_market_name(api_key)
+            market_name = normalize_market_name(api_key, self._market_names)
 
             for outcome in selected:
                 market_odds = self._to_market_odds(
@@ -461,7 +504,7 @@ class OddsNormalizer:
 
         for api_key in markets:
             outcomes = self._collect_outcomes(raw_event, api_key)
-            market_name = normalize_market_name(api_key)
+            market_name = normalize_market_name(api_key, self._market_names)
 
             for outcome in outcomes:
                 market_odds = self._to_market_odds(

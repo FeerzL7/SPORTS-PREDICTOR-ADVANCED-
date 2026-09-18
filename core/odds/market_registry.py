@@ -339,9 +339,27 @@ _UNIVERSAL_CORE: list[MarketDefinition] = [
         #
         # Hockey lo incluye porque el mercado europeo cotiza el empate
         # en tiempo reglamentario (60 min) como opción separada.
-        sports=frozenset({"soccer", "nhl"}),
-        description="1X2 con empate. Principal para Soccer, aplica a NHL "
-                    "en mercados de tiempo reglamentario.",
+        # CORRECCIÓN (auditoría de fútbol, tarea 11.3): se retira
+        # soccer de este conjunto.
+        #
+        # En la tarea 10.2 se añadió soccer aquí asumiendo que su
+        # mercado principal necesitaba una clave propia. No es así: el
+        # `h2h` de fútbol YA devuelve tres resultados con el empate
+        # incluido. Pedir además h2h_3_way duplicaría el mismo mercado
+        # y gastaría un crédito por región en cada petición sin
+        # aportar nada — el 50% del coste de la request CORE de fútbol,
+        # que solo necesita h2h y totals.
+        #
+        # La traducción h2h → 1X2 para fútbol la resuelve
+        # OddsNormalizer con su mapeo por deporte, no una clave
+        # distinta de la API.
+        #
+        # NHL sí lo necesita: allí `h2h` es el moneyline con prórroga y
+        # penaltis incluidos, mientras que h2h_3_way cotiza el
+        # resultado en tiempo reglamentario. Son mercados distintos.
+        sports=frozenset({"nhl"}),
+        description="1X2 con empate en tiempo reglamentario. Aplica a NHL, "
+                    "donde h2h incluye prórroga y penaltis.",
     ),
 ]
 
@@ -426,20 +444,24 @@ _SOCCER_MARKETS: list[MarketDefinition] = [
         sports=frozenset({"soccer"}),
         description="Ambos equipos anotan (Soccer).",
     ),
-    MarketDefinition(
-        api_key="draw_no_bet",
-        internal_name="DNB",
-        tier=MarketTier.EXTENDED,
-        sports=frozenset({"soccer"}),
-        description="Draw No Bet — apuesta sin empate (Soccer).",
-    ),
-    MarketDefinition(
-        api_key="double_chance",
-        internal_name="DC",
-        tier=MarketTier.EXTENDED,
-        sports=frozenset({"soccer"}),
-        description="Doble oportunidad: 1X, 12, X2 (Soccer).",
-    ),
+    # draw_no_bet y double_chance quedan RETIRADOS del catálogo.
+    #
+    # No son mercados independientes: 1X = P(local) + P(empate), y DNB
+    # es el 1X2 con el empate devuelto. Si el modelo tiene una opinión,
+    # ya la expresa en el 1X2.
+    #
+    # Y el margen del book sobre ellos es proporcionalmente mayor.
+    # Mismo partido, modelo dice local 0.58 y empate 0.25:
+    #
+    #     1X2 local a 2.00   →  EV +7.20%
+    #     DC 1X a 1.30       →  EV +1.66%
+    #
+    # El book cotiza 1.30 donde el precio justo de 0.83 sería 1.20:
+    # ~8% de vig frente al ~5% del 1X2. Expresar la misma ventaja en el
+    # 1X2 rinde más de cuatro veces.
+    #
+    # Mantenerlos en el catálogo solo serviría para gastar créditos en
+    # mercados que el plugin nunca va a operar.
 ]
 
 # Mercados NBA-específicos

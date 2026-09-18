@@ -1,0 +1,475 @@
+# ═══════════════════════════════════════════════════════════════════════════
+#  config/soccer.yaml
+#
+#  Parámetros del plugin de fútbol. Sobreescribe config/base.yaml.
+#
+#  ADVERTENCIA SOBRE LA CALIBRACIÓN
+#  ─────────────────────────────────
+#  Los valores de este archivo NO están calibrados con historial propio.
+#  Provienen de dos fuentes:
+#
+#      Literatura pública   Dixon-Coles, ventaja de campo, correlación
+#                           entre goles. Son parámetros estudiados y
+#                           estables.
+#
+#      Verificación de      Los umbrales de filtros se calcularon para
+#      ventanas             que la ventana de operación sea viable en
+#                           todo el rango de cuotas. Ver la nota de la
+#                           sección `filters`.
+#
+#  Recalibrar con n ≥ 150 picks propios por mercado antes de considerar
+#  estos umbrales definitivos.
+# ═══════════════════════════════════════════════════════════════════════════
+
+sport: soccer
+league: SOCCER
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  COMPETICIONES
+# ═══════════════════════════════════════════════════════════════════════════
+#
+#  El catálogo vive en sports/soccer/competitions.py, que es donde
+#  están los identificadores de cada fuente. Aquí solo van los
+#  parámetros que se pueden recalibrar sin tocar código.
+#
+#  Las medias de goles difieren de forma apreciable entre ligas —la
+#  Bundesliga promedia 3.10 por partido y La Liga 2.53— así que usar un
+#  valor global sesgaría los totales de ambas en direcciones opuestas.
+
+soccer:
+  competitions:
+    epl:
+      avg_home_goals: 1.53
+      avg_away_goals: 1.25
+      home_advantage: 0.33      # en goles, ver la nota de abajo
+    laliga:
+      avg_home_goals: 1.43
+      avg_away_goals: 1.10
+      home_advantage: 0.36      # la más alta de las cinco
+    seriea:
+      avg_home_goals: 1.48
+      avg_away_goals: 1.20
+      home_advantage: 0.31
+    bundesliga:
+      avg_home_goals: 1.72
+      avg_away_goals: 1.38
+      home_advantage: 0.30
+    ligue1:
+      avg_home_goals: 1.48
+      avg_away_goals: 1.15
+      home_advantage: 0.34
+
+  # ── Ventaja de campo ────────────────────────────────────────────────
+  #
+  # Valor por defecto cuando la competición no lo define. Expresado en
+  # GOLES, no en probabilidad: el modelo lo suma a la media esperada del
+  # local antes de calcular la distribución.
+  #
+  # Nota sobre su evolución histórica, que importa para el backtest:
+  # la ventaja de campo en las cinco grandes rondaba 0.45 goles antes
+  # de 2020, cayó a ~0.15 durante los partidos a puerta cerrada, y se
+  # recuperó parcialmente hasta ~0.30-0.35. Un backtest que abarque
+  # 2020-21 con un valor fijo sobreestimará al local en esa temporada.
+  home_advantage_default: 0.33
+
+  # ── Corrección Dixon-Coles ──────────────────────────────────────────
+  #
+  # El Poisson bivariado subestima sistemáticamente los marcadores
+  # bajos: 0-0, 1-0, 0-1 y 1-1 concentran ~30% de los resultados reales
+  # pero el modelo puro les asigna menos.
+  #
+  # Dixon y Coles (1997) corrigen esa dependencia con un parámetro rho
+  # que ajusta solo esas cuatro celdas de la matriz de resultados. El
+  # valor típico en ligas europeas ronda -0.13; valores publicados van
+  # de -0.10 a -0.18 según liga y periodo.
+  #
+  # El signo negativo es lo esperado: indica que los marcadores bajos
+  # son MÁS frecuentes de lo que predice la independencia.
+  #
+  # Sin esta corrección, el modelo infravalora el empate —que es el
+  # 25% de los partidos y el mercado donde más margen aplican los
+  # books— y con él la mayor parte del valor potencial.
+  dixon_coles:
+    # CORREGIDO tras la validación de 11.9.
+    #
+    # El valor -0.13 de la literatura empuja el empate al 28.6% con las
+    # medias de las cinco grandes, por encima del rango observado
+    # (22-28%). El efecto neto de tau depende del producto λ_h·λ_a del
+    # modelo concreto, y los valores publicados se calibraron junto con
+    # sus propias estimaciones de ataque y defensa.
+    #
+    # -0.05 deja el empate en 26.7%, dentro de rango tanto en partidos
+    # igualados como desiguales.
+    #
+    # sports/soccer/dixon_coles.py:calibrate_rho() permite estimarlo con
+    # resultados reales, que es lo que debería hacerse antes de operar.
+    rho: -0.05
+    rho_min: -0.25          # cotas de seguridad si se recalibra
+    rho_max: 0.00
+    # Solo se corrigen los marcadores donde ambos equipos anotan 0 o 1.
+    # Aplicarlo a marcadores altos no tiene base empírica.
+    max_goals_corrected: 1
+
+  # ── Proyección de goles ─────────────────────────────────────────────
+  #
+  # Pesos de las cuatro señales que componen la media esperada de goles.
+  # Suman 1.0: es un promedio ponderado, no un producto — la misma
+  # estructura que en NFL, por la misma razón (los errores se promedian
+  # en vez de multiplicarse).
+  #
+  # Por qué npxG pesa más que xG
+  # -----------------------------
+  # npxG excluye los penaltis. Un penalti vale ~0.76 de xG y su
+  # concesión depende mucho más del azar que el resto del juego, así
+  # que un equipo con muchos penaltis a favor tiene el xG inflado por
+  # un componente poco repetible.
+  #
+  # Por qué los goles pesan poco
+  # -----------------------------
+  # La correlación de xG con resultados futuros ronda 0.60; la de goles
+  # marcados, 0.40. Los goles llevan la información de la finalización,
+  # que es parcialmente real pero muy ruidosa. Peso bajo, no nulo.
+  projection:
+    npxg_weight:   0.45
+    xg_weight:     0.25
+    goals_weight:  0.15
+    form_weight:   0.15
+
+    # Ventana móvil para la forma reciente, en partidos.
+    #
+    # Ocho y no cinco: en fútbol un partido aporta ~2.7 goles de
+    # información frente a los ~45 puntos de NFL, así que la muestra
+    # necesita más amplitud para estabilizarse. Por encima de diez, la
+    # ventana empieza a describir un equipo que ya cambió de forma.
+    form_window: 8
+
+    # Ventana separada para casa y fuera.
+    #
+    # La ventaja de campo no es uniforme: algunos equipos la explotan
+    # bastante más que otros. Separar los promedios captura eso, pero
+    # divide la muestra por dos, así que la ventana se amplía.
+    venue_split_window: 12
+
+  # ── Regresión a la media ────────────────────────────────────────────
+  #
+  # Los índices de ataque y defensa se encogen hacia la media de liga
+  # según el tamaño de muestra, igual que el EPA en NFL.
+  #
+  # Prior en PARTIDOS, no en jugadas. Seis partidos ≈ un 16% de una
+  # temporada de 38. Es menos agresivo que el equivalente de NFL
+  # (3 partidos sobre 17, un 18%) porque el xG estabiliza más rápido
+  # que el EPA: hacen falta ~8-10 partidos para que el xG por partido
+  # sea informativo, frente a los ~20 que necesitan los goles.
+  shrinkage:
+    prior_matches: 6
+    # Por debajo de este número, el modelo no debería operar la
+    # competición: la proyección estaría dominada por la media de liga
+    # y no aportaría información sobre el mercado.
+    min_matches_to_bet: 5
+
+  # ── Congestión de calendario ────────────────────────────────────────
+  #
+  # Lo que no existe en MLB ni NFL: un equipo puede jugar liga, copa
+  # nacional y competición europea en la misma semana.
+  #
+  # Dos efectos distintos y ambos reales:
+  #     Fatiga     Rendimiento físico reducido con menos de tres días
+  #                de descanso.
+  #     Rotación   El cuerpo técnico reserva titulares, lo que baja el
+  #                nivel del once más de lo que baja la fatiga.
+  #
+  # Los valores son penalizaciones en GOLES sobre la media esperada.
+  congestion:
+    # Días de descanso por debajo de los cuales se penaliza
+    short_rest_days: 3
+    short_rest_penalty: -0.12
+
+    # Partido europeo entre semana antes de este
+    midweek_european_penalty: -0.08
+
+    # Tres partidos en ocho días
+    heavy_load_penalty: -0.15
+
+    # Techo de la penalización acumulada. Más allá, el partido tiene
+    # demasiada incertidumbre sobre la alineación.
+    max_congestion_penalty: -0.30
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  SIMULACIÓN
+# ═══════════════════════════════════════════════════════════════════════════
+
+simulation:
+  soccer:
+    # Poisson bivariado con corrección Dixon-Coles.
+    #
+    # El Poisson bivariado modela la correlación entre los goles de
+    # ambos equipos mediante un componente compartido. En fútbol esa
+    # correlación es POSITIVA y modesta: hay partidos abiertos donde
+    # ambos marcan y partidos cerrados donde ninguno lo hace.
+    #
+    # Es la situación opuesta a la de NFL, donde el game script genera
+    # correlación NEGATIVA (el equipo que gana corre el reloj y
+    # suprime la anotación de ambos).
+    default_model: bivariate_poisson
+
+    bivariate_poisson:
+      # DESACTIVADO. Dixon-Coles y el Poisson bivariado modelan la
+      # MISMA dependencia por vías distintas; activar ambos la cuenta
+      # dos veces y empuja el empate al 30.2%, fuera del rango real.
+      #
+      #     ninguno          25.5%
+      #     solo Dixon-Coles 28.6%
+      #     solo λ₃          26.9%
+      #     ambos            30.2%  ← fuera de rango
+      #
+      # Para usar la vía bivariada en su lugar: lambda_3 = 0.12 con
+      # dixon_coles.rho = 0.
+      lambda_3: 0.0
+      lambda_3_min: 0.00
+      lambda_3_max: 0.30
+
+      # Máximo de goles por equipo en la matriz de resultados.
+      # Diez cubre más del 99.9% de los marcadores reales; ampliarlo
+      # solo añade coste computacional.
+      max_goals: 10
+
+    # Cotas de la media esperada de goles por equipo.
+    # Red de seguridad ante datos corruptos: ningún equipo de las cinco
+    # grandes proyecta por debajo de 0.35 ni por encima de 3.5.
+    lambda_min: 0.35
+    lambda_max: 3.50
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  BLENDING
+# ═══════════════════════════════════════════════════════════════════════════
+#
+#  Peso del modelo frente al mercado. Conservador por la misma razón
+#  que en NFL: sin historial propio, el mercado sabe más.
+#
+#  El 1X2 lleva peso ligeramente mayor (0.45) que los mercados
+#  derivados porque es donde el xG aporta señal más directa.
+
+blending:
+  "1X2":
+    model_weight: 0.45
+    prob_cap: 0.68
+  TOTAL:
+    model_weight: 0.45
+    prob_cap: 0.68
+  BTTS:
+    model_weight: 0.40
+    prob_cap: 0.72
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  FILTROS
+# ═══════════════════════════════════════════════════════════════════════════
+#
+#  CÓMO SE CALIBRARON ESTOS VALORES
+#  ─────────────────────────────────
+#  min_ev, model_weight y max_edge NO son independientes. En el plugin
+#  NFL se fijaron por separado y la ventana de operación resultante era
+#  de 0.87 puntos porcentuales: el sistema no habría generado un solo
+#  pick de spread. El fallo se detectó en el dry run, no antes.
+#
+#  Aquí las ventanas se verificaron ANTES de fijar los valores.
+#
+#  El hallazgo, contrario a la intuición
+#  --------------------------------------
+#  El favorito es el caso difícil, no el empate:
+#
+#      Favorito a 1.80   exige +9.4 pp de ventaja bruta
+#      Empate a 3.60     exige +5.8 pp
+#
+#  A cuota baja el margen del book se come proporcionalmente más, así
+#  que hace falta mucha más ventaja en probabilidad para generar el
+#  mismo EV. Con max_edge = 0.08 la ventana del favorito salía
+#  NEGATIVA: imposible por construcción.
+#
+#  Ventanas resultantes con los valores actuales
+#  ----------------------------------------------
+#      1X2   favorito 1.80   5.62 pp
+#            empate 3.40     8.79 pp
+#            dog 6.00       11.30 pp
+#      TOTAL línea par      4.27 pp
+#      BTTS  sí 1.70         6.03 pp
+#
+#  Todas por encima de 3 pp, que es el mínimo para que el mercado sea
+#  operable en la práctica.
+
+filters:
+  "1X2":
+    min_ev:        3.0
+    min_prob:      null      # el empate legítimamente ronda 0.27
+    min_odds:      1.70      # ver la nota de abajo
+    max_odds:      6.50
+    min_edge:      0.020
+    max_edge:      0.150
+    min_line_diff: null
+
+  TOTAL:
+    min_ev:        3.0
+    min_prob:      0.480
+    min_odds:      1.60
+    max_odds:      2.60
+    min_edge:      0.020
+    max_edge:      0.130
+    # Diferencia mínima entre el total proyectado y la línea, en goles.
+    # Medio gol es sustancial en un deporte que promedia 2.7.
+    min_line_diff: 0.35
+
+  BTTS:
+    min_ev:        3.0
+    min_prob:      0.450
+    min_odds:      1.55
+    max_odds:      2.50
+    min_edge:      0.025
+    max_edge:      0.150
+    min_line_diff: null
+
+# ── Por qué min_odds = 1.70 en el 1X2 ─────────────────────────────────
+#
+# Excluye a los favoritos más cortos. No es arbitrario: por debajo de
+# esa cuota la ventana se vuelve nula, y además es la zona donde el
+# mercado es más eficiente — el dinero se concentra en el resultado
+# obvio y el precio lo refleja con precisión.
+#
+# Apostar favoritos a 1.40 exigiría que el modelo acertara la
+# probabilidad con una precisión que no puede demostrar.
+
+# ── Mercados declarados pero DESACTIVADOS ─────────────────────────────
+#
+# DOBLE OPORTUNIDAD (1X, X2, 12) y DRAW NO BET
+#
+# No son mercados independientes: 1X = P(local) + P(empate). Si el
+# modelo tiene una opinión, ya la expresa en el 1X2.
+#
+# Y el margen del book sobre ellos es proporcionalmente mayor. Mismo
+# partido, modelo dice local 0.58 y empate 0.25:
+#
+#     1X2 local a 2.00   →  EV +7.20%
+#     DC 1X a 1.30       →  EV +1.66%
+#
+# El book cotiza 1.30 cuando el precio justo de 0.83 sería 1.20: ~8% de
+# vig frente al ~5% del 1X2. Expresar la misma ventaja en el 1X2 rinde
+# más de cuatro veces.
+#
+# El DC solo tiene sentido como reductor de varianza, que es un
+# objetivo distinto del que persigue este sistema.
+#
+# HÁNDICAP ASIÁTICO
+#
+# Queda fuera de la primera versión por su complejidad de liquidación:
+# las líneas de cuarto (-0.25, -0.75) dividen el stake en dos apuestas,
+# y los push parciales requieren lógica que el settlement genérico no
+# tiene. Es una extensión posterior, no un recorte de alcance.
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  KELLY Y STAKING
+# ═══════════════════════════════════════════════════════════════════════════
+
+kelly:
+  "1X2":
+    fraction: 0.15
+    max_fraction: 1.0
+  TOTAL:
+    fraction: 0.15
+    max_fraction: 1.0
+  BTTS:
+    fraction: 0.12          # el más conservador: mercado menos estudiado
+    max_fraction: 1.0
+
+staking:
+  "1X2":
+    min_pct: 1
+    max_pct: 2
+    ev_l1: 8.0
+    prob_l1: 0.40           # umbral bajo: el empate legítimamente ronda 0.27
+    ev_l2: 15.0
+    prob_l2: 0.48
+  TOTAL:
+    min_pct: 1
+    max_pct: 2
+    ev_l1: 8.0
+    prob_l1: 0.52
+    ev_l2: 15.0
+    prob_l2: 0.56
+  BTTS:
+    min_pct: 1
+    max_pct: 1              # sin escalado hasta tener historial
+    ev_l1: 99.0
+    prob_l1: 0.99
+    ev_l2: 99.0
+    prob_l2: 0.99
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  GESTIÓN DE RIESGO
+# ═══════════════════════════════════════════════════════════════════════════
+#
+#  El fútbol presenta un problema de correlación distinto al de NFL.
+#
+#  En NFL el riesgo era la concentración dominguera: dieciséis partidos
+#  en unas horas.
+#
+#  En fútbol, las cinco ligas juegan en el mismo fin de semana y hay
+#  hasta cuarenta partidos entre sábado y domingo. El límite diario
+#  tiene que ser más alto en términos absolutos, pero la exposición
+#  total no puede crecer proporcionalmente: cuarenta picks al 2% serían
+#  el 80% del bankroll en un fin de semana.
+
+risk:
+  max_picks_daily: 8
+  max_exposure_pct: 10
+
+  # Tope por competición. Evita que una sola liga con muchos partidos
+  # acapare la exposición del día.
+  max_picks_per_competition: 3
+
+  # Un equipo no puede aparecer en más de un pick del mismo partido:
+  # apostar 1X2 local y under en el mismo encuentro son posiciones
+  # correlacionadas, no diversificación.
+  max_picks_per_match: 1
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  MOVIMIENTO DE LÍNEA
+# ═══════════════════════════════════════════════════════════════════════════
+#
+#  El fútbol no tiene números clave como el 3 y el 7 de NFL: la
+#  distribución de goles es continua en su efecto sobre el mercado, sin
+#  concentraciones comparables.
+#
+#  Lo que sí importa es el movimiento del 1X2 tras noticias de
+#  alineación, que en fútbol se publican una hora antes del partido y
+#  mueven el precio de forma brusca.
+
+line_movement:
+  # Umbral de movimiento adverso que invalida un pick, en porcentaje
+  # de la cuota.
+  adverse_threshold_pct: 4.0
+  # Movimiento a favor que confirma la lectura del modelo.
+  confirming_threshold_pct: 3.0
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  ENSEMBLE
+# ═══════════════════════════════════════════════════════════════════════════
+
+ensemble:
+  # Cotas de la proyección de goles por equipo.
+  proj_min: 0.35
+  proj_max: 3.50
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+#  THE ODDS API
+# ═══════════════════════════════════════════════════════════════════════════
+
+odds_api:
+  regions: "eu,uk"          # mejor cobertura de fútbol europeo que "us"
+  odds_format: "decimal"

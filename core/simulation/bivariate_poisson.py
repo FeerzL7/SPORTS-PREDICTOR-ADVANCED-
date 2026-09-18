@@ -61,6 +61,18 @@ import math
 
 from core.contracts import Projection
 from core.simulation.protocols import SimulationResult
+
+
+# API pública del módulo.
+#
+# Se declara explícitamente porque build_joint_matrix es matemática
+# compartida con el plugin de fútbol: dejar su condición de pública al
+# criterio de quien lea el código invita a que alguien la vuelva
+# privada y rompa esa dependencia sin darse cuenta.
+__all__ = [
+    "BivariatePoissonModel",
+    "build_joint_matrix",
+]
 from core.utils.math.poisson_math import cdf, pmf, sf
 
 
@@ -87,35 +99,161 @@ def _tau(h: int, a: int, mu_h: float, mu_a: float, rho: float) -> float:
     return 1.0
 
 
-def _build_joint_matrix(
+def _means(projection: Projection) -> tuple[float, float]:
+    """
+    Medias esperadas de la proyección, con prioridad a las explícitas.
+
+    distribution_params puede traer lambda_home/lambda_away, que son
+    las que el modelo de proyección usó realmente. expected_home y
+    expected_away son el mismo valor redondeado a tres decimales, así
+    que preferir las explícitas evita una divergencia de milésimas
+    entre la matriz de la proyección y la de aquí.
+    """
+    params = projection.distribution_params or {}
+    mu_h = _param(params.get("lambda_home"), projection.expected_home)
+    mu_a = _param(params.get("lambda_away"), projection.expected_away)
+    return max(mu_h, 0.1), max(mu_a, 0.1)
+
+
+def _param(value, fallback: float) -> float:
+    """
+    Convierte a float, con respaldo cuando el valor está AUSENTE.
+
+    No se usa `value or fallback` porque el cero es legítimo aquí:
+    rho = 0.0 desactiva la corrección Dixon-Coles y lambda_3 = 0.0 el
+    componente bivariado. Con `or`, una proyección calculada sin
+    corrección se recalcularía CON ella.
+    """
+    if value is None:
+        return fallback
+    try:
+        result = float(value)
+    except (ValueError, TypeError):
+        return fallback
+    return result if result == result else fallback
+
+
+def build_joint_matrix(
     mu_h: float,
     mu_a: float,
     rho: float,
     max_score: int,
+    lambda_3: float = 0.0,
 ) -> list[list[float]]:
     """
-    Construye la matriz de probabilidades conjuntas P(home=h, away=a)
-    con corrección Dixon-Coles, normalizada para que sume 1.0.
+    Matriz de probabilidades conjuntas P(home=h, away=a).
 
-    Retorna matrix[h][a] = P(home scores h, away scores a).
+    PÚBLICA de forma deliberada. La versión anterior se llamaba
+    `_build_joint_matrix`, y sports/soccer/dixon_coles.py la importaba
+    con el guion bajo incluido — una contradicción: el guion declara
+    "interno a este módulo" y el import venía de fuera. El type checker
+    lo señaló con razón.
+
+    Un símbolo del que depende otro módulo es parte de la API pública
+    por definición. Renombrarla es reconocer lo que ya era.
+
+    Fuente ÚNICA de esta matemática en todo el proyecto. El módulo
+    sports/soccer/dixon_coles.py delega aquí en vez de reimplementarla:
+    tener dos versiones significaría que cualquier recalibración habría
+    que aplicarla en dos sitios, y divergirían en silencio.
+
+    La dirección de la dependencia es sports → core, nunca al revés.
+
+    Parámetros
+    ----------
+    mu_h / mu_a -- Medias esperadas de cada equipo. Son las MARGINALES:
+                   con lambda_3 > 0 los parámetros del proceso interno
+                   se ajustan para que la media total siga siendo la
+                   pedida.
+    rho         -- Corrección Dixon-Coles. Negativo aumenta la masa en
+                   empates de marcador bajo. Cero la desactiva.
+    max_score   -- Máximo de goles por equipo. La matriz resultante es
+                   de (max_score + 1) × (max_score + 1), cubriendo los
+                   marcadores de 0 a max_score inclusive.
+
+                   CORRECCIÓN: la versión anterior usaba
+                   range(max_score), así que max_score=10 producía
+                   marcadores 0-9 y truncaba el 10. La masa perdida la
+                   redistribuía la normalización, desplazando
+                   ligeramente todas las probabilidades.
+    lambda_3    -- Componente compartido del Poisson bivariado. Cero lo
+                   reduce a dos Poisson independientes.
+
+                   AÑADIDO: pese a llamarse BivariatePoissonModel, el
+                   módulo no lo soportaba — era un Poisson
+                   INDEPENDIENTE con corrección Dixon-Coles. Ahora
+                   ofrece ambas vías.
+
+                   Nota importante: Dixon-Coles y el componente
+                   bivariado modelan la MISMA dependencia. Activar los
+                   dos la cuenta dos veces y empuja el empate fuera del
+                   rango observado. Usar uno u otro, no ambos.
     """
-    matrix = []
-    total = 0.0
+    size = max(2, int(max_score))
+    lam_3 = max(0.0, min(lambda_3, min(mu_h, mu_a) * 0.9))
 
-    for h in range(max_score):
-        row = []
-        ph = pmf(h, mu_h)
-        for a in range(max_score):
-            p = ph * pmf(a, mu_a) * _tau(h, a, mu_h, mu_a, rho)
-            p = max(p, 0.0)  # por seguridad ante tau negativo
-            row.append(p)
-            total += p
-        matrix.append(row)
+    if lam_3 > 0:
+        matrix = _bivariate_base(mu_h, mu_a, lam_3, size)
+    else:
+        matrix = _independent_base(mu_h, mu_a, size)
 
-    # Normalizar para compensar la masa truncada fuera de max_score
-    # y cualquier distorsión de la corrección tau
+    # Corrección tau sobre las cuatro celdas de marcador bajo
+    for h in range(min(2, size + 1)):
+        for a in range(min(2, size + 1)):
+            matrix[h][a] = max(0.0, matrix[h][a] * _tau(h, a, mu_h, mu_a, rho))
+
+    total = sum(sum(row) for row in matrix)
     if total > 0:
         matrix = [[p / total for p in row] for row in matrix]
+
+    return matrix
+
+
+def _independent_base(
+    mu_h: float,
+    mu_a: float,
+    size: int,
+) -> list[list[float]]:
+    """Producto exterior de dos Poisson independientes."""
+    p_home = [pmf(k, mu_h) for k in range(size + 1)]
+    p_away = [pmf(k, mu_a) for k in range(size + 1)]
+    return [[ph * pa for pa in p_away] for ph in p_home]
+
+
+def _bivariate_base(
+    mu_h:  float,
+    mu_a:  float,
+    lam_3: float,
+    size:  int,
+) -> list[list[float]]:
+    """
+    Poisson bivariado con componente compartido.
+
+        Goles_local     = X₁ + X₃
+        Goles_visitante = X₂ + X₃
+
+    con X₁, X₂, X₃ Poisson independientes. Para conservar las medias
+    marginales: λ₁ = mu_h - λ₃ y λ₂ = mu_a - λ₃.
+
+    La probabilidad conjunta suma sobre los valores del componente
+    compartido:
+
+        P(h, a) = Σ_k P(X₁ = h-k) · P(X₂ = a-k) · P(X₃ = k)
+    """
+    lam_1 = max(mu_h - lam_3, 0.01)
+    lam_2 = max(mu_a - lam_3, 0.01)
+
+    p1 = [pmf(k, lam_1) for k in range(size + 1)]
+    p2 = [pmf(k, lam_2) for k in range(size + 1)]
+    p3 = [pmf(k, lam_3) for k in range(size + 1)]
+
+    matrix = [[0.0] * (size + 1) for _ in range(size + 1)]
+    for h in range(size + 1):
+        for a in range(size + 1):
+            acc = 0.0
+            for k in range(min(h, a) + 1):
+                acc += p1[h - k] * p2[a - k] * p3[k]
+            matrix[h][a] = acc
 
     return matrix
 
@@ -154,6 +292,43 @@ class BivariatePoissonModel:
         self.rho = rho
         self.max_score = max_score
 
+    # ── Resolución de parámetros ──────────────────────────────────────────────
+
+    def _get_params(self, projection: Projection) -> tuple[float, float, int]:
+        """
+        Parámetros de la matriz, con prioridad al valor de la proyección.
+
+        Retorna (rho, lambda_3, max_score).
+
+        Por qué la proyección manda sobre el constructor
+        ------------------------------------------------
+        El modelo de proyección de fútbol calibra rho contra las medias
+        de su liga y lo deja en distribution_params. La versión
+        anterior de este módulo NO los leía: usaba el rho fijado al
+        construir, así que las probabilidades del pick diferían de las
+        que produjeron la proyección.
+
+        La diferencia medida era del 4.5% en el empate — precisamente
+        el mercado donde los books aplican más margen y donde el
+        modelo busca su valor. Un pick de empate calculado con un rho
+        distinto al proyectado no corresponde a nada.
+
+        Es el mismo defecto que apareció en NormalModel para NFL, donde
+        la sigma adaptativa del modelo se descartaba en silencio.
+        """
+        params = projection.distribution_params or {}
+
+        rho = _param(params.get("rho"), self.rho)
+        # rho positivo no tiene sentido en fútbol; se acota en vez de
+        # lanzar, porque un parámetro corrupto en una proyección no
+        # debería tumbar el pipeline entero.
+        rho = min(0.0, rho)
+
+        lambda_3 = max(0.0, _param(params.get("lambda_3"), 0.0))
+        max_score = int(_param(params.get("max_goals"), self.max_score))
+
+        return rho, lambda_3, max(2, max_score)
+
     def win_probabilities(
         self,
         projection: Projection,
@@ -163,13 +338,13 @@ class BivariatePoissonModel:
         Dixon-Coles. Los tres suman 1.0 (la normalización de la matriz
         garantiza esto).
         """
-        mu_h = max(projection.expected_home, 0.1)
-        mu_a = max(projection.expected_away, 0.1)
-        matrix = _build_joint_matrix(mu_h, mu_a, self.rho, self.max_score)
+        mu_h, mu_a = _means(projection)
+        rho, lambda_3, size = self._get_params(projection)
+        matrix = build_joint_matrix(mu_h, mu_a, rho, size, lambda_3)
 
         home_win = away_win = draw = 0.0
-        for h in range(self.max_score):
-            for a in range(self.max_score):
+        for h in range(len(matrix)):
+            for a in range(len(matrix[h])):
                 p = matrix[h][a]
                 if h > a:
                     home_win += p
@@ -197,13 +372,13 @@ class BivariatePoissonModel:
         line puede ser entero (.0), medio (.5) o cuarto (.25/.75).
         La iteración sobre la matriz conjunta maneja todos los casos.
         """
-        mu_h = max(projection.expected_home, 0.1)
-        mu_a = max(projection.expected_away, 0.1)
-        matrix = _build_joint_matrix(mu_h, mu_a, self.rho, self.max_score)
+        mu_h, mu_a = _means(projection)
+        rho, lambda_3, size = self._get_params(projection)
+        matrix = build_joint_matrix(mu_h, mu_a, rho, size, lambda_3)
 
         cover_prob = 0.0
-        for h in range(self.max_score):
-            for a in range(self.max_score):
+        for h in range(len(matrix)):
+            for a in range(len(matrix[h])):
                 team_score = h if side == 'home' else a
                 opp_score  = a if side == 'home' else h
                 if team_score + line > opp_score:
@@ -227,13 +402,13 @@ class BivariatePoissonModel:
         corrección Dixon-Coles hace que la distribución de la suma
         NO sea Poisson simple.
         """
-        mu_h = max(projection.expected_home, 0.1)
-        mu_a = max(projection.expected_away, 0.1)
-        matrix = _build_joint_matrix(mu_h, mu_a, self.rho, self.max_score)
+        mu_h, mu_a = _means(projection)
+        rho, lambda_3, size = self._get_params(projection)
+        matrix = build_joint_matrix(mu_h, mu_a, rho, size, lambda_3)
 
         prob = 0.0
-        for h in range(self.max_score):
-            for a in range(self.max_score):
+        for h in range(len(matrix)):
+            for a in range(len(matrix[h])):
                 total = h + a
                 if side == 'over' and total > line:
                     prob += matrix[h][a]
@@ -243,7 +418,7 @@ class BivariatePoissonModel:
         return round(prob, 4)
 
     def model_version(self) -> str:
-        return f'bivariate_poisson-v1.0-rho{self.rho}'
+        return f'bivariate_poisson-v1.1-rho{self.rho}'
 
     def simulate(
         self,
@@ -257,27 +432,45 @@ class BivariatePoissonModel:
         en una sola llamada. La matriz se construye una vez y se reutiliza
         para los tres mercados — no se recalcula tres veces.
         """
-        mu_h = max(projection.expected_home, 0.1)
-        mu_a = max(projection.expected_away, 0.1)
-        matrix = _build_joint_matrix(mu_h, mu_a, self.rho, self.max_score)
+        mu_h, mu_a = _means(projection)
+        rho, lambda_3, size = self._get_params(projection)
+        matrix = build_joint_matrix(mu_h, mu_a, rho, size, lambda_3)
+        rows = len(matrix)
+        cols = len(matrix[0]) if matrix else 0
 
         # Win probabilities
         home_win = away_win = draw = 0.0
-        for h in range(self.max_score):
-            for a in range(self.max_score):
+        for h in range(rows):
+            for a in range(cols):
                 p = matrix[h][a]
                 if h > a:   home_win += p
                 elif a > h: away_win += p
                 else:       draw     += p
 
         # Spread
+        #
+        # CORRECCIÓN: la versión anterior aplicaba la MISMA línea a
+        # ambos lados:
+        #
+        #     if h + spread_line > a: sh += ...
+        #     if a + spread_line > h: sa += ...
+        #
+        # Eso calcula dos veces el mismo lado del mercado. Si el local
+        # es -1.0, el visitante es +1.0: `spread_away` debe usar la
+        # línea NEGADA. Sin ello las dos probabilidades no suman 1.0 y
+        # no corresponden a ningún mercado real.
+        #
+        # Es el mismo defecto que se corrigió en NormalModel.simulate()
+        # en la tarea 10.11. SkellamModel lo sigue arrastrando.
         spread_home = spread_away = None
         if spread_line is not None:
             sh = sa = 0.0
-            for h in range(self.max_score):
-                for a in range(self.max_score):
-                    if h + spread_line > a: sh += matrix[h][a]
-                    if a + spread_line > h: sa += matrix[h][a]
+            for h in range(rows):
+                for a in range(cols):
+                    if h + spread_line > a:
+                        sh += matrix[h][a]
+                    if a - spread_line > h:
+                        sa += matrix[h][a]
             spread_home = round(sh, 4)
             spread_away = round(sa, 4)
 
@@ -285,8 +478,8 @@ class BivariatePoissonModel:
         over_prob = under_prob = None
         if total_line is not None:
             op = up = 0.0
-            for h in range(self.max_score):
-                for a in range(self.max_score):
+            for h in range(rows):
+                for a in range(cols):
                     t = h + a
                     if t > total_line: op += matrix[h][a]
                     elif t < total_line: up += matrix[h][a]
