@@ -57,7 +57,7 @@ from __future__ import annotations
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
-from typing import Any
+from typing import Any, Callable, cast
 
 from core.contracts.event import Event
 from core.contracts.pick import CandidatePick
@@ -141,6 +141,125 @@ class PipelineResult:
 
 
 # ── Motor principal ───────────────────────────────────────────────────────────
+
+# ── Capacidades opcionales de los plugins ────────────────────────────────────
+#
+# Stage 5 soporta dos extensiones que ningún plugin está obligado a
+# implementar. Se resuelven con helpers dedicados en vez de `isinstance`
+# contra Protocols, por una razón concreta que la primera versión
+# ignoró:
+#
+#     isinstance(self._plugin, SupportsMultipleLeagues)
+#
+# ESTRECHA el tipo de self._plugin a ese Protocol dentro de la rama, y
+# el Protocol no declara sport_id ni get_market_definitions. Todos los
+# accesos posteriores a esos atributos pasan a ser errores de tipo.
+#
+# Los helpers reciben el plugin como parámetro y devuelven un tipo
+# concreto, así que la variable original conserva su tipo completo.
+
+OddsMatcher = Callable[[Event, list], Any]
+"""
+Empareja un Event con su RawOddsEvent entre los candidatos.
+
+Firma: matcher(event, raw_events) -> RawOddsEvent | None
+"""
+
+
+def _resolve_sport_ids(plugin: SportPlugin) -> list[str]:
+    """
+    Claves de The Odds API que cubren el deporte del plugin.
+
+    MLB y NFL declaran UNA: un deporte, una request, todos los partidos
+    del día.
+
+    Fútbol tiene una POR COMPETICIÓN —soccer_epl,
+    soccer_spain_la_liga...— porque The Odds API trata cada liga como
+    un deporte distinto. Una sola request cubriría el 20% de los
+    partidos.
+
+    Orden de preferencia: `odds_api_sport_ids` (plural),
+    `odds_api_sport_id` (singular), `sport_id`. Los plugins existentes
+    no declaran el plural, así que su comportamiento no cambia.
+    """
+    ids = getattr(plugin, "odds_api_sport_ids", None)
+    if isinstance(ids, (list, tuple)) and ids:
+        return [str(key) for key in ids if key]
+
+    single = getattr(plugin, "odds_api_sport_id", None)
+    if isinstance(single, str) and single:
+        return [single]
+
+    return [plugin.sport_id]
+
+
+def _resolve_odds_matcher(plugin: SportPlugin) -> OddsMatcher | None:
+    """
+    Estrategia de emparejamiento propia del plugin, si la tiene.
+
+    Por defecto el pipeline empareja por el id de The Odds API, que el
+    plugin deja en `provider_ids['odds_api']`.
+
+    Algunas fuentes de calendario no lo publican: football-data.co.uk y
+    The Odds API son proveedores sin relación, así que el plugin no
+    puede rellenarlo al construir el Event —ocurre antes de pedir las
+    cuotas. Esos plugins exponen `get_odds_matcher()` con su propia
+    estrategia; en fútbol, fecha y nombres canónicos.
+
+    Sin este punto de extensión, ningún partido de fútbol recibiría
+    cuotas y el pipeline produciría cero picks sin un solo error: el
+    mismo modo de fallo silencioso que dio cero picks en el primer
+    backtest de NFL.
+
+    Devuelve None si el plugin no lo implementa o si construirlo falla
+    — en ese caso se cae a la ruta por id, que puede funcionar si el
+    plugin también rellena provider_ids.
+    """
+    factory = getattr(plugin, "get_odds_matcher", None)
+    if not callable(factory):
+        return None
+
+    try:
+        matcher = factory()
+    except Exception:
+        return None
+
+    if not callable(matcher):
+        return None
+
+    # La llamabilidad está verificada en runtime; el cast se lo comunica
+    # al type checker, que no puede deducirlo de un getattr.
+    return cast(OddsMatcher, matcher)
+
+
+def _first_preferred_line(market_defs) -> float | None:
+    """
+    Primera línea preferida declarada entre los mercados CORE.
+
+    OddsNormalizer.extract_best acepta UNA línea preferida para toda la
+    extracción. Antes se le pasaba la del mercado 'SPREAD', fijado en
+    código, lo que funcionaba para MLB —cuyo runline es siempre ±1.5—
+    pero ignoraba cualquier otro deporte cuya preferencia estuviera en
+    otro mercado.
+
+    Recorrer los mercados CORE en orden y tomar la primera preferencia
+    declarada da el mismo resultado para MLB y NFL, y hace que el 2.5
+    de fútbol se aplique.
+    """
+    try:
+        markets = market_defs.get_core_markets()
+    except Exception:
+        return None
+
+    for api_key in list(markets) + ["SPREAD"]:
+        try:
+            line = market_defs.get_preferred_line(api_key)
+        except Exception:
+            continue
+        if line is not None:
+            return line
+    return None
+
 
 class PipelineRunner:
     """
@@ -378,51 +497,116 @@ class PipelineRunner:
 
         Una sola request a la API cubre todos los eventos del deporte.
         """
-        t     = time.monotonic()
-        # Usar odds_api_sport_id si el plugin lo declara (ej: "baseball_mlb"),
-        # fallback a sport_id genérico (ej: "mlb") si no existe.
-        sport = getattr(self._plugin, "odds_api_sport_id", self._plugin.sport_id)
-        mkt   = self._plugin.get_market_definitions()
+        t   = time.monotonic()
+        mkt = self._plugin.get_market_definitions()
 
-        try:
-            response = self._odds_client.get_events(
-                sport   = sport,
-                markets = mkt.get_core_markets(),
-            )
-        except Exception as e:
-            context.add_error("Stage5", f"OddsAPIClient falló: {e}")
-            return
+        # ── Claves de la API ───────────────────────────────────────
+        #
+        # MLB y NFL declaran UNA clave: un deporte, una request, todos
+        # los partidos del día.
+        #
+        # Fútbol tiene una POR COMPETICIÓN —soccer_epl,
+        # soccer_spain_la_liga...— porque The Odds API trata cada liga
+        # como un deporte distinto. Una sola request cubriría el 20% de
+        # los partidos.
+        #
+        # Se prefiere `odds_api_sport_ids` (plural) cuando el plugin lo
+        # declara, y se cae al singular y luego al sport_id. Los
+        # plugins existentes no declaran el plural, así que su
+        # comportamiento no cambia.
+        sport_ids = _resolve_sport_ids(self._plugin)
 
-        if not response.success:
-            context.add_error(
-                "Stage5",
-                f"API error ({response.error_type}): {response.error_message}"
-            )
-            return
+        raw_events: list = []
+        credits_remaining = None
 
-        # Registrar créditos restantes
-        context.set_meta("odds_credits_remaining", response.requests_remaining)
-
-        snap_date = self._config.odds_snapshot_date or context.date
-
-        for event in context.events:
-            # Buscar el RawOddsEvent correspondiente por event_id de la API
-            odds_api_id = event.provider_ids.get("odds_api")
-            if not odds_api_id:
+        for sport in sport_ids:
+            try:
+                response = self._odds_client.get_events(
+                    sport   = sport,
+                    markets = mkt.get_core_markets(),
+                )
+            except Exception as e:
+                context.add_error("Stage5", f"OddsAPIClient falló ({sport}): {e}")
                 continue
 
-            raw_event = self._normalizer.find_by_event_id(
-                response.events, odds_api_id
-            )
-            if raw_event is None:
+            if not response.success:
+                # Una competición fuera de temporada devuelve error y no
+                # debe abortar las demás: en agosto la Premier ya juega
+                # y la Bundesliga aún no.
                 context.add_error(
                     "Stage5",
-                    f"Sin odds para event_id='{odds_api_id}' ({event.home_team} vs {event.away_team})"
+                    f"API error en {sport} ({response.error_type}): "
+                    f"{response.error_message}"
                 )
                 continue
 
+            raw_events.extend(response.events)
+            if response.requests_remaining is not None:
+                credits_remaining = response.requests_remaining
+
+        if not raw_events:
+            context.add_error("Stage5", "Ninguna competición devolvió cuotas")
+            return
+
+        context.set_meta("odds_credits_remaining", credits_remaining)
+        context.set_meta("odds_sport_ids", list(sport_ids))
+
+        snap_date = self._config.odds_snapshot_date or context.date
+        sport = sport_ids[0]
+
+        # ── Emparejador de eventos ─────────────────────────────────
+        #
+        # Por defecto se empareja por el id de The Odds API, que el
+        # plugin deja en provider_ids['odds_api'].
+        #
+        # Algunas fuentes de calendario no lo publican: football-data
+        # y The Odds API son proveedores sin relación. Esos plugins
+        # exponen `get_odds_matcher()` con su propia estrategia —en
+        # fútbol, fecha y nombres canónicos.
+        #
+        # Sin este punto de extensión, ningún partido de fútbol
+        # recibiría cuotas y el pipeline produciría cero picks sin un
+        # solo error: el mismo modo de fallo silencioso que dio cero
+        # picks en el primer backtest de NFL.
+        matcher = _resolve_odds_matcher(self._plugin)
+
+        for event in context.events:
+            if matcher is not None:
+                raw_event = matcher(event, raw_events)
+                if raw_event is None:
+                    context.add_error(
+                        "Stage5",
+                        f"Sin odds para {event.home_team} vs {event.away_team} "
+                        f"({event.date})"
+                    )
+                    continue
+            else:
+                odds_api_id = event.provider_ids.get("odds_api")
+                if not odds_api_id:
+                    continue
+
+                raw_event = self._normalizer.find_by_event_id(
+                    raw_events, odds_api_id
+                )
+                if raw_event is None:
+                    context.add_error(
+                        "Stage5",
+                        f"Sin odds para event_id='{odds_api_id}' ({event.home_team} vs {event.away_team})"
+                    )
+                    continue
+
             # Normalizar a list[MarketOdds]
-            preferred_line = mkt.get_preferred_line("SPREAD")
+            #
+            # CORRECCIÓN: la línea preferida se buscaba con
+            # get_preferred_line("SPREAD"), fijado al mercado de
+            # handicap. En fútbol la preferencia está en TOTAL —2.5 es
+            # el estándar de las cinco grandes— así que nunca se
+            # aplicaba.
+            #
+            # Se consulta cada mercado CORE y se usa la primera
+            # preferencia declarada. Para MLB y NFL eso sigue dando el
+            # spread; para fútbol, el total.
+            preferred_line = _first_preferred_line(mkt)
             market_odds    = self._normalizer.extract_best(
                 raw_event      = raw_event,
                 markets        = mkt.get_core_markets(),

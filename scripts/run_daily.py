@@ -9,6 +9,9 @@ Uso
     # Ejecutar pipeline MLB para hoy
     python scripts/run_daily.py --sport mlb
 
+    # Ejecutar pipeline NFL (requiere: pip install nfl_data_py)
+    python scripts/run_daily.py --sport nfl
+
     # Ejecutar para una fecha específica
     python scripts/run_daily.py --sport mlb --date 2026-07-15
 
@@ -89,10 +92,19 @@ _load_dotenv()
 # ── Registro de plugins disponibles ──────────────────────────────────────────
 
 _AVAILABLE_SPORTS: dict[str, str] = {
-    "mlb": "sports.mlb.plugin.MLBPlugin",
+    "mlb":    "sports.mlb.plugin.MLBPlugin",
+    "nfl":    "sports.nfl.plugin.NFLPlugin",
+    # 'soccer' cubre las cinco grandes ligas europeas a la vez, no una.
+    #
+    # A diferencia de MLB y NFL —un deporte, una competición— aquí un
+    # solo plugin atiende Premier League, La Liga, Serie A, Bundesliga
+    # y Ligue 1. Las competiciones son configuración
+    # (sports/soccer/competitions.py), no plugins separados: comparten
+    # el 90% de la lógica y duplicarla sería el error que evitamos en
+    # el Core con h2h_base.
+    "soccer": "sports.soccer.plugin.SoccerPlugin",
     # Futuras extensiones:
     # "nba": "sports.nba.plugin.NBAPlugin",
-    # "nfl": "sports.nfl.plugin.NFLPlugin",
 }
 
 
@@ -140,10 +152,22 @@ def main() -> int:
         print("Tip: usar --dry-run para ejecutar sin API key.")
         return 1
 
+    # ── Comprobar dependencias del plugin ─────────────────────────────
+    # Algunos plugins requieren paquetes que el Core no necesita: NFL
+    # depende de nfl_data_py, que arrastra pandas y pyarrow (~150 MB).
+    # Comprobarlo aquí da una instrucción accionable en vez de dejar
+    # escapar una traza de ImportError desde tres niveles de imports.
+    missing = _check_plugin_dependencies(sport)
+    if missing:
+        print(f"ERROR: el plugin {sport.upper()} requiere dependencias "
+              f"que no están instaladas.")
+        print(f"  Instalar con: {missing}")
+        return 1
+
     # ── Instanciar plugin ─────────────────────────────────────────────
     print(f"Cargando plugin {sport.upper()}...")
     try:
-        plugin = _load_plugin(sport, config)
+        plugin = _load_plugin(sport, config, date=date)
     except Exception as e:
         print(f"ERROR cargando plugin: {e}")
         return 1
@@ -354,12 +378,63 @@ class _DictConfig:
         return cur if cur is not None else default
 
 
-def _load_plugin(sport: str, config):
-    """Instancia el SportPlugin para el deporte dado."""
+def _check_plugin_dependencies(sport: str) -> str | None:
+    """
+    Comprueba las dependencias opcionales de un plugin.
+
+    Retorna el comando de instalación si falta algo, o None si el
+    plugin puede construirse.
+
+    Solo NFL tiene dependencias externas hoy: nfl_data_py, que arrastra
+    pandas y pyarrow. MLB y SOCCER funcionan con requests y pyyaml, que
+    ya son requisitos del Core.
+
+    El plugin de fútbol se diseñó así a propósito. Una primera versión
+    dependía de `soccerdata`, que exige pandas>=2.0 mientras nfl_data_py
+    exige pandas<2.0: instalarla rompía NFL, y el conflicto era
+    irreconciliable. Los resultados y las cuotas vienen ahora de CSV
+    planos y el xG de un cliente propio de Understat.
+
+    Se comprueba antes de construir el plugin porque el ImportError
+    aparecería tres niveles más abajo (plugin → data_source →
+    nfl_data_py) y la traza resultante no indica qué instalar.
+    """
+    if sport == "nfl":
+        try:
+            from sports.nfl.plugin import NFLPlugin
+            if not NFLPlugin.is_available():
+                return "pip install nfl_data_py"
+        except Exception:
+            return "pip install nfl_data_py"
+    return None
+
+
+def _load_plugin(sport: str, config, date: str | None = None):
+    """
+    Instancia el SportPlugin para el deporte dado.
+
+    El plugin de fútbol acepta `season`, que se deduce de la fecha
+    cuando se indica. Las ligas europeas cruzan el año natural —la
+    temporada 2024 va de agosto de 2024 a mayo de 2025— así que una
+    fecha de marzo pertenece a la temporada que empezó el agosto
+    anterior. Sin esa resolución, un backtest de marzo consultaría la
+    temporada equivocada.
+
+    Los demás plugins ignoran el parámetro, así que se pasa solo a
+    quienes lo aceptan.
+    """
     module_path, class_name = _AVAILABLE_SPORTS[sport].rsplit(".", 1)
     import importlib
     module = importlib.import_module(module_path)
     plugin_cls = getattr(module, class_name)
+
+    if sport == "soccer" and date:
+        from sports.soccer.data_source import current_soccer_season
+        return plugin_cls(
+            config_loader=config,
+            season=current_soccer_season(date),
+        )
+
     return plugin_cls(config_loader=config)
 
 
