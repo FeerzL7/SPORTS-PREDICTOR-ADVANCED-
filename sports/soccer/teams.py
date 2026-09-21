@@ -113,7 +113,7 @@ def normalize_team(name: str) -> str:
 # equipos distintos en ligas distintas: "Valencia" es un club español,
 # pero también existe un Valencia en otras competiciones.
 
-_ALIASES: dict[str, dict[str, str]] = {
+_RAW_ALIASES: dict[str, dict[str, str]] = {
 
     # ── Premier League ───────────────────────────────────────────
     # football-data abrevia mucho más en Inglaterra que en el resto.
@@ -237,7 +237,11 @@ _ALIASES: dict[str, dict[str, str]] = {
     # ── Ligue 1 ──────────────────────────────────────────────────
     "ligue1": {
         "paris sg":      "paris saint germain",
-        "paris fc":      "paris fc",
+        # 'Paris FC' no necesita alias: la normalización elimina el
+        # sufijo 'fc' y produce 'paris', que no colisiona con
+        # 'paris saint germain'. Declararlo como clave lo volvía un
+        # alias muerto —nunca se buscaría 'paris fc'— y dead_aliases()
+        # lo detectó.
         "st etienne":    "saint etienne",
         "marseille":     "marseille",
         "lyon":          "lyon",
@@ -263,6 +267,81 @@ _ALIASES: dict[str, dict[str, str]] = {
         "ajaccio":       "ajaccio",
     },
 }
+
+
+# ── Normalización de la tabla ────────────────────────────────────────────────
+
+def _build_alias_tables() -> dict[str, dict[str, str]]:
+    """
+    Normaliza claves y valores de la tabla de alias al cargar el módulo.
+
+    Por qué hace falta
+    -------------------
+    Los alias se escriben a mano en forma legible, pero se comparan
+    contra nombres YA NORMALIZADOS. Si el valor de un alias no está
+    normalizado, el destino queda fuera del espacio canónico y dos
+    grafías del mismo equipo divergen.
+
+    El caso que lo destapó:
+
+        'Ath Bilbao'    → alias → 'athletic club'
+        'Athletic Club' → normaliza → 'athletic'    ('club' es ruido)
+
+    No convergen. El xG del Athletic Club nunca cruzaría con sus
+    resultados, y el modelo proyectaría con la media de liga creyendo
+    que tiene datos — el fallo silencioso exacto que este módulo existe
+    para prevenir.
+
+    Normalizar ambos lados lo cierra: el alias apunta siempre a la
+    forma que produce normalize_team(), sea cual sea la grafía de
+    entrada.
+
+    Efecto secundario útil: las claves que la normalización nunca puede
+    producir quedan visibles. 'paris fc' era una de ellas —el sufijo
+    'fc' se elimina antes de buscar el alias— así que ese alias no
+    podía dispararse nunca.
+    """
+    tables: dict[str, dict[str, str]] = {}
+    for comp, raw_table in _RAW_ALIASES.items():
+        table: dict[str, str] = {}
+        for key, value in raw_table.items():
+            norm_key = normalize_team(key)
+            norm_value = normalize_team(value)
+            if not norm_key or not norm_value:
+                continue
+            # Un alias que apunta a sí mismo es un no-op: la
+            # normalización ya resuelve ese caso. Se omite para que la
+            # tabla refleje solo las equivalencias reales.
+            if norm_key == norm_value:
+                continue
+            table[norm_key] = norm_value
+        tables[comp] = table
+    return tables
+
+
+_ALIASES: dict[str, dict[str, str]] = _build_alias_tables()
+
+
+def dead_aliases() -> dict[str, list[str]]:
+    """
+    Alias declarados que la normalización vuelve inalcanzables.
+
+    Una clave cuya forma normalizada difiere de sí misma nunca se
+    encontrará: canonical_team() normaliza ANTES de buscar el alias.
+
+    Sirve como diagnóstico al añadir entradas nuevas: si alguien
+    escribe 'Paris FC' como clave, el sufijo societario se elimina y el
+    alias queda muerto sin aviso.
+    """
+    result: dict[str, list[str]] = {}
+    for comp, raw_table in _RAW_ALIASES.items():
+        muertos = [
+            key for key in raw_table
+            if normalize_team(key) != key
+        ]
+        if muertos:
+            result[comp] = sorted(muertos)
+    return result
 
 
 # ── API pública ──────────────────────────────────────────────────────────────
@@ -309,7 +388,12 @@ def display_name(name: str) -> str:
 
 
 def known_aliases(comp_id: str) -> dict[str, str]:
-    """Tabla de alias de una competición, para diagnóstico."""
+    """
+    Tabla de alias EFECTIVA de una competición, para diagnóstico.
+
+    Es la normalizada, no la declarada: excluye los no-op y refleja lo
+    que canonical_team() realmente aplica.
+    """
     return dict(_ALIASES.get(str(comp_id).strip().lower(), {}))
 
 

@@ -123,7 +123,7 @@ _DEFAULT_DERBY_ADJUSTMENT = -0.12
 # Madrid-Barcelona es la mayor rivalidad de España y no es un derbi en
 # este sentido: hay 600 km de por medio.
 
-_DERBIES: dict[str, frozenset[tuple[str, str]]] = {
+_RAW_DERBIES: dict[str, frozenset[tuple[str, str]]] = {
     "epl": frozenset({
         ("arsenal", "tottenham"),                    # norte de Londres
         ("chelsea", "fulham"),
@@ -169,6 +169,43 @@ _DERBIES: dict[str, frozenset[tuple[str, str]]] = {
         ("paris saint germain", "paris fc"),
     }),
 }
+
+
+def _build_derby_tables() -> dict[str, frozenset[tuple[str, str]]]:
+    """
+    Normaliza la tabla de derbis al cargar el módulo.
+
+    Por qué hace falta
+    -------------------
+    Los derbis se escriben a mano en forma legible, pero se comparan
+    contra nombres YA canonizados por teams.py. Si una entrada no
+    coincide con lo que produce canonical_team(), el derbi no se
+    detecta y su ajuste nunca se aplica.
+
+    El caso que lo destapó: la tabla declaraba ('ac milan', 'inter'),
+    pero tras corregir la normalización de alias la forma canónica pasó
+    a ser 'milan'. El derbi della Madonnina dejó de detectarse sin que
+    nada fallara — el ajuste de ventaja de campo simplemente no se
+    aplicaba.
+
+    Es la misma lección que en teams.py: cualquier tabla escrita a mano
+    con nombres canónicos deriva de lo que el normalizador produce en
+    cuanto este cambia. Normalizarla al cargar la mantiene sincronizada
+    por construcción.
+    """
+    tables: dict[str, frozenset[tuple[str, str]]] = {}
+    for comp, pairs in _RAW_DERBIES.items():
+        normalized = set()
+        for team_a, team_b in pairs:
+            canon_a = canonical_team(team_a, comp)
+            canon_b = canonical_team(team_b, comp)
+            if canon_a and canon_b and canon_a != canon_b:
+                normalized.add(tuple(sorted((canon_a, canon_b))))
+        tables[comp] = frozenset(normalized)
+    return tables
+
+
+_DERBIES: dict[str, frozenset[tuple[str, str]]] = _build_derby_tables()
 
 
 def is_derby(team_a: str, team_b: str, comp_id: str) -> bool:

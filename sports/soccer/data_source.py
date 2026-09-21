@@ -159,6 +159,7 @@ class MatchRow:
     ht_home:    int | None = None
     ht_away:    int | None = None
 
+    # ── Cuotas de CIERRE ──────────────────────────────────────
     odds_home:  float | None = None
     odds_draw:  float | None = None
     odds_away:  float | None = None
@@ -168,6 +169,30 @@ class MatchRow:
     ah_home:    float | None = None
     ah_away:    float | None = None
     odds_source: str = ""
+
+    # ── Cuotas de APERTURA ────────────────────────────────────
+    #
+    # football-data publica ambas. La diferencia entre ellas ES el
+    # margen accesible: el cierre incorpora todo el dinero profesional
+    # y toda la información pública, mientras que la apertura es el
+    # precio inicial del book.
+    #
+    # El pipeline en producción opera con precios de apertura y media
+    # semana, no de cierre, así que medir contra la apertura responde
+    # una pregunta distinta y más relevante para decidir si el sistema
+    # es operable.
+    #
+    # CORRECCIÓN: la versión anterior mezclaba ambos conjuntos sin
+    # saberlo. Para Pinnacle tomaba el 1X2 de cierre (PSCH) pero el
+    # total de apertura (P>2.5), porque esa columna no lleva la 'C'.
+    # Los picks de total se estaban midiendo contra un benchmark más
+    # blando que los de 1X2.
+    open_home:  float | None = None
+    open_draw:  float | None = None
+    open_away:  float | None = None
+    open_over:  float | None = None
+    open_under: float | None = None
+    open_source: str = ""
 
     @property
     def is_final(self) -> bool:
@@ -187,6 +212,28 @@ class MatchRow:
             return None
         h, a = self.home_goals or 0, self.away_goals or 0
         return "H" if h > a else ("A" if a > h else "D")
+
+    @property
+    def has_opening_odds(self) -> bool:
+        """True si el 1X2 de apertura está completo."""
+        return all(o is not None for o in
+                   (self.open_home, self.open_draw, self.open_away))
+
+    @property
+    def closing_line_value(self) -> float | None:
+        """
+        Movimiento del 1X2 local, de apertura a cierre, en porcentaje.
+
+        Positivo significa que la cuota SUBIÓ: el mercado se movió en
+        contra del local. Es la magnitud que el CLV mide en producción,
+        y tenerla aquí permite comprobar si el modelo anticipa el
+        movimiento aunque no gane dinero contra el cierre.
+        """
+        if self.open_home is None or self.odds_home is None:
+            return None
+        if self.open_home <= 0:
+            return None
+        return round((self.odds_home / self.open_home - 1.0) * 100.0, 3)
 
     @property
     def has_closing_odds(self) -> bool:
@@ -647,61 +694,78 @@ class SoccerDataSource:
 # Pinnacle primero: margen mínimo y límites altos hacen de su cierre el
 # mejor estimador del precio justo, y por tanto el benchmark más
 # exigente para el backtest.
-_ODDS_SOURCES: tuple[tuple[str, dict[str, str]], ...] = (
+_CLOSING_SOURCES: tuple[tuple[str, dict[str, str]], ...] = (
     ("pinnacle", {
-        "odds_home": "PSCH", "odds_draw": "PSCD", "odds_away": "PSCA",
-        "odds_over": "P>2.5", "odds_under": "P<2.5",
+        "home": "PSCH", "draw": "PSCD", "away": "PSCA",
+        "over": "PC>2.5", "under": "PC<2.5",
         "ah_line": "AHCh", "ah_home": "PCAHH", "ah_away": "PCAHA",
     }),
     ("bet365", {
-        "odds_home": "B365CH", "odds_draw": "B365CD", "odds_away": "B365CA",
-        "odds_over": "B365C>2.5", "odds_under": "B365C<2.5",
+        "home": "B365CH", "draw": "B365CD", "away": "B365CA",
+        "over": "B365C>2.5", "under": "B365C<2.5",
         "ah_line": "AHCh", "ah_home": "B365CAHH", "ah_away": "B365CAHA",
     }),
-    # Respaldo para temporadas antiguas sin columnas de cierre: se usa
-    # la apertura. Es un benchmark más blando y queda registrado en
-    # odds_source para que el análisis pueda separarlas.
-    ("pinnacle_open", {
-        "odds_home": "PSH", "odds_draw": "PSD", "odds_away": "PSA",
-        "odds_over": "P>2.5", "odds_under": "P<2.5",
-        "ah_line": "AHh", "ah_home": "PAHH", "ah_away": "PAHA",
+)
+
+_OPENING_SOURCES: tuple[tuple[str, dict[str, str]], ...] = (
+    ("pinnacle", {
+        "home": "PSH", "draw": "PSD", "away": "PSA",
+        "over": "P>2.5", "under": "P<2.5",
     }),
-    ("bet365_open", {
-        "odds_home": "B365H", "odds_draw": "B365D", "odds_away": "B365A",
-        "odds_over": "B365>2.5", "odds_under": "B365<2.5",
-        "ah_line": "AHh", "ah_home": "B365AHH", "ah_away": "B365AHA",
+    ("bet365", {
+        "home": "B365H", "draw": "B365D", "away": "B365A",
+        "over": "B365>2.5", "under": "B365<2.5",
     }),
 )
 
 
 def _extract_odds(record: dict) -> dict:
     """
-    Extrae las cuotas de la primera fuente que tenga el 1X2 completo.
+    Extrae las cuotas de apertura y de cierre por separado.
 
-    Se exigen las tres cuotas del 1X2 porque una incompleta no permite
-    calcular las probabilidades implícitas sin vig, que es lo que
-    consume el blending. Los mercados secundarios (over/under,
-    hándicap) sí pueden faltar sin invalidar la fila.
+    Se exige el 1X2 completo de cada conjunto: una cuota suelta no
+    permite calcular las probabilidades implícitas sin vig, que es lo
+    que consume el blending.
+
+    Pinnacle tiene prioridad sobre Bet365 en ambos: margen mínimo y
+    límites altos hacen de su precio el mejor estimador del justo.
+
+    Los mercados secundarios —over/under, hándicap— pueden faltar sin
+    invalidar la fila: el 1X2 es el que define si el partido es
+    operable.
     """
-    for source, columns in _ODDS_SOURCES:
-        home = _safe_float(record.get(columns["odds_home"]))
-        draw = _safe_float(record.get(columns["odds_draw"]))
-        away = _safe_float(record.get(columns["odds_away"]))
+    out: dict = {"odds_source": "", "open_source": ""}
 
+    for source, cols in _CLOSING_SOURCES:
+        home = _safe_float(record.get(cols["home"]))
+        draw = _safe_float(record.get(cols["draw"]))
+        away = _safe_float(record.get(cols["away"]))
         if home and draw and away:
-            return {
-                "odds_home":  home,
-                "odds_draw":  draw,
-                "odds_away":  away,
-                "odds_over":  _safe_float(record.get(columns["odds_over"])),
-                "odds_under": _safe_float(record.get(columns["odds_under"])),
-                "ah_line":    _safe_float(record.get(columns["ah_line"])),
-                "ah_home":    _safe_float(record.get(columns["ah_home"])),
-                "ah_away":    _safe_float(record.get(columns["ah_away"])),
+            out.update({
+                "odds_home": home, "odds_draw": draw, "odds_away": away,
+                "odds_over":  _safe_float(record.get(cols["over"])),
+                "odds_under": _safe_float(record.get(cols["under"])),
+                "ah_line":    _safe_float(record.get(cols.get("ah_line", ""))),
+                "ah_home":    _safe_float(record.get(cols.get("ah_home", ""))),
+                "ah_away":    _safe_float(record.get(cols.get("ah_away", ""))),
                 "odds_source": source,
-            }
+            })
+            break
 
-    return {"odds_source": ""}
+    for source, cols in _OPENING_SOURCES:
+        home = _safe_float(record.get(cols["home"]))
+        draw = _safe_float(record.get(cols["draw"]))
+        away = _safe_float(record.get(cols["away"]))
+        if home and draw and away:
+            out.update({
+                "open_home": home, "open_draw": draw, "open_away": away,
+                "open_over":  _safe_float(record.get(cols["over"])),
+                "open_under": _safe_float(record.get(cols["under"])),
+                "open_source": source,
+            })
+            break
+
+    return out
 
 
 # ── Utilidades ───────────────────────────────────────────────────────────────

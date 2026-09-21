@@ -142,6 +142,16 @@ class SoccerMatchInfo:
     ah_away:    float | None = None
     odds_source: str = ""
 
+    # Cuotas de APERTURA. La diferencia con el cierre es el margen
+    # accesible: el pipeline opera con precios de apertura y media
+    # semana, no con el cierre.
+    open_home:  float | None = None
+    open_draw:  float | None = None
+    open_away:  float | None = None
+    open_over:  float | None = None
+    open_under: float | None = None
+    open_source: str = ""
+
     home_xg:   float | None = None
     away_xg:   float | None = None
     home_npxg: float | None = None
@@ -173,6 +183,24 @@ class SoccerMatchInfo:
         if not self.is_final:
             return None
         return (self.home_goals or 0) > 0 and (self.away_goals or 0) > 0
+
+    @property
+    def has_opening_odds(self) -> bool:
+        """True si el 1X2 de apertura está completo."""
+        return all(o is not None for o in
+                   (self.open_home, self.open_draw, self.open_away))
+
+    @property
+    def line_movement(self) -> float | None:
+        """
+        Movimiento del 1X2 local, de apertura a cierre, en porcentaje.
+
+        Positivo: la cuota subió y el mercado se movió CONTRA el local.
+        Es la magnitud que el CLV mide en producción.
+        """
+        if not self.open_home or not self.odds_home:
+            return None
+        return round((self.odds_home / self.open_home - 1.0) * 100.0, 3)
 
     @property
     def has_closing_odds(self) -> bool:
@@ -439,6 +467,12 @@ class SoccerScheduleFetcher:
             ah_home      = row.ah_home,
             ah_away      = row.ah_away,
             odds_source  = row.odds_source,
+            open_home    = row.open_home,
+            open_draw    = row.open_draw,
+            open_away    = row.open_away,
+            open_over    = row.open_over,
+            open_under   = row.open_under,
+            open_source  = row.open_source,
         )
 
     def _attach_xg(
