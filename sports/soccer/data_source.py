@@ -110,6 +110,21 @@ class SoccerDataSourceError(RuntimeError):
 
 _FOOTBALL_DATA_BASE = "https://www.football-data.co.uk/mmz4281"
 
+# Sección de ligas no europeas de football-data.
+#
+# Formato distinto al principal, y la diferencia importa:
+#
+#     Principal : un fichero por LIGA y TEMPORADA (E0.csv de 2425)
+#                 columnas HomeTeam, FTHG, PSCH...
+#
+#     Extendida : un fichero por PAÍS con TODAS las temporadas
+#                 (MEX.csv) y columnas Home, HG, PH, AvgCH...
+#
+# Tratarlas con el mismo parser produciría filas vacías en silencio,
+# que es el modo de fallo que este plugin lleva corrigiendo desde el
+# principio. Cada formato tiene su extractor.
+_FOOTBALL_DATA_EXTRA = "https://www.football-data.co.uk/new"
+
 # TTL del caché en disco, en segundos.
 # Una temporada cerrada no cambia nunca; la actual se actualiza tras
 # cada jornada, así que un día es suficiente.
@@ -444,7 +459,12 @@ class SoccerDataSource:
             return self._matches[key]
 
         raw = self._fetch_football_data(competition, season)
-        rows = self._parse_football_data(raw, competition, season) if raw else []
+        if not raw:
+            rows = []
+        elif (competition.football_data_code or "").startswith("new:"):
+            rows = self._parse_extra(raw, competition, season)
+        else:
+            rows = self._parse_football_data(raw, competition, season)
 
         self._matches[key] = rows
         return rows
@@ -463,6 +483,15 @@ class SoccerDataSource:
         Premier League.
         """
         code = comp.football_data_code
+        if not code:
+            return None
+
+        # El código con prefijo 'new:' indica la sección extendida, que
+        # sirve un fichero por PAÍS con todas las temporadas en vez de
+        # uno por liga y temporada.
+        if code.startswith("new:"):
+            return self._fetch_extra(comp, season, code[4:])
+
         season_code = comp.football_data_season(season)
         cache_name = f"fd_{comp.comp_id}_{season}.csv"
 
@@ -486,6 +515,99 @@ class SoccerDataSource:
 
         self._write_cache(cache_name, text)
         return text
+
+    def _fetch_extra(
+        self,
+        comp:    Competition,
+        season:  int,
+        country: str,
+    ) -> str | None:
+        """
+        Descarga el fichero de país de la sección extendida.
+
+        Un solo fichero cubre todas las temporadas, así que se cachea
+        por PAÍS y no por temporada. Un backtest de cinco temporadas de
+        Liga MX hace una descarga, no cinco.
+
+        El TTL usa la temporada actual porque el fichero se actualiza
+        mientras haya alguna en curso.
+        """
+        cache_name = f"fdx_{country}.csv"
+
+        cached = self._read_cache(cache_name, self._current_season)
+        if cached is not None:
+            return cached
+
+        if _requests is None:
+            return None
+
+        url = f"{_FOOTBALL_DATA_EXTRA}/{country}.csv"
+        try:
+            response = _requests.get(url, timeout=self._timeout)
+            if response.status_code != 200:
+                return None
+            text = response.content.decode("latin-1", errors="replace")
+        except Exception:
+            return None
+
+        self._write_cache(cache_name, text)
+        return text
+
+    def _parse_extra(
+        self,
+        raw:    str,
+        comp:   Competition,
+        season: int,
+    ) -> list[MatchRow]:
+        """
+        Convierte el formato extendido en MatchRow.
+
+        Tres diferencias con el principal, todas con consecuencias:
+
+        COLUMNAS         Home/Away en vez de HomeTeam/AwayTeam,
+                         HG/AG en vez de FTHG/FTAG.
+
+        TODAS LAS
+        TEMPORADAS       El fichero las trae juntas, así que hay que
+                         filtrar por la columna Season.
+
+        FORMATO DE
+        TEMPORADA        Varía según el calendario de la liga:
+
+                             Brasileirão   '2023'      (año natural)
+                             Liga MX       '2023/2024' (cruza el año)
+
+                         Se aceptan ambos y se comparan contra el año
+                         de inicio, que es la convención del plugin.
+
+        FECHA            'dd/mm/yyyy', igual que el principal.
+        """
+        rows: list[MatchRow] = []
+        target = str(season)
+        reader = csv.DictReader(io.StringIO(raw))
+
+        for record in reader:
+            if not _season_matches(record.get("Season"), target):
+                continue
+
+            home = _clean(record.get("Home"))
+            away = _clean(record.get("Away"))
+            date = _parse_date(record.get("Date"))
+            if not home or not away or not date:
+                continue
+
+            rows.append(MatchRow(
+                comp_id    = comp.comp_id,
+                season     = season,
+                date       = date,
+                home_team  = home,
+                away_team  = away,
+                home_goals = _safe_int(record.get("HG")),
+                away_goals = _safe_int(record.get("AG")),
+                **_extract_odds_extra(record),
+            ))
+
+        return rows
 
     def _parse_football_data(
         self,
@@ -707,6 +829,35 @@ _CLOSING_SOURCES: tuple[tuple[str, dict[str, str]], ...] = (
     }),
 )
 
+# Columnas del formato EXTENDIDO (ligas no europeas).
+#
+# Pinnacle aparece como PH/PD/PA y su cierre como PCH/PCD/PCA. Cuando
+# falta, se usa la media del mercado (AvgH...), que es un benchmark
+# algo más blando pero honesto: representa lo que un apostante
+# encontraría sin buscar el mejor precio.
+_EXTRA_CLOSING: tuple[tuple[str, dict[str, str]], ...] = (
+    ("pinnacle", {
+        "home": "PCH", "draw": "PCD", "away": "PCA",
+        "over": "AvgC>2.5", "under": "AvgC<2.5",
+    }),
+    ("market_avg", {
+        "home": "AvgCH", "draw": "AvgCD", "away": "AvgCA",
+        "over": "AvgC>2.5", "under": "AvgC<2.5",
+    }),
+)
+
+_EXTRA_OPENING: tuple[tuple[str, dict[str, str]], ...] = (
+    ("pinnacle", {
+        "home": "PH", "draw": "PD", "away": "PA",
+        "over": "Avg>2.5", "under": "Avg<2.5",
+    }),
+    ("market_avg", {
+        "home": "AvgH", "draw": "AvgD", "away": "AvgA",
+        "over": "Avg>2.5", "under": "Avg<2.5",
+    }),
+)
+
+
 _OPENING_SOURCES: tuple[tuple[str, dict[str, str]], ...] = (
     ("pinnacle", {
         "home": "PSH", "draw": "PSD", "away": "PSA",
@@ -717,6 +868,73 @@ _OPENING_SOURCES: tuple[tuple[str, dict[str, str]], ...] = (
         "over": "B365>2.5", "under": "B365<2.5",
     }),
 )
+
+
+def _season_matches(raw, target: str) -> bool:
+    """
+    True si la etiqueta de temporada corresponde al año de inicio.
+
+    El formato varía según el calendario de la liga:
+
+        Brasileirão   '2023'       año natural
+        Liga MX       '2023/2024'  cruza el año
+
+    El plugin identifica las temporadas por su AÑO DE INICIO, así que
+    '2023/2024' y '2023' apuntan ambas a 2023. Aceptar solo una de las
+    dos formas dejaría una de las dos ligas sin datos, en silencio.
+    """
+    text = _clean(raw)
+    if not text:
+        return False
+    if text == target:
+        return True
+    # '2023/2024' o '2023/24'
+    if "/" in text:
+        return text.split("/")[0].strip() == target
+    return False
+
+
+def _extract_odds_extra(record: dict) -> dict:
+    """
+    Cuotas del formato extendido, apertura y cierre por separado.
+
+    Mismo criterio que en el principal: se exige el 1X2 completo de
+    cada conjunto, y Pinnacle tiene prioridad.
+
+    Cuando Pinnacle falta se usa la media del mercado. Es un benchmark
+    algo más blando —representa lo que encontraría alguien sin buscar
+    el mejor precio— pero honesto, y en estas ligas Pinnacle no cotiza
+    todos los partidos.
+    """
+    out: dict = {"odds_source": "", "open_source": ""}
+
+    for source, cols in _EXTRA_CLOSING:
+        home = _safe_float(record.get(cols["home"]))
+        draw = _safe_float(record.get(cols["draw"]))
+        away = _safe_float(record.get(cols["away"]))
+        if home and draw and away:
+            out.update({
+                "odds_home": home, "odds_draw": draw, "odds_away": away,
+                "odds_over":  _safe_float(record.get(cols["over"])),
+                "odds_under": _safe_float(record.get(cols["under"])),
+                "odds_source": source,
+            })
+            break
+
+    for source, cols in _EXTRA_OPENING:
+        home = _safe_float(record.get(cols["home"]))
+        draw = _safe_float(record.get(cols["draw"]))
+        away = _safe_float(record.get(cols["away"]))
+        if home and draw and away:
+            out.update({
+                "open_home": home, "open_draw": draw, "open_away": away,
+                "open_over":  _safe_float(record.get(cols["over"])),
+                "open_under": _safe_float(record.get(cols["under"])),
+                "open_source": source,
+            })
+            break
+
+    return out
 
 
 def _extract_odds(record: dict) -> dict:

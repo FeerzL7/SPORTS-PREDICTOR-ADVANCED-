@@ -115,6 +115,7 @@ class SoccerDataProvider:
         congestion_fetcher   = None,
         h2h_fetcher          = None,
         context_fetcher      = None,
+        elo_client           = None,
     ) -> None:
         self._competitions = (competitions if competitions is not None
                               else enabled_competitions())
@@ -170,6 +171,15 @@ class SoccerDataProvider:
                 h2h_fetcher=self._h2h,
             )
         self._context = context_fetcher
+
+        # Cliente de Elo, opcional y diferido.
+        #
+        # Solo se construye si el config lo activa: ClubElo cubre
+        # clubes europeos, así que en Liga MX y Brasileirão sería una
+        # petición inútil por partido.
+        self._elo = elo_client
+        self._elo_enabled = self._cfg_bool("soccer.elo.enabled", False)
+        self._elo_min_coverage = self._cfg_float("soccer.elo.min_coverage", 0.80)
 
     # ── SportDataProvider Protocol ────────────────────────────────────────────
 
@@ -265,6 +275,15 @@ class SoccerDataProvider:
         context.setdefault("match_id", event.event_id)
         context["competition"] = comp.comp_id
         context["season"] = season
+
+        # ── Diferencia de Elo ──────────────────────────────────────
+        #
+        # Va al contexto y no a TeamFeatures porque es una magnitud del
+        # PARTIDO, no de un equipo: la diferencia entre dos ratings no
+        # pertenece a ninguno de los dos.
+        elo_diff = self._elo_difference(match, comp)
+        if elo_diff is not None:
+            context["elo_difference"] = elo_diff
 
         if league is not None:
             # Una media no positiva no describe ninguna liga; en ese
@@ -532,6 +551,59 @@ class SoccerDataProvider:
             quality = min(quality, comp.data_quality_base)
 
         return round(max(0.0, min(1.0, quality)), 3), missing
+
+    def _elo_difference(self, match, comp) -> float | None:
+        """
+        Diferencia de Elo entre local y visitante, si está disponible.
+
+        Retorna None cuando falta cualquiera de los dos ratings: una
+        diferencia calculada con un rating ausente sería medio dato, y
+        el modelo lo trataría como si fuera completo.
+
+        La fecha que se pasa es la del partido, y el endpoint de
+        ClubElo devuelve los ratings VIGENTES ese día —los que reflejan
+        solo encuentros anteriores— así que no introduce look-ahead.
+        """
+        if not self._elo_enabled or match is None or comp is None:
+            return None
+
+        client = self._get_elo_client()
+        if client is None:
+            return None
+
+        return self._safe(lambda: client.difference(
+            match.home, match.away, match.date, comp.comp_id,
+        ))
+
+    def _get_elo_client(self):
+        """Cliente de Elo, construido de forma diferida."""
+        if self._elo is None:
+            try:
+                from sports.soccer.elo import ClubEloClient
+                if not ClubEloClient.is_available():
+                    return None
+                self._elo = ClubEloClient()
+            except Exception:
+                return None
+        return self._elo
+
+    def _cfg_bool(self, key: str, default: bool) -> bool:
+        if self._config is None:
+            return default
+        try:
+            value = self._config.get(key, default=default)
+            return bool(value) if value is not None else default
+        except Exception:
+            return default
+
+    def _cfg_float(self, key: str, default: float) -> float:
+        if self._config is None:
+            return default
+        try:
+            value = self._config.get(key, default=default)
+            return float(value) if value is not None else default
+        except (ValueError, TypeError, AttributeError):
+            return default
 
     # ── Utilidad ──────────────────────────────────────────────────────────────
 

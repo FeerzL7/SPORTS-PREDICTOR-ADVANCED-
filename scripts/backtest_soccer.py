@@ -262,6 +262,32 @@ def _profit(result: str, price: float) -> float:
     return 0.0   # push y void devuelven el stake
 
 
+class _ConfigWithOverride:
+    """
+    Envoltorio que sobreescribe claves concretas del config.
+
+    Permite barrer un parámetro desde la línea de comandos sin editar
+    el archivo en cada corrida. Delega todo lo demás en el loader real,
+    así que el resto de la configuración es idéntica.
+
+    Existe para que la comparación entre pesos sea limpia: si hubiera
+    que editar soccer.yaml entre corridas, cualquier otro cambio
+    accidental contaminaría el resultado.
+    """
+
+    def __init__(self, base, overrides: dict):
+        self._base = base
+        self._overrides = dict(overrides)
+
+    def get(self, key: str, default=None):
+        if key in self._overrides:
+            return self._overrides[key]
+        return self._base.get(key, default=default)
+
+    def __getattr__(self, name):
+        return getattr(self._base, name)
+
+
 # ── Verificación de imports ──────────────────────────────────────────────────
 
 def _verify_imports() -> str | None:
@@ -741,6 +767,12 @@ def main() -> int:
     parser.add_argument("--verify-no-lookahead", action="store_true",
                         help="Proyecta cada partido con y sin su propio xG "
                              "y compara. Duplica el tiempo de ejecución.")
+    parser.add_argument("--elo-weight", type=float, default=None,
+                        help="Peso de la señal de Elo en la mezcla de medias, "
+                             "de 0.0 a 1.0. Sobreescribe soccer.yaml. Barrer "
+                             "varios valores dice si el Elo aporta resolución "
+                             "o solo ruido — la misma pregunta que resolvimos "
+                             "con el peso del mercado.")
     parser.add_argument("--opening-odds", action="store_true",
                         help="Mide contra las cuotas de APERTURA en vez de "
                              "las de cierre. El pipeline en producción opera "
@@ -770,6 +802,15 @@ def main() -> int:
     from sports.soccer.competitions import enabled_competitions
 
     config = load_config(sport="soccer", base_dir="config")
+
+    # El peso del Elo pasado por CLI sobreescribe el del archivo, para
+    # poder barrer valores sin editar soccer.yaml en cada corrida.
+    if args.elo_weight is not None:
+        config = _ConfigWithOverride(config, {
+            "soccer.elo.weight": args.elo_weight,
+            "soccer.elo.enabled": args.elo_weight > 0,
+        })
+
     comps = args.comps or [c.comp_id for c in enabled_competitions()]
 
     print("=" * 70)
@@ -779,6 +820,8 @@ def main() -> int:
     print(f"  Competiciones : {', '.join(comps)}")
     if args.verify_no_lookahead:
         print(f"  Verificación de look-ahead: ACTIVA")
+    if args.elo_weight is not None:
+        print(f"  Peso del Elo: {args.elo_weight}")
     if args.opening_odds:
         print(f"  Cuotas: APERTURA (no cierre)")
     if args.no_filter:

@@ -91,6 +91,17 @@ _MODEL_VERSION = "soccer-v1.0.0"
 # en silencio el comportamiento del modelo de proyección aunque
 # soccer.yaml no se hubiera tocado. Y el type checker lo señalaba con
 # razón: eran símbolos con guion bajo importados desde fuera.
+# ── Señal de Elo ─────────────────────────────────────────────────────────────
+#
+# Peso por defecto CERO. Se activa solo tras medir que aporta, con
+# scripts/backtest_soccer.py --elo-weight.
+#
+# Ponerlo a un valor de la literatura sin medirlo sería repetir el
+# error de rho, que tomé como -0.13 de estudios publicados y resultó
+# empujar el empate fuera del rango real con las medias de este modelo.
+_DEFAULT_ELO_WEIGHT = 0.0
+_DEFAULT_ELO_PER_GOAL = 250.0
+
 _DEFAULT_RHO      = -0.05
 _DEFAULT_LAMBDA_3 = 0.0
 _DEFAULT_MAX_GOALS = 10
@@ -133,6 +144,8 @@ class _Lambdas:
     derby_adjustment: float = 0.0
     congestion_home: float = 0.0
     congestion_away: float = 0.0
+    elo_home: float | None = None
+    elo_away: float | None = None
 
 
 class SoccerProjectionModel:
@@ -156,6 +169,10 @@ class SoccerProjectionModel:
         ))
         self._lambda_min = self._cfg("simulation.soccer.lambda_min", _LAMBDA_MIN)
         self._lambda_max = self._cfg("simulation.soccer.lambda_max", _LAMBDA_MAX)
+
+        self._elo_weight = self._cfg("soccer.elo.weight", _DEFAULT_ELO_WEIGHT)
+        self._elo_per_goal = self._cfg("soccer.elo.elo_per_goal",
+                                       _DEFAULT_ELO_PER_GOAL)
 
     def model_version(self) -> str:
         return _MODEL_VERSION
@@ -279,9 +296,35 @@ class SoccerProjectionModel:
         lam_home = base_home + derby + cong_home
         lam_away = base_away + cong_away
 
+        # ── Mezcla con la estimación del Elo ───────────────────────
+        #
+        # El Elo da una ventaja NETA en goles, no índices de ataque y
+        # defensa. Se convierte a un par de medias independiente y se
+        # promedia con el del xG.
+        #
+        # Mezclar estimaciones completas —en vez de sumar la ventaja
+        # del Elo sobre λ— tiene dos ventajas:
+        #
+        #   No mezcla escalas. Las dos señales producen la misma
+        #   magnitud y se comparan directamente.
+        #
+        #   Convierte "¿aporta el Elo?" en una medición del peso
+        #   óptimo, del mismo tipo que ya hacemos contra el mercado.
+        #   Si sale cero, se descarta con evidencia.
+        elo_home = elo_away = None
+        if self._elo_weight > 0:
+            elo_home, elo_away = self._lambdas_from_elo(
+                ctx, league_home, league_away
+            )
+            if elo_home is not None and elo_away is not None:
+                w = self._elo_weight
+                lam_home = (1 - w) * lam_home + w * elo_home
+                lam_away = (1 - w) * lam_away + w * elo_away
+
         return _Lambdas(
             home=_clamp(lam_home, self._lambda_min, self._lambda_max),
             away=_clamp(lam_away, self._lambda_min, self._lambda_max),
+            elo_home=elo_home, elo_away=elo_away,
             base_home=base_home, base_away=base_away,
             attack_home=attack_home, attack_away=attack_away,
             defense_factor_home=factor_vs_away_defense,
@@ -323,6 +366,49 @@ class SoccerProjectionModel:
 
         half = differential / 2.0
         return half, -half
+
+    def _lambdas_from_elo(
+        self,
+        ctx:         dict,
+        league_home: float,
+        league_away: float,
+    ) -> tuple[float | None, float | None]:
+        """
+        Par de medias esperadas derivado solo del Elo.
+
+        El Elo da una diferencia de fuerza, que se convierte en ventaja
+        de goles. Repartirla sobre el total medio de la competición da
+        un par de medias comparable al del xG:
+
+            total     = media_liga_local + media_liga_visitante
+            ventaja   = diferencia_elo / elo_por_gol
+            λ_local     = (total + ventaja) / 2
+            λ_visitante = (total − ventaja) / 2
+
+        El total se toma de la liga y no del Elo porque el Elo no mide
+        cuántos goles se marcan, solo quién es mejor. Dos equipos de la
+        Bundesliga y dos de La Liga con la misma diferencia de Elo
+        tienen la misma ventaja pero totales distintos.
+
+        La ventaja de campo ya está dentro de las medias por localía,
+        así que el reparto no la añade otra vez.
+
+        Retorna (None, None) si no hay diferencia de Elo: proyectar con
+        una señal ausente sería inventarla.
+        """
+        from sports.soccer.elo import elo_to_supremacy
+
+        diff = _num(ctx.get("elo_difference"))
+        if diff is None:
+            return None, None
+
+        supremacy = elo_to_supremacy(diff, self._elo_per_goal)
+        total = league_home + league_away
+
+        return (
+            max(0.05, (total + supremacy) / 2.0),
+            max(0.05, (total - supremacy) / 2.0),
+        )
 
     # ── Confianza ─────────────────────────────────────────────────────────────
 
@@ -400,6 +486,11 @@ class SoccerProjectionModel:
             "adj_derby":       lambdas.derby_adjustment,
             "adj_congestion_home": lambdas.congestion_home,
             "adj_congestion_away": lambdas.congestion_away,
+            "elo_lambda_home": (round(lambdas.elo_home, 4)
+                                if lambdas.elo_home is not None else None),
+            "elo_lambda_away": (round(lambdas.elo_away, 4)
+                                if lambdas.elo_away is not None else None),
+            "elo_difference": ctx.get("elo_difference"),
             # Distribución
             "rho":          matrix.rho,
             "lambda_3":     matrix.lambda_3,

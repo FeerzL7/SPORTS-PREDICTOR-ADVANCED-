@@ -168,6 +168,45 @@ soccer:
     # y no aportaría información sobre el mercado.
     min_matches_to_bet: 5
 
+  # ── Ratings Elo ─────────────────────────────────────────────────────
+  #
+  # Señal añadida tras el diagnóstico de calibración, que identificó el
+  # problema exacto: el modelo está bien calibrado —fiabilidad 0.0008—
+  # pero su RESOLUCIÓN es menor que la del mercado.
+  #
+  #     modelo con xG   0.0212
+  #     modelo sin xG   0.0119
+  #     mercado         0.0205 - 0.0291
+  #
+  # Resolución mide capacidad de DISCRIMINAR entre partidos. Subirla
+  # exige información que el xG agregado no da, y el Elo la aporta por
+  # tres vías: calidad del rival incorporada automáticamente, historial
+  # largo en vez de una ventana de 8-12 partidos, y comparabilidad
+  # entre ligas.
+  #
+  # El peso está en 0.0 DELIBERADAMENTE. Activarlo sin medir repetiría
+  # el error de rho: tomar un valor de fuera y confiar en él.
+  # scripts/backtest_soccer.py --elo-weight barre los valores y dice
+  # cuál mejora de verdad, si alguno lo hace.
+  elo:
+    enabled: true
+    weight: 0.0
+
+    # Puntos de Elo por gol de ventaja.
+    #
+    # La relación empírica en fútbol ronda los 100 puntos por 0.40
+    # goles, lo que da 250. NO es una constante universal: depende de
+    # la liga y del periodo, y calibrarla con datos propios es lo que
+    # habría que hacer antes de operar.
+    elo_per_goal: 250.0
+
+    # Cobertura mínima de la competición para usar la señal.
+    #
+    # ClubElo cubre clubes EUROPEOS. En Liga MX y Brasileirão la
+    # cobertura será nula, y proyectar con una señal ausente sería
+    # peor que no usarla: el λ del Elo saldría de la nada.
+    min_coverage: 0.80
+
   # ── Congestión de calendario ────────────────────────────────────────
   #
   # Lo que no existe en MLB ni NFL: un equipo puede jugar liga, copa

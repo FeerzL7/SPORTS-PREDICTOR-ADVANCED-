@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 24,
+            "gamesPlayed": 17,
+            "gamesStarted": 17,
+            "groundOuts": 60,
+            "airOuts": 105,
+            "runs": 27,
+            "doubles": 12,
+            "triples": 1,
+            "homeRuns": 14,
+            "strikeOuts": 107,
+            "baseOnBalls": 16,
+            "intentionalWalks": 0,
+            "hits": 60,
+            "hitByPitch": 1,
+            "avg": ".181",
+            "atBats": 331,
+            "obp": ".221",
+            "slg": ".350",
+            "ops": ".571",
+            "caughtStealing": 3,
+            "stolenBases": 2,
+            "stolenBasePercentage": ".400",
+            "caughtStealingPercentage": ".600",
+            "groundIntoDoublePlay": 5,
+            "numberOfPitches": 1418,
+            "era": "2.51",
+            "inningsPitched": "93.1",
+            "wins": 10,
+            "losses": 3,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 26,
+            "whip": "0.81",
+            "battersFaced": 349,
+            "outs": 280,
+            "gamesPitched": 17,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 977,
+            "strikePercentage": ".690",
+            "hitBatsmen": 1,
+            "balks": 0,
+            "wildPitches": 1,
+            "pickoffs": 0,
+            "totalBases": 116,
+            "groundOutsToAirouts": "0.57",
+            "winPercentage": ".769",
+            "pitchesPerInning": "15.19",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "6.69",
+            "strikeoutsPer9Inn": "10.32",
+            "walksPer9Inn": "1.54",
+            "hitsPer9Inn": "5.79",
+            "runsScoredPer9": "2.60",
+            "homeRunsPer9": "1.35",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 0
+          },
+          "team": {
+            "id": 158,
+            "name": "Milwaukee Brewers",
+            "link": "/api/v1/teams/158"
+          },
+          "player": {
+            "id": 701656,
+            "fullName": "Logan Henderson",
+            "link": "/api/v1/people/701656"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

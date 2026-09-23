@@ -314,18 +314,41 @@ _COMPETITIONS: dict[str, Competition] = {
         n_teams=36, enabled=False,
         avg_home_goals=1.55, avg_away_goals=1.22,
     ),
+    # ── Ligas de la sección extendida de football-data ───────────
+    #
+    # El prefijo 'new:' en football_data_code indica que la fuente es
+    # la sección extendida: un fichero por PAÍS con todas las
+    # temporadas, en vez de uno por liga y temporada.
+    #
+    # ACTIVADAS tras comprobar que las cinco grandes europeas están
+    # fuera de alcance. El backtest sobre 2021-2023 dio ROI -5.50%
+    # contra el cierre y -5.38% contra la apertura, con peso de mezcla
+    # óptimo CERO en ambos casos: la información del modelo ya está en
+    # el precio.
+    #
+    # Estas dos ligas mueven mucho menos volumen y tienen bastantes
+    # menos modelos profesionales operando, así que sus precios
+    # deberían ser menos eficientes. Es la hipótesis que toca
+    # contrastar, y el mismo backtest la responde.
+    #
+    # Ojo con el tier: sin xG el modelo pierde su señal principal
+    # —correlación ~0.40 frente a ~0.60— y data_quality lo refleja.
+    # Una ventaja aquí tendría que venir de la ineficiencia del
+    # mercado, no de mejores datos.
     "ligamx": Competition(
         comp_id="ligamx", name="Liga MX", country="México",
-        fbref_id="MEX-Liga MX", odds_api_key="soccer_mexico_ligamx",
+        fbref_id="MEX-Liga MX", football_data_code="new:MEX",
+        odds_api_key="soccer_mexico_ligamx",
         tier=TIER_PARTIAL, season_type=SEASON_SPLIT_TOURNAMENT,
-        n_teams=18, enabled=False,
+        n_teams=18, enabled=True,
         avg_home_goals=1.58, avg_away_goals=1.18,
     ),
     "brasileirao": Competition(
         comp_id="brasileirao", name="Brasileirão Série A", country="Brasil",
-        fbref_id="BRA-Serie A", odds_api_key="soccer_brazil_campeonato",
+        fbref_id="BRA-Serie A", football_data_code="new:BRA",
+        odds_api_key="soccer_brazil_campeonato",
         tier=TIER_PARTIAL, season_type=SEASON_CALENDAR,
-        n_teams=20, enabled=False,
+        n_teams=20, enabled=True,
         avg_home_goals=1.35, avg_away_goals=1.00,
     ),
 }
