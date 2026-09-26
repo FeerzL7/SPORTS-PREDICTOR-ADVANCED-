@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 23,
+            "gamesPlayed": 7,
+            "gamesStarted": 4,
+            "groundOuts": 22,
+            "airOuts": 38,
+            "runs": 16,
+            "doubles": 2,
+            "triples": 1,
+            "homeRuns": 2,
+            "strikeOuts": 34,
+            "baseOnBalls": 14,
+            "intentionalWalks": 0,
+            "hits": 24,
+            "hitByPitch": 2,
+            "avg": ".211",
+            "atBats": 114,
+            "obp": ".301",
+            "slg": ".298",
+            "ops": ".599",
+            "caughtStealing": 0,
+            "stolenBases": 0,
+            "stolenBasePercentage": ".---",
+            "caughtStealingPercentage": ".---",
+            "groundIntoDoublePlay": 1,
+            "numberOfPitches": 539,
+            "era": "3.82",
+            "inningsPitched": "30.2",
+            "wins": 2,
+            "losses": 2,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 13,
+            "whip": "1.24",
+            "battersFaced": 134,
+            "outs": 92,
+            "gamesPitched": 7,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 337,
+            "strikePercentage": ".630",
+            "hitBatsmen": 2,
+            "balks": 0,
+            "wildPitches": 1,
+            "pickoffs": 0,
+            "totalBases": 34,
+            "groundOutsToAirouts": "0.58",
+            "winPercentage": ".500",
+            "pitchesPerInning": "17.58",
+            "gamesFinished": 1,
+            "strikeoutWalkRatio": "2.43",
+            "strikeoutsPer9Inn": "9.98",
+            "walksPer9Inn": "4.11",
+            "hitsPer9Inn": "7.04",
+            "runsScoredPer9": "4.70",
+            "homeRunsPer9": "0.59",
+            "inheritedRunners": 1,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 3
+          },
+          "team": {
+            "id": 121,
+            "name": "New York Mets",
+            "link": "/api/v1/teams/121"
+          },
+          "player": {
+            "id": 804636,
+            "fullName": "Jonah Tong",
+            "link": "/api/v1/people/804636"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

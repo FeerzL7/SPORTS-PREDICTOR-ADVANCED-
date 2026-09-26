@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 25,
+            "gamesPlayed": 8,
+            "gamesStarted": 8,
+            "groundOuts": 39,
+            "airOuts": 50,
+            "runs": 18,
+            "doubles": 7,
+            "triples": 0,
+            "homeRuns": 4,
+            "strikeOuts": 39,
+            "baseOnBalls": 18,
+            "intentionalWalks": 0,
+            "hits": 43,
+            "hitByPitch": 1,
+            "avg": ".257",
+            "atBats": 167,
+            "obp": ".328",
+            "slg": ".371",
+            "ops": ".699",
+            "caughtStealing": 2,
+            "stolenBases": 2,
+            "stolenBasePercentage": ".500",
+            "caughtStealingPercentage": ".500",
+            "groundIntoDoublePlay": 2,
+            "numberOfPitches": 786,
+            "era": "3.65",
+            "inningsPitched": "44.1",
+            "wins": 2,
+            "losses": 3,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 18,
+            "whip": "1.38",
+            "battersFaced": 190,
+            "outs": 133,
+            "gamesPitched": 8,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 482,
+            "strikePercentage": ".610",
+            "hitBatsmen": 1,
+            "balks": 0,
+            "wildPitches": 1,
+            "pickoffs": 0,
+            "totalBases": 62,
+            "groundOutsToAirouts": "0.78",
+            "winPercentage": ".400",
+            "pitchesPerInning": "17.73",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.17",
+            "strikeoutsPer9Inn": "7.92",
+            "walksPer9Inn": "3.65",
+            "hitsPer9Inn": "8.73",
+            "runsScoredPer9": "3.65",
+            "homeRunsPer9": "0.81",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 3
+          },
+          "team": {
+            "id": 138,
+            "name": "St. Louis Cardinals",
+            "link": "/api/v1/teams/138"
+          },
+          "player": {
+            "id": 687273,
+            "fullName": "Quinn Mathews",
+            "link": "/api/v1/people/687273"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

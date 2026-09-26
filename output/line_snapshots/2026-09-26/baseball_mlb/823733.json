@@ -1,0 +1,214 @@
+[
+  {
+    "event_id": "823733",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-26T19:03:34.183937+00:00",
+    "snapshot_date": "2026-09-26",
+    "odds": [
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "ML",
+        "selection": "Milwaukee Brewers",
+        "line": null,
+        "price": 1.65,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-26T19:02:50Z"
+      },
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "ML",
+        "selection": "St. Louis Cardinals",
+        "line": null,
+        "price": 2.4,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-26T19:02:50Z"
+      },
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 7.5,
+        "price": 1.96,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-26T19:03:24Z"
+      },
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 7.5,
+        "price": 1.95,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-26T19:03:06Z"
+      },
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "SPREAD",
+        "selection": "Milwaukee Brewers",
+        "line": -1.5,
+        "price": 2.41,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-26T19:03:24Z"
+      }
+    ]
+  },
+  {
+    "event_id": "823733",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-26T19:11:56.314189+00:00",
+    "snapshot_date": "2026-09-26",
+    "odds": [
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "ML",
+        "selection": "Milwaukee Brewers",
+        "line": null,
+        "price": 1.65,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-26T19:11:31Z"
+      },
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "ML",
+        "selection": "St. Louis Cardinals",
+        "line": null,
+        "price": 2.4,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-26T19:11:31Z"
+      },
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 7.5,
+        "price": 1.96,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-26T19:11:12Z"
+      },
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 7.5,
+        "price": 1.95,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-26T19:11:47Z"
+      },
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "SPREAD",
+        "selection": "Milwaukee Brewers",
+        "line": -1.5,
+        "price": 2.41,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-26T19:11:12Z"
+      }
+    ]
+  },
+  {
+    "event_id": "823733",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-26T19:15:21.189475+00:00",
+    "snapshot_date": "2026-09-26",
+    "odds": [
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "ML",
+        "selection": "Milwaukee Brewers",
+        "line": null,
+        "price": 1.65,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-26T19:14:57Z"
+      },
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "ML",
+        "selection": "St. Louis Cardinals",
+        "line": null,
+        "price": 2.4,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-26T19:14:57Z"
+      },
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 7.5,
+        "price": 1.96,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-26T19:14:42Z"
+      },
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 7.5,
+        "price": 1.95,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-26T19:15:15Z"
+      },
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "SPREAD",
+        "selection": "Milwaukee Brewers",
+        "line": -1.5,
+        "price": 2.41,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-26T19:14:42Z"
+      }
+    ]
+  },
+  {
+    "event_id": "823733",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-26T19:28:28.942247+00:00",
+    "snapshot_date": "2026-09-26",
+    "odds": [
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "ML",
+        "selection": "Milwaukee Brewers",
+        "line": null,
+        "price": 1.65,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-26T19:27:50Z"
+      },
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "ML",
+        "selection": "St. Louis Cardinals",
+        "line": null,
+        "price": 2.4,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-26T19:27:50Z"
+      },
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 7.5,
+        "price": 1.96,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-26T19:27:37Z"
+      },
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 7.5,
+        "price": 1.95,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-26T19:28:23Z"
+      },
+      {
+        "event_id": "bff2944df94a062f85abadcd9aab1086",
+        "market": "SPREAD",
+        "selection": "Milwaukee Brewers",
+        "line": -1.5,
+        "price": 2.41,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-26T19:27:37Z"
+      }
+    ]
+  }
+]

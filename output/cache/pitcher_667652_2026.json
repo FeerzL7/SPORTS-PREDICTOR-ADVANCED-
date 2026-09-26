@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 28,
+            "gamesPlayed": 15,
+            "gamesStarted": 0,
+            "groundOuts": 19,
+            "airOuts": 12,
+            "runs": 8,
+            "doubles": 1,
+            "triples": 1,
+            "homeRuns": 4,
+            "strikeOuts": 17,
+            "baseOnBalls": 8,
+            "intentionalWalks": 1,
+            "hits": 12,
+            "hitByPitch": 1,
+            "avg": ".203",
+            "atBats": 59,
+            "obp": ".309",
+            "slg": ".458",
+            "ops": ".767",
+            "caughtStealing": 0,
+            "stolenBases": 1,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 0,
+            "numberOfPitches": 278,
+            "era": "4.50",
+            "inningsPitched": "16.0",
+            "wins": 0,
+            "losses": 2,
+            "saves": 0,
+            "saveOpportunities": 1,
+            "holds": 3,
+            "blownSaves": 1,
+            "earnedRuns": 8,
+            "whip": "1.25",
+            "battersFaced": 69,
+            "outs": 48,
+            "gamesPitched": 15,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 172,
+            "strikePercentage": ".620",
+            "hitBatsmen": 1,
+            "balks": 0,
+            "wildPitches": 1,
+            "pickoffs": 0,
+            "totalBases": 27,
+            "groundOutsToAirouts": "1.58",
+            "winPercentage": ".000",
+            "pitchesPerInning": "17.38",
+            "gamesFinished": 4,
+            "strikeoutWalkRatio": "2.13",
+            "strikeoutsPer9Inn": "9.56",
+            "walksPer9Inn": "4.50",
+            "hitsPer9Inn": "6.75",
+            "runsScoredPer9": "4.50",
+            "homeRunsPer9": "2.25",
+            "inheritedRunners": 3,
+            "inheritedRunnersScored": 2,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 0
+          },
+          "team": {
+            "id": 146,
+            "name": "Miami Marlins",
+            "link": "/api/v1/teams/146"
+          },
+          "player": {
+            "id": 667652,
+            "fullName": "Jack Ralston",
+            "link": "/api/v1/people/667652"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 21,
+            "gamesPlayed": 6,
+            "gamesStarted": 6,
+            "groundOuts": 28,
+            "airOuts": 36,
+            "runs": 15,
+            "doubles": 3,
+            "triples": 2,
+            "homeRuns": 4,
+            "strikeOuts": 28,
+            "baseOnBalls": 8,
+            "intentionalWalks": 0,
+            "hits": 31,
+            "hitByPitch": 0,
+            "avg": ".256",
+            "atBats": 121,
+            "obp": ".298",
+            "slg": ".413",
+            "ops": ".711",
+            "caughtStealing": 0,
+            "stolenBases": 3,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 4,
+            "numberOfPitches": 482,
+            "era": "4.18",
+            "inningsPitched": "32.1",
+            "wins": 2,
+            "losses": 2,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 15,
+            "whip": "1.21",
+            "battersFaced": 131,
+            "outs": 97,
+            "gamesPitched": 6,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 325,
+            "strikePercentage": ".670",
+            "hitBatsmen": 0,
+            "balks": 0,
+            "wildPitches": 1,
+            "pickoffs": 0,
+            "totalBases": 50,
+            "groundOutsToAirouts": "0.78",
+            "winPercentage": ".500",
+            "pitchesPerInning": "14.91",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "3.50",
+            "strikeoutsPer9Inn": "7.79",
+            "walksPer9Inn": "2.23",
+            "hitsPer9Inn": "8.63",
+            "runsScoredPer9": "4.18",
+            "homeRunsPer9": "1.11",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 2
+          },
+          "team": {
+            "id": 136,
+            "name": "Seattle Mariners",
+            "link": "/api/v1/teams/136"
+          },
+          "player": {
+            "id": 807739,
+            "fullName": "Kade Anderson",
+            "link": "/api/v1/people/807739"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

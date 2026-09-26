@@ -1,0 +1,250 @@
+[
+  {
+    "event_id": "823407",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-26T19:03:34.183937+00:00",
+    "snapshot_date": "2026-09-26",
+    "odds": [
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "ML",
+        "selection": "Philadelphia Phillies",
+        "line": null,
+        "price": 1.95,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-26T19:03:21Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "ML",
+        "selection": "Tampa Bay Rays",
+        "line": null,
+        "price": 1.95,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-26T19:03:21Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 7.0,
+        "price": 2.0,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-26T19:03:05Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 7.0,
+        "price": 1.92,
+        "bookmaker": "MyBookie.ag",
+        "timestamp": "2026-09-26T19:03:24Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "SPREAD",
+        "selection": "Philadelphia Phillies",
+        "line": -1.5,
+        "price": 3.0,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-26T19:02:34Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "SPREAD",
+        "selection": "Tampa Bay Rays",
+        "line": -1.5,
+        "price": 2.72,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-26T19:03:06Z"
+      }
+    ]
+  },
+  {
+    "event_id": "823407",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-26T19:11:56.314189+00:00",
+    "snapshot_date": "2026-09-26",
+    "odds": [
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "ML",
+        "selection": "Philadelphia Phillies",
+        "line": null,
+        "price": 1.95,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-26T19:11:29Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "ML",
+        "selection": "Tampa Bay Rays",
+        "line": null,
+        "price": 1.95,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-26T19:11:29Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 7.0,
+        "price": 2.0,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-26T19:11:11Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 7.0,
+        "price": 1.9,
+        "bookmaker": "MyBookie.ag",
+        "timestamp": "2026-09-26T19:10:00Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "SPREAD",
+        "selection": "Tampa Bay Rays",
+        "line": -1.5,
+        "price": 2.72,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-26T19:11:47Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "SPREAD",
+        "selection": "Philadelphia Phillies",
+        "line": -1.5,
+        "price": 3.0,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-26T19:09:32Z"
+      }
+    ]
+  },
+  {
+    "event_id": "823407",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-26T19:15:21.189475+00:00",
+    "snapshot_date": "2026-09-26",
+    "odds": [
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "ML",
+        "selection": "Philadelphia Phillies",
+        "line": null,
+        "price": 1.95,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-26T19:14:41Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "ML",
+        "selection": "Tampa Bay Rays",
+        "line": null,
+        "price": 1.95,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-26T19:14:41Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 7.0,
+        "price": 2.0,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-26T19:14:40Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 7.0,
+        "price": 1.9,
+        "bookmaker": "MyBookie.ag",
+        "timestamp": "2026-09-26T19:14:22Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "SPREAD",
+        "selection": "Tampa Bay Rays",
+        "line": -1.5,
+        "price": 2.72,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-26T19:15:15Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "SPREAD",
+        "selection": "Philadelphia Phillies",
+        "line": -1.5,
+        "price": 3.0,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-26T19:09:32Z"
+      }
+    ]
+  },
+  {
+    "event_id": "823407",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-26T19:28:28.944002+00:00",
+    "snapshot_date": "2026-09-26",
+    "odds": [
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "ML",
+        "selection": "Philadelphia Phillies",
+        "line": null,
+        "price": 1.95,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-26T19:28:24Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "ML",
+        "selection": "Tampa Bay Rays",
+        "line": null,
+        "price": 1.95,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-26T19:28:24Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 7.0,
+        "price": 2.0,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-26T19:28:07Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 7.0,
+        "price": 1.9,
+        "bookmaker": "MyBookie.ag",
+        "timestamp": "2026-09-26T19:27:16Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "SPREAD",
+        "selection": "Tampa Bay Rays",
+        "line": -1.5,
+        "price": 2.72,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-26T19:28:23Z"
+      },
+      {
+        "event_id": "bc51231e140db0366a043ea863838421",
+        "market": "SPREAD",
+        "selection": "Philadelphia Phillies",
+        "line": -1.5,
+        "price": 3.0,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-26T19:27:53Z"
+      }
+    ]
+  }
+]

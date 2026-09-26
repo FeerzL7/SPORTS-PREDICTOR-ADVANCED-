@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 43,
+            "gamesPlayed": 2,
+            "gamesStarted": 2,
+            "groundOuts": 3,
+            "airOuts": 14,
+            "runs": 7,
+            "doubles": 1,
+            "triples": 1,
+            "homeRuns": 3,
+            "strikeOuts": 7,
+            "baseOnBalls": 3,
+            "intentionalWalks": 0,
+            "hits": 11,
+            "hitByPitch": 0,
+            "avg": ".314",
+            "atBats": 35,
+            "obp": ".368",
+            "slg": ".657",
+            "ops": "1.025",
+            "caughtStealing": 1,
+            "stolenBases": 0,
+            "stolenBasePercentage": ".000",
+            "caughtStealingPercentage": "1.000",
+            "groundIntoDoublePlay": 0,
+            "numberOfPitches": 167,
+            "era": "7.27",
+            "inningsPitched": "8.2",
+            "wins": 0,
+            "losses": 1,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 7,
+            "whip": "1.62",
+            "battersFaced": 38,
+            "outs": 26,
+            "gamesPitched": 2,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 108,
+            "strikePercentage": ".650",
+            "hitBatsmen": 0,
+            "balks": 0,
+            "wildPitches": 1,
+            "pickoffs": 0,
+            "totalBases": 23,
+            "groundOutsToAirouts": "0.21",
+            "winPercentage": ".000",
+            "pitchesPerInning": "19.27",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.33",
+            "strikeoutsPer9Inn": "7.27",
+            "walksPer9Inn": "3.12",
+            "hitsPer9Inn": "11.42",
+            "runsScoredPer9": "7.27",
+            "homeRunsPer9": "3.12",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 0
+          },
+          "team": {
+            "id": 116,
+            "name": "Detroit Tigers",
+            "link": "/api/v1/teams/116"
+          },
+          "player": {
+            "id": 434378,
+            "fullName": "Justin Verlander",
+            "link": "/api/v1/people/434378"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

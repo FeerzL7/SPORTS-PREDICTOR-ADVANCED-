@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 37,
+            "gamesPlayed": 10,
+            "gamesStarted": 10,
+            "groundOuts": 45,
+            "airOuts": 63,
+            "runs": 30,
+            "doubles": 11,
+            "triples": 2,
+            "homeRuns": 8,
+            "strikeOuts": 22,
+            "baseOnBalls": 18,
+            "intentionalWalks": 0,
+            "hits": 50,
+            "hitByPitch": 1,
+            "avg": ".289",
+            "atBats": 173,
+            "obp": ".350",
+            "slg": ".514",
+            "ops": ".864",
+            "caughtStealing": 0,
+            "stolenBases": 4,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 4,
+            "numberOfPitches": 757,
+            "era": "5.40",
+            "inningsPitched": "45.0",
+            "wins": 2,
+            "losses": 3,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 27,
+            "whip": "1.51",
+            "battersFaced": 199,
+            "outs": 135,
+            "gamesPitched": 10,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 454,
+            "strikePercentage": ".600",
+            "hitBatsmen": 1,
+            "balks": 1,
+            "wildPitches": 1,
+            "pickoffs": 1,
+            "totalBases": 89,
+            "groundOutsToAirouts": "0.71",
+            "winPercentage": ".400",
+            "pitchesPerInning": "16.82",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "1.22",
+            "strikeoutsPer9Inn": "4.40",
+            "walksPer9Inn": "3.60",
+            "hitsPer9Inn": "10.00",
+            "runsScoredPer9": "6.00",
+            "homeRunsPer9": "1.60",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 2,
+            "sacFlies": 5
+          },
+          "team": {
+            "id": 115,
+            "name": "Colorado Rockies",
+            "link": "/api/v1/teams/115"
+          },
+          "player": {
+            "id": 500779,
+            "fullName": "Jose Quintana",
+            "link": "/api/v1/people/500779"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

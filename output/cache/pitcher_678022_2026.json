@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 26,
+            "gamesPlayed": 36,
+            "gamesStarted": 16,
+            "groundOuts": 90,
+            "airOuts": 120,
+            "runs": 83,
+            "doubles": 22,
+            "triples": 2,
+            "homeRuns": 20,
+            "strikeOuts": 131,
+            "baseOnBalls": 48,
+            "intentionalWalks": 2,
+            "hits": 120,
+            "hitByPitch": 10,
+            "avg": ".263",
+            "atBats": 457,
+            "obp": ".344",
+            "slg": ".451",
+            "ops": ".795",
+            "caughtStealing": 1,
+            "stolenBases": 6,
+            "stolenBasePercentage": ".857",
+            "caughtStealingPercentage": ".143",
+            "groundIntoDoublePlay": 9,
+            "numberOfPitches": 2007,
+            "era": "5.90",
+            "inningsPitched": "116.0",
+            "wins": 3,
+            "losses": 12,
+            "saves": 3,
+            "saveOpportunities": 5,
+            "holds": 2,
+            "blownSaves": 2,
+            "earnedRuns": 76,
+            "whip": "1.45",
+            "battersFaced": 519,
+            "outs": 348,
+            "gamesPitched": 36,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1294,
+            "strikePercentage": ".640",
+            "hitBatsmen": 10,
+            "balks": 0,
+            "wildPitches": 5,
+            "pickoffs": 0,
+            "totalBases": 206,
+            "groundOutsToAirouts": "0.75",
+            "winPercentage": ".200",
+            "pitchesPerInning": "17.30",
+            "gamesFinished": 5,
+            "strikeoutWalkRatio": "2.73",
+            "strikeoutsPer9Inn": "10.16",
+            "walksPer9Inn": "3.72",
+            "hitsPer9Inn": "9.31",
+            "runsScoredPer9": "6.44",
+            "homeRunsPer9": "1.55",
+            "inheritedRunners": 5,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 3
+          },
+          "team": {
+            "id": 133,
+            "name": "Athletics",
+            "link": "/api/v1/teams/133"
+          },
+          "player": {
+            "id": 678022,
+            "fullName": "Jack Perkins",
+            "link": "/api/v1/people/678022"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 23,
+            "gamesPlayed": 7,
+            "gamesStarted": 5,
+            "groundOuts": 16,
+            "airOuts": 40,
+            "runs": 13,
+            "doubles": 4,
+            "triples": 1,
+            "homeRuns": 4,
+            "strikeOuts": 18,
+            "baseOnBalls": 4,
+            "intentionalWalks": 0,
+            "hits": 21,
+            "hitByPitch": 0,
+            "avg": ".221",
+            "atBats": 95,
+            "obp": ".253",
+            "slg": ".411",
+            "ops": ".664",
+            "caughtStealing": 0,
+            "stolenBases": 6,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 1,
+            "numberOfPitches": 382,
+            "era": "3.65",
+            "inningsPitched": "24.2",
+            "wins": 1,
+            "losses": 3,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 10,
+            "whip": "1.01",
+            "battersFaced": 99,
+            "outs": 74,
+            "gamesPitched": 7,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 241,
+            "strikePercentage": ".630",
+            "hitBatsmen": 0,
+            "balks": 1,
+            "wildPitches": 0,
+            "pickoffs": 0,
+            "totalBases": 39,
+            "groundOutsToAirouts": "0.40",
+            "winPercentage": ".250",
+            "pitchesPerInning": "15.49",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "4.50",
+            "strikeoutsPer9Inn": "6.57",
+            "walksPer9Inn": "1.46",
+            "hitsPer9Inn": "7.66",
+            "runsScoredPer9": "4.74",
+            "homeRunsPer9": "1.46",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 0
+          },
+          "team": {
+            "id": 137,
+            "name": "San Francisco Giants",
+            "link": "/api/v1/teams/137"
+          },
+          "player": {
+            "id": 683363,
+            "fullName": "Matt Wilkinson",
+            "link": "/api/v1/people/683363"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

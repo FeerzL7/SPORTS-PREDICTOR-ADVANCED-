@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 30,
+            "gamesPlayed": 24,
+            "gamesStarted": 23,
+            "groundOuts": 108,
+            "airOuts": 174,
+            "runs": 63,
+            "doubles": 28,
+            "triples": 0,
+            "homeRuns": 19,
+            "strikeOuts": 91,
+            "baseOnBalls": 36,
+            "intentionalWalks": 0,
+            "hits": 123,
+            "hitByPitch": 2,
+            "avg": ".248",
+            "atBats": 495,
+            "obp": ".302",
+            "slg": ".420",
+            "ops": ".722",
+            "caughtStealing": 1,
+            "stolenBases": 15,
+            "stolenBasePercentage": ".938",
+            "caughtStealingPercentage": ".063",
+            "groundIntoDoublePlay": 5,
+            "numberOfPitches": 2013,
+            "era": "4.21",
+            "inningsPitched": "126.0",
+            "wins": 7,
+            "losses": 6,
+            "saves": 1,
+            "saveOpportunities": 1,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 59,
+            "whip": "1.26",
+            "battersFaced": 535,
+            "outs": 378,
+            "gamesPitched": 24,
+            "completeGames": 1,
+            "shutouts": 1,
+            "strikes": 1313,
+            "strikePercentage": ".650",
+            "hitBatsmen": 2,
+            "balks": 0,
+            "wildPitches": 0,
+            "pickoffs": 0,
+            "totalBases": 208,
+            "groundOutsToAirouts": "0.62",
+            "winPercentage": ".538",
+            "pitchesPerInning": "15.98",
+            "gamesFinished": 1,
+            "strikeoutWalkRatio": "2.53",
+            "strikeoutsPer9Inn": "6.50",
+            "walksPer9Inn": "2.57",
+            "hitsPer9Inn": "8.79",
+            "runsScoredPer9": "4.50",
+            "homeRunsPer9": "1.36",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 1,
+            "sacBunts": 1,
+            "sacFlies": 0
+          },
+          "team": {
+            "id": 142,
+            "name": "Minnesota Twins",
+            "link": "/api/v1/teams/142"
+          },
+          "player": {
+            "id": 641927,
+            "fullName": "Bailey Ober",
+            "link": "/api/v1/people/641927"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

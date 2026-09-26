@@ -1,0 +1,214 @@
+[
+  {
+    "event_id": "824949",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-26T19:03:34.186816+00:00",
+    "snapshot_date": "2026-09-26",
+    "odds": [
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "ML",
+        "selection": "Athletics",
+        "line": null,
+        "price": 2.42,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-26T19:02:34Z"
+      },
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "ML",
+        "selection": "Houston Astros",
+        "line": null,
+        "price": 1.67,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-26T19:03:21Z"
+      },
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 10.0,
+        "price": 1.98,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-26T19:03:05Z"
+      },
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 10.0,
+        "price": 1.92,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-26T19:03:24Z"
+      },
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "SPREAD",
+        "selection": "Houston Astros",
+        "line": -1.5,
+        "price": 2.08,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-26T19:03:24Z"
+      }
+    ]
+  },
+  {
+    "event_id": "824949",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-26T19:11:56.318423+00:00",
+    "snapshot_date": "2026-09-26",
+    "odds": [
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "ML",
+        "selection": "Athletics",
+        "line": null,
+        "price": 2.42,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-26T19:09:32Z"
+      },
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "ML",
+        "selection": "Houston Astros",
+        "line": null,
+        "price": 1.67,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-26T19:11:12Z"
+      },
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 10.0,
+        "price": 1.98,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-26T19:11:12Z"
+      },
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 10.0,
+        "price": 1.92,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-26T19:11:12Z"
+      },
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "SPREAD",
+        "selection": "Houston Astros",
+        "line": -1.5,
+        "price": 2.08,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-26T19:11:12Z"
+      }
+    ]
+  },
+  {
+    "event_id": "824949",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-26T19:15:21.189475+00:00",
+    "snapshot_date": "2026-09-26",
+    "odds": [
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "ML",
+        "selection": "Athletics",
+        "line": null,
+        "price": 2.42,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-26T19:09:32Z"
+      },
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "ML",
+        "selection": "Houston Astros",
+        "line": null,
+        "price": 1.67,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-26T19:14:41Z"
+      },
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 10.0,
+        "price": 1.98,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-26T19:14:40Z"
+      },
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 10.0,
+        "price": 1.92,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-26T19:14:42Z"
+      },
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "SPREAD",
+        "selection": "Houston Astros",
+        "line": -1.5,
+        "price": 2.08,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-26T19:14:42Z"
+      }
+    ]
+  },
+  {
+    "event_id": "824949",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-26T19:28:28.944002+00:00",
+    "snapshot_date": "2026-09-26",
+    "odds": [
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "ML",
+        "selection": "Athletics",
+        "line": null,
+        "price": 2.42,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-26T19:27:53Z"
+      },
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "ML",
+        "selection": "Houston Astros",
+        "line": null,
+        "price": 1.67,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-26T19:28:24Z"
+      },
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 10.0,
+        "price": 1.98,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-26T19:28:07Z"
+      },
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 10.0,
+        "price": 1.92,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-26T19:27:37Z"
+      },
+      {
+        "event_id": "9b8ec8bc261ab6b47fd213703849325e",
+        "market": "SPREAD",
+        "selection": "Houston Astros",
+        "line": -1.5,
+        "price": 2.08,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-26T19:27:37Z"
+      }
+    ]
+  }
+]

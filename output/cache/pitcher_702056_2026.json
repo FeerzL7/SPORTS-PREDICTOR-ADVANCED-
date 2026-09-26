@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 22,
+            "gamesPlayed": 19,
+            "gamesStarted": 19,
+            "groundOuts": 70,
+            "airOuts": 119,
+            "runs": 40,
+            "doubles": 21,
+            "triples": 0,
+            "homeRuns": 11,
+            "strikeOuts": 94,
+            "baseOnBalls": 46,
+            "intentionalWalks": 0,
+            "hits": 62,
+            "hitByPitch": 2,
+            "avg": ".184",
+            "atBats": 337,
+            "obp": ".282",
+            "slg": ".344",
+            "ops": ".626",
+            "caughtStealing": 0,
+            "stolenBases": 3,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 4,
+            "numberOfPitches": 1589,
+            "era": "3.67",
+            "inningsPitched": "95.2",
+            "wins": 5,
+            "losses": 5,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 39,
+            "whip": "1.13",
+            "battersFaced": 393,
+            "outs": 287,
+            "gamesPitched": 19,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 984,
+            "strikePercentage": ".620",
+            "hitBatsmen": 2,
+            "balks": 0,
+            "wildPitches": 4,
+            "pickoffs": 0,
+            "totalBases": 116,
+            "groundOutsToAirouts": "0.59",
+            "winPercentage": ".500",
+            "pitchesPerInning": "16.61",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.04",
+            "strikeoutsPer9Inn": "8.84",
+            "walksPer9Inn": "4.33",
+            "hitsPer9Inn": "5.83",
+            "runsScoredPer9": "3.76",
+            "homeRunsPer9": "1.03",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 3,
+            "sacFlies": 5
+          },
+          "team": {
+            "id": 141,
+            "name": "Toronto Blue Jays",
+            "link": "/api/v1/teams/141"
+          },
+          "player": {
+            "id": 702056,
+            "fullName": "Trey Yesavage",
+            "link": "/api/v1/people/702056"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

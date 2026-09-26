@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 24,
+            "gamesPlayed": 28,
+            "gamesStarted": 25,
+            "groundOuts": 130,
+            "airOuts": 144,
+            "runs": 88,
+            "doubles": 32,
+            "triples": 3,
+            "homeRuns": 18,
+            "strikeOuts": 101,
+            "baseOnBalls": 54,
+            "intentionalWalks": 1,
+            "hits": 144,
+            "hitByPitch": 6,
+            "avg": ".279",
+            "atBats": 517,
+            "obp": ".353",
+            "slg": ".456",
+            "ops": ".809",
+            "caughtStealing": 0,
+            "stolenBases": 9,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 10,
+            "numberOfPitches": 2217,
+            "era": "6.01",
+            "inningsPitched": "127.1",
+            "wins": 6,
+            "losses": 12,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 85,
+            "whip": "1.55",
+            "battersFaced": 581,
+            "outs": 382,
+            "gamesPitched": 28,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1376,
+            "strikePercentage": ".620",
+            "hitBatsmen": 6,
+            "balks": 1,
+            "wildPitches": 1,
+            "pickoffs": 0,
+            "totalBases": 236,
+            "groundOutsToAirouts": "0.90",
+            "winPercentage": ".333",
+            "pitchesPerInning": "17.41",
+            "gamesFinished": 3,
+            "strikeoutWalkRatio": "1.87",
+            "strikeoutsPer9Inn": "7.14",
+            "walksPer9Inn": "3.82",
+            "hitsPer9Inn": "10.18",
+            "runsScoredPer9": "6.22",
+            "homeRunsPer9": "1.27",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 2,
+            "sacBunts": 1,
+            "sacFlies": 1
+          },
+          "team": {
+            "id": 113,
+            "name": "Cincinnati Reds",
+            "link": "/api/v1/teams/113"
+          },
+          "player": {
+            "id": 695076,
+            "fullName": "Rhett Lowder",
+            "link": "/api/v1/people/695076"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

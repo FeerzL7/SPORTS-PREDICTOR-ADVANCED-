@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 28,
+            "gamesPlayed": 10,
+            "gamesStarted": 10,
+            "groundOuts": 51,
+            "airOuts": 63,
+            "runs": 25,
+            "doubles": 8,
+            "triples": 3,
+            "homeRuns": 4,
+            "strikeOuts": 41,
+            "baseOnBalls": 19,
+            "intentionalWalks": 0,
+            "hits": 43,
+            "hitByPitch": 2,
+            "avg": ".219",
+            "atBats": 196,
+            "obp": ".294",
+            "slg": ".352",
+            "ops": ".646",
+            "caughtStealing": 0,
+            "stolenBases": 4,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 7,
+            "numberOfPitches": 816,
+            "era": "3.50",
+            "inningsPitched": "54.0",
+            "wins": 5,
+            "losses": 2,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 21,
+            "whip": "1.15",
+            "battersFaced": 219,
+            "outs": 162,
+            "gamesPitched": 10,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 528,
+            "strikePercentage": ".650",
+            "hitBatsmen": 2,
+            "balks": 0,
+            "wildPitches": 2,
+            "pickoffs": 0,
+            "totalBases": 69,
+            "groundOutsToAirouts": "0.81",
+            "winPercentage": ".714",
+            "pitchesPerInning": "15.11",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.16",
+            "strikeoutsPer9Inn": "6.83",
+            "walksPer9Inn": "3.17",
+            "hitsPer9Inn": "7.17",
+            "runsScoredPer9": "4.17",
+            "homeRunsPer9": "0.67",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 1
+          },
+          "team": {
+            "id": 117,
+            "name": "Houston Astros",
+            "link": "/api/v1/teams/117"
+          },
+          "player": {
+            "id": 669713,
+            "fullName": "Hayden Wesneski",
+            "link": "/api/v1/people/669713"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

@@ -139,6 +139,72 @@ class MLBPlugin:
             )
         return self._market_defs
 
+    def get_odds_matcher(self):
+        """
+        Empareja un Event con su RawOddsEvent por fecha y equipos.
+
+        Por qué hace falta
+        -------------------
+        El pipeline empareja cada evento con sus cuotas usando
+        `provider_ids['odds_api']`, que debe contener el id del evento
+        EN THE ODDS API.
+
+        MLBDataProvider lo deja vacío con el comentario "se mapea
+        externamente", pero ese paso nunca llegó a existir. El runner
+        hace `if not odds_api_id: continue` y salta TODOS los eventos
+        sin registrar un solo error — el pipeline llega a Stage 6 con
+        cero candidatos y el informe solo dice "sin picks".
+
+        Es el mismo caso que en fútbol, donde football-data y The Odds
+        API son proveedores sin relación: la MLB Stats API tampoco
+        conoce los identificadores de la casa de apuestas.
+
+        Por qué basta con los nombres
+        ------------------------------
+        Ambas fuentes usan el nombre oficial completo —"Washington
+        Nationals", no "Nationals" ni "WSH"— así que la normalización
+        resuelve la mayoría de casos sin tabla de alias.
+
+        No se usa coincidencia difusa por el mismo motivo que en
+        fútbol: emparejar un partido con las cuotas de otro daría
+        precios plausibles del rival equivocado, y nada en el sistema
+        lo detectaría. Ante la duda, None.
+        """
+
+        def matcher(event, raw_events):
+            if not raw_events:
+                return None
+
+            home = _normalize_mlb_team(event.home_team)
+            away = _normalize_mlb_team(event.away_team)
+            if not home or not away:
+                return None
+
+            date = (event.date or "")[:10]
+
+            for raw in raw_events:
+                raw_home = _normalize_mlb_team(getattr(raw, "home_team", ""))
+                raw_away = _normalize_mlb_team(getattr(raw, "away_team", ""))
+                if raw_home != home or raw_away != away:
+                    continue
+
+                # La fecha de The Odds API viene en UTC. Un partido
+                # nocturno en la costa oeste —19:00 en Los Ángeles— es
+                # las 02:00 UTC del día siguiente, así que se acepta
+                # ±1 día.
+                #
+                # Ampliarlo más arriesgaría cruzar partidos de una
+                # serie: dos equipos juegan tres o cuatro días
+                # seguidos, y a dos días de distancia ya sería otro
+                # encuentro.
+                raw_date = str(getattr(raw, "commence_time", ""))[:10]
+                if not raw_date or _within_a_day(date, raw_date):
+                    return raw
+
+            return None
+
+        return matcher
+
     @staticmethod
     def is_available() -> bool:
         """
@@ -220,3 +286,49 @@ class MLBPlugin:
             f"MLBPlugin(season={self._season}, "
             f"include_props={self._include_props})"
         )
+
+
+# ── Utilidades ───────────────────────────────────────────────────────────────
+
+def _normalize_mlb_team(name: str) -> str:
+    """
+    Normaliza un nombre de equipo de MLB para comparar entre fuentes.
+
+    La MLB Stats API y The Odds API usan ambas el nombre oficial
+    completo, así que basta con minúsculas, sin acentos y espacios
+    colapsados. Los alias que necesita el fútbol —'Man City' frente a
+    'Manchester City'— no tienen equivalente aquí.
+
+    Se mantiene la ciudad en el nombre a propósito: hay dos equipos en
+    Nueva York, dos en Chicago y dos en Los Ángeles. Recortar a
+    'Yankees' o 'Mets' funcionaría, pero 'Sox' no distinguiría Boston
+    de Chicago.
+    """
+    import unicodedata
+
+    if not name:
+        return ""
+
+    decomposed = unicodedata.normalize("NFD", str(name))
+    stripped = "".join(ch for ch in decomposed
+                       if unicodedata.category(ch) != "Mn")
+    cleaned = "".join(ch.lower() if (ch.isalnum() or ch.isspace()) else " "
+                      for ch in stripped)
+    return " ".join(cleaned.split())
+
+
+def _within_a_day(date_a: str, date_b: str) -> bool:
+    """
+    True si dos fechas ISO distan como mucho un día.
+
+    Las cuotas de The Odds API llevan `commence_time` en UTC, y un
+    partido nocturno en la costa oeste cae en el día siguiente.
+    """
+    from datetime import datetime
+
+    try:
+        a = datetime.strptime(date_a[:10], "%Y-%m-%d")
+        b = datetime.strptime(date_b[:10], "%Y-%m-%d")
+    except (ValueError, TypeError):
+        return False
+    return abs((a - b).days) <= 1

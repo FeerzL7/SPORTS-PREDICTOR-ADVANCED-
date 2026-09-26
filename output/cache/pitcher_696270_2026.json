@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 23,
+            "gamesPlayed": 21,
+            "gamesStarted": 18,
+            "groundOuts": 79,
+            "airOuts": 121,
+            "runs": 57,
+            "doubles": 9,
+            "triples": 1,
+            "homeRuns": 18,
+            "strikeOuts": 76,
+            "baseOnBalls": 39,
+            "intentionalWalks": 0,
+            "hits": 89,
+            "hitByPitch": 6,
+            "avg": ".247",
+            "atBats": 361,
+            "obp": ".328",
+            "slg": ".427",
+            "ops": ".755",
+            "caughtStealing": 1,
+            "stolenBases": 0,
+            "stolenBasePercentage": ".000",
+            "caughtStealingPercentage": "1.000",
+            "groundIntoDoublePlay": 9,
+            "numberOfPitches": 1636,
+            "era": "4.93",
+            "inningsPitched": "95.0",
+            "wins": 5,
+            "losses": 9,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 52,
+            "whip": "1.35",
+            "battersFaced": 410,
+            "outs": 285,
+            "gamesPitched": 21,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1034,
+            "strikePercentage": ".630",
+            "hitBatsmen": 6,
+            "balks": 0,
+            "wildPitches": 4,
+            "pickoffs": 0,
+            "totalBases": 154,
+            "groundOutsToAirouts": "0.65",
+            "winPercentage": ".357",
+            "pitchesPerInning": "17.22",
+            "gamesFinished": 1,
+            "strikeoutWalkRatio": "1.95",
+            "strikeoutsPer9Inn": "7.20",
+            "walksPer9Inn": "3.69",
+            "hitsPer9Inn": "8.43",
+            "runsScoredPer9": "5.40",
+            "homeRunsPer9": "1.71",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 3
+          },
+          "team": {
+            "id": 108,
+            "name": "Los Angeles Angels",
+            "link": "/api/v1/teams/108"
+          },
+          "player": {
+            "id": 696270,
+            "fullName": "Ryan Johnson",
+            "link": "/api/v1/people/696270"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

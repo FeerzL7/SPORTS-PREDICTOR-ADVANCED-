@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 34,
+            "gamesPlayed": 31,
+            "gamesStarted": 31,
+            "groundOuts": 169,
+            "airOuts": 241,
+            "runs": 76,
+            "doubles": 38,
+            "triples": 4,
+            "homeRuns": 28,
+            "strikeOuts": 154,
+            "baseOnBalls": 53,
+            "intentionalWalks": 1,
+            "hits": 162,
+            "hitByPitch": 7,
+            "avg": ".224",
+            "atBats": 722,
+            "obp": ".283",
+            "slg": ".404",
+            "ops": ".687",
+            "caughtStealing": 3,
+            "stolenBases": 7,
+            "stolenBasePercentage": ".700",
+            "caughtStealingPercentage": ".300",
+            "groundIntoDoublePlay": 14,
+            "numberOfPitches": 2938,
+            "era": "3.33",
+            "inningsPitched": "194.1",
+            "wins": 9,
+            "losses": 9,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 72,
+            "whip": "1.11",
+            "battersFaced": 786,
+            "outs": 583,
+            "gamesPitched": 31,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1912,
+            "strikePercentage": ".650",
+            "hitBatsmen": 7,
+            "balks": 0,
+            "wildPitches": 5,
+            "pickoffs": 1,
+            "totalBases": 292,
+            "groundOutsToAirouts": "0.70",
+            "winPercentage": ".500",
+            "pitchesPerInning": "15.12",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.91",
+            "strikeoutsPer9Inn": "7.13",
+            "walksPer9Inn": "2.45",
+            "hitsPer9Inn": "7.50",
+            "runsScoredPer9": "3.52",
+            "homeRunsPer9": "1.30",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 2,
+            "sacFlies": 2
+          },
+          "team": {
+            "id": 118,
+            "name": "Kansas City Royals",
+            "link": "/api/v1/teams/118"
+          },
+          "player": {
+            "id": 608379,
+            "fullName": "Michael Wacha",
+            "link": "/api/v1/people/608379"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

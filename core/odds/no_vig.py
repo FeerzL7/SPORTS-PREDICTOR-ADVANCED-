@@ -112,6 +112,47 @@ def _validate_selections(selections: list[MarketOdds]) -> None:
             "Se necesita al menos una selección para calcular el overround."
         )
 
+    # ── Al menos DOS selecciones ───────────────────────────────────
+    #
+    # Con una sola, la normalización divide su probabilidad implícita
+    # por sí misma y devuelve 1.00 — una certeza absoluta que ningún
+    # mercado real expresa.
+    #
+    # El fallo era silencioso y grave. Ocurrió con el runline de MLB:
+    #
+    #     Pittsburgh Pirates -1.5 @ 3.40
+    #     implícita = 1/3.40 = 0.294
+    #     suma      = 0.294        ← solo hay una
+    #     sin vig   = 0.294/0.294 = 1.00
+    #
+    # Ese 1.00 contaminó el blend hasta dar un EV de +188.8% sobre un
+    # pick cuyo modelo real decía 0.588. Los filtros de max_odds lo
+    # contuvieron por casualidad, pero una cuota algo menor habría
+    # dejado pasar una apuesta con valor inventado.
+    #
+    # Un mercado con un solo lado cotizado no tiene overround que
+    # quitar: el concepto no aplica. Rechazarlo es más correcto que
+    # devolver una probabilidad imposible.
+    #
+    # CAUSA HABITUAL: agrupar por (mercado, línea) cuando los dos lados
+    # llevan líneas opuestas. En el runline de MLB el local va a -1.5 y
+    # el visitante a +1.5, así que cada uno cae en su propio grupo. La
+    # agrupación debe ser por (evento, mercado) y tratar las líneas
+    # opuestas como el mismo mercado.
+    if len(selections) < 2:
+        solo = selections[0]
+        raise ValueError(
+            f"no_vig_probabilities() recibió UNA sola selección "
+            f"('{solo.selection}', market='{solo.market}', "
+            f"line={solo.line}, event_id='{solo.event_id}'). "
+            f"Con un solo lado no hay overround que quitar: la "
+            f"normalización devolvería 1.00, una certeza que ningún "
+            f"mercado expresa. Causa habitual: agrupar por (mercado, "
+            f"línea) cuando los dos lados llevan líneas opuestas — en "
+            f"un runline el local va a -1.5 y el visitante a +1.5. "
+            f"Agrupar por (evento, mercado)."
+        )
+
     first = selections[0]
 
     event_ids = {s.event_id for s in selections}

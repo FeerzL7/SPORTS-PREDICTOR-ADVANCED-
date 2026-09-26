@@ -409,6 +409,49 @@ def _check_plugin_dependencies(sport: str) -> str | None:
     return None
 
 
+def _mostrar_mejores_rechazados(result, n: int = 5) -> None:
+    """
+    Los candidatos con mayor EV que no pasaron el filtro.
+
+    Responde dos preguntas que el informe no contestaba:
+
+        ¿Se acercó alguno?
+            Un mejor candidato con EV +2.8% y umbral en 3.0 dice que el
+            día fue flojo. Uno con EV -12% dice que el modelo no vio
+            valor en ninguna parte.
+
+        ¿Por qué se rechazó?
+            Cada pick arrastra sus `reasons`, que incluyen el veredicto
+            de los filtros. Eso distingue "EV insuficiente" de "cuota
+            fuera de rango" o "probabilidad bajo el mínimo".
+    """
+    candidatos = getattr(result, "candidates", None) or []
+    rechazados = [p for p in candidatos if not getattr(p, "active", False)]
+
+    if not rechazados:
+        return
+
+    try:
+        mejores = sorted(rechazados, key=lambda p: -p.ev)[:n]
+    except Exception:
+        return
+
+    print()
+    print(f"  MEJORES CANDIDATOS RECHAZADOS ({len(rechazados)} en total):")
+    for p in mejores:
+        linea = f" {p.line}" if getattr(p, "line", None) is not None else ""
+        print(f"    [{p.market}] {p.selection}{linea} @ {p.price} "
+              f"| EV={p.ev:+.1f}% | prob={p.blended_prob:.3f}")
+
+        # El motivo del filtro, si viaja en las razones del pick
+        razones = getattr(p, "reasons", None) or []
+        for r in razones:
+            texto = str(r)
+            if "filter" in texto.lower() or "rechaz" in texto.lower():
+                print(f"       {texto[:90]}")
+                break
+
+
 def _load_plugin(sport: str, config, date: str | None = None):
     """
     Instancia el SportPlugin para el deporte dado.
@@ -456,6 +499,17 @@ def _print_result(result) -> None:
     else:
         print("\n  Sin picks activos para hoy.")
         print("  (Los filtros de EV y riesgo no aprobaron candidatos)")
+
+        # Los mejores candidatos rechazados, con su EV.
+        #
+        # Sin esto, "sin picks" es indistinguible de "el pipeline se
+        # rompió": ambos imprimen lo mismo. Y cuando un pick aparece un
+        # día y desaparece al siguiente, no hay forma de saber si fue
+        # el mercado o un cambio en el código.
+        #
+        # Mostrar los que más cerca estuvieron convierte esa pregunta
+        # en algo que se lee del informe.
+        _mostrar_mejores_rechazados(result)
 
     if result.errors:
         print(f"\nERRORES ({len(result.errors)}):")

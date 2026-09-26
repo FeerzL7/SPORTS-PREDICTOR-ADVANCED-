@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 31,
+            "gamesPlayed": 31,
+            "gamesStarted": 31,
+            "groundOuts": 154,
+            "airOuts": 144,
+            "runs": 77,
+            "doubles": 23,
+            "triples": 3,
+            "homeRuns": 21,
+            "strikeOuts": 128,
+            "baseOnBalls": 56,
+            "intentionalWalks": 2,
+            "hits": 145,
+            "hitByPitch": 6,
+            "avg": ".255",
+            "atBats": 569,
+            "obp": ".328",
+            "slg": ".417",
+            "ops": ".745",
+            "caughtStealing": 7,
+            "stolenBases": 12,
+            "stolenBasePercentage": ".632",
+            "caughtStealingPercentage": ".368",
+            "groundIntoDoublePlay": 12,
+            "numberOfPitches": 2535,
+            "era": "4.56",
+            "inningsPitched": "150.0",
+            "wins": 9,
+            "losses": 6,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 76,
+            "whip": "1.34",
+            "battersFaced": 633,
+            "outs": 450,
+            "gamesPitched": 31,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1594,
+            "strikePercentage": ".630",
+            "hitBatsmen": 6,
+            "balks": 0,
+            "wildPitches": 3,
+            "pickoffs": 2,
+            "totalBases": 237,
+            "groundOutsToAirouts": "1.07",
+            "winPercentage": ".600",
+            "pitchesPerInning": "16.90",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.29",
+            "strikeoutsPer9Inn": "7.68",
+            "walksPer9Inn": "3.36",
+            "hitsPer9Inn": "8.70",
+            "runsScoredPer9": "4.62",
+            "homeRunsPer9": "1.26",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 1
+          },
+          "team": {
+            "id": 135,
+            "name": "San Diego Padres",
+            "link": "/api/v1/teams/135"
+          },
+          "player": {
+            "id": 621111,
+            "fullName": "Walker Buehler",
+            "link": "/api/v1/people/621111"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

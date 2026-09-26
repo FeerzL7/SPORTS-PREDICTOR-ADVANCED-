@@ -583,6 +583,26 @@ class PipelineRunner:
             else:
                 odds_api_id = event.provider_ids.get("odds_api")
                 if not odds_api_id:
+                    # CORRECCIÓN: antes era un `continue` mudo.
+                    #
+                    # Un plugin cuya fuente de calendario no conoce los
+                    # ids de The Odds API deja esta clave vacía, y el
+                    # bucle descartaba TODOS sus eventos sin registrar
+                    # nada. El informe decía "sin candidatos" y no había
+                    # forma de saber que el emparejamiento ni se había
+                    # intentado.
+                    #
+                    # Le pasó al plugin MLB: 13 partidos, cuotas
+                    # descargadas, cero candidatos y ningún error.
+                    #
+                    # La solución para ese caso es que el plugin exponga
+                    # get_odds_matcher(), así que el mensaje lo dice.
+                    context.add_error(
+                        "Stage5",
+                        f"{event.home_team} vs {event.away_team}: sin "
+                        f"provider_ids['odds_api']. El plugin debería "
+                        f"exponer get_odds_matcher()."
+                    )
                     continue
 
                 raw_event = self._normalizer.find_by_event_id(

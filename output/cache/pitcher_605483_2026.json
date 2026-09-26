@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 33,
+            "gamesPlayed": 8,
+            "gamesStarted": 8,
+            "groundOuts": 29,
+            "airOuts": 33,
+            "runs": 9,
+            "doubles": 5,
+            "triples": 0,
+            "homeRuns": 0,
+            "strikeOuts": 52,
+            "baseOnBalls": 16,
+            "intentionalWalks": 0,
+            "hits": 26,
+            "hitByPitch": 1,
+            "avg": ".188",
+            "atBats": 138,
+            "obp": ".276",
+            "slg": ".225",
+            "ops": ".501",
+            "caughtStealing": 3,
+            "stolenBases": 8,
+            "stolenBasePercentage": ".727",
+            "caughtStealingPercentage": ".273",
+            "groundIntoDoublePlay": 1,
+            "numberOfPitches": 664,
+            "era": "1.86",
+            "inningsPitched": "38.2",
+            "wins": 4,
+            "losses": 1,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 8,
+            "whip": "1.09",
+            "battersFaced": 157,
+            "outs": 116,
+            "gamesPitched": 8,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 430,
+            "strikePercentage": ".650",
+            "hitBatsmen": 1,
+            "balks": 0,
+            "wildPitches": 1,
+            "pickoffs": 1,
+            "totalBases": 31,
+            "groundOutsToAirouts": "0.88",
+            "winPercentage": ".800",
+            "pitchesPerInning": "17.17",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "3.25",
+            "strikeoutsPer9Inn": "12.10",
+            "walksPer9Inn": "3.72",
+            "hitsPer9Inn": "6.05",
+            "runsScoredPer9": "2.09",
+            "homeRunsPer9": "0.00",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 1
+          },
+          "team": {
+            "id": 119,
+            "name": "Los Angeles Dodgers",
+            "link": "/api/v1/teams/119"
+          },
+          "player": {
+            "id": 605483,
+            "fullName": "Blake Snell",
+            "link": "/api/v1/people/605483"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

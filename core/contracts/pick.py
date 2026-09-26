@@ -77,6 +77,17 @@ class CandidatePick:
         price       -- Cuota decimal usada para este pick.
 
     Probabilidades:
+        model_prob_capped
+                       -- Probabilidad del modelo DESPUÉS de aplicar
+                          prob_cap, que es la que el BlendingEngine
+                          mezcla realmente. None si no hubo cap.
+
+                          Existe porque el engine capa el modelo ANTES
+                          de mezclar, y con el cap activo el resultado
+                          puede caer FUERA del rango entre las dos
+                          probabilidades originales. Validar contra
+                          model_prob_raw rechazaba mezclas correctas.
+
         model_prob_raw -- Probabilidad del modelo deportivo puro,
                          antes de mezclar con el mercado. Viene de
                          Projection (home_win_prob, away_win_prob, o
@@ -181,6 +192,12 @@ class CandidatePick:
 
     # ── Validación e invariantes ──────────────────────────────────────────────
 
+    # Probabilidad del modelo tras aplicar prob_cap, que es la que
+    # BlendingEngine mezcla realmente. None si el engine no la
+    # informa: entonces la validación cae a model_prob_raw y
+    # conserva el comportamiento anterior.
+    model_prob_capped: float | None = None
+
     def __post_init__(self) -> None:
         """
         Aplica las invariantes estructurales del contrato.
@@ -223,19 +240,58 @@ class CandidatePick:
         punto de entrada al ValueEngine, en vez de dejar que un pick
         con probabilidad imposible reciba stake real.
         """
-        lower = min(self.model_prob_raw, self.market_prob) - BLENDED_PROB_RANGE_TOLERANCE
-        upper = max(self.model_prob_raw, self.market_prob) + BLENDED_PROB_RANGE_TOLERANCE
+        # Se valida contra la probabilidad que el engine mezcló DE
+        # VERDAD, no contra la cruda.
+        #
+        # CORRECCIÓN: BlendingEngine aplica prob_cap al modelo ANTES de
+        # mezclar. Con el cap activo, el blend cae legítimamente fuera
+        # del rango entre model_prob_raw y market_prob:
+        #
+        #     modelo 0.7404 → capado a 0.58
+        #     blend = 0.35×0.58 + 0.65×0.7157 = 0.6682
+        #     rango [0.7157, 0.7404] → RECHAZADO
+        #
+        # La mezcla era correcta; la validación no sabía del cap. En
+        # producción eso descartaba picks buenos y culpaba al engine de
+        # un bug que no tenía.
+        #
+        # Cuando el engine informa model_prob_capped, se usa ese valor.
+        # Sin él —picks construidos a mano, plugins antiguos— se
+        # conserva el comportamiento anterior.
+        efectiva = (self.model_prob_capped
+                    if self.model_prob_capped is not None
+                    else self.model_prob_raw)
+
+        lower = min(efectiva, self.market_prob) - BLENDED_PROB_RANGE_TOLERANCE
+        upper = max(efectiva, self.market_prob) + BLENDED_PROB_RANGE_TOLERANCE
 
         if not (lower <= self.blended_prob <= upper):
+            # El mensaje distingue los dos casos, porque exigen
+            # arreglos distintos y la versión anterior acusaba en falso
+            # al BlendingEngine de un bug que no tenía.
+            if self.model_prob_capped is not None:
+                diagnostico = (
+                    "El pick informa model_prob_capped, así que el rango "
+                    "ya tiene en cuenta el prob_cap: esto es un bug real "
+                    "del BlendingEngine."
+                )
+            else:
+                diagnostico = (
+                    "El pick NO informa model_prob_capped. Si este mercado "
+                    "usa prob_cap, el BlendingEngine debería pasarlo: con "
+                    "el cap activo, el blend cae legítimamente fuera del "
+                    "rango entre las dos probabilidades crudas."
+                )
+
             raise ValueError(
                 f"blended_prob={self.blended_prob} no es alcanzable como "
-                f"combinación convexa de model_prob_raw="
-                f"{self.model_prob_raw} y market_prob={self.market_prob} "
+                f"combinación convexa de "
+                f"{'model_prob_capped' if self.model_prob_capped is not None else 'model_prob_raw'}"
+                f"={efectiva} y market_prob={self.market_prob} "
                 f"para event_id='{self.event.event_id}', market="
                 f"'{self.market}', selection='{self.selection}'. Rango "
-                f"válido: [{round(lower, 4)}, {round(upper, 4)}]. Esto "
-                f"indica un bug en el BlendingEngine que produjo este "
-                f"pick, no un problema de calidad de dato."
+                f"válido: [{round(lower, 4)}, {round(upper, 4)}]. "
+                f"{diagnostico}"
             )
 
     # ── Métricas de valor calculadas ───────────────────────────────────────────
