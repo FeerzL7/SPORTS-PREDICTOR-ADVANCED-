@@ -366,6 +366,39 @@ def _remedios(faltan: list[str], plugins: list[str],
             print()
             print("         ODDS_API_KEY=tu_clave")
 
+    # ── Plugins rotos ──────────────────────────────────────────
+    #
+    # Se trata aparte porque no se arregla instalando nada. Y el
+    # verificador NO debe decir "nada que hacer" cuando un plugin
+    # falla: la primera versión lo hacía, porque solo contemplaba las
+    # categorías de problema que había previsto.
+    rotos = [p for p in plugins
+             if p.endswith(("_import", "_clase", "_disponible"))]
+    if rotos:
+        hay_algo = True
+        print()
+        print("  PLUGINS ROTOS")
+        print()
+        for p in rotos:
+            nombre = p.rsplit("_", 1)[0]
+            causa = p.rsplit("_", 1)[1]
+            print(f"     {nombre}")
+            if causa == "clase":
+                print(f"       El módulo importa pero no contiene su clase.")
+                print(f"       Causa habitual: el archivo en disco es de OTRO")
+                print(f"       plugin. Los tres se llaman plugin.py, así que")
+                print(f"       es fácil copiarlos a la carpeta equivocada.")
+                print()
+                print(f"       Comprobar con:")
+                print(f'         python -c "import sports.{nombre}.plugin as p; '
+                      f'print([n for n in dir(p) if \'Plugin\' in n])"')
+            elif causa == "import":
+                print(f"       El módulo no importa: falta un archivo del")
+                print(f"       plugin o una de sus dependencias internas.")
+            else:
+                print(f"       is_available() lanzó una excepción.")
+            print()
+
     if not hay_algo:
         print()
         print("  Nada que hacer: el entorno está completo.")

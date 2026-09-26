@@ -139,6 +139,37 @@ class MLBPlugin:
             )
         return self._market_defs
 
+    @staticmethod
+    def is_available() -> bool:
+        """
+        True si el plugin puede operar.
+
+        MLB consulta la MLB Stats API por HTTP directo, así que solo
+        necesita `requests` —que ya es requisito del Core para The Odds
+        API. No hay dependencias adicionales que instalar, al contrario
+        que NFL, que exige nfl_data_py.
+
+        Por qué existe este método
+        ---------------------------
+        Lo declaran SoccerPlugin y NFLPlugin, y el CLI lo consulta
+        antes de construir el pipeline para dar un mensaje útil en vez
+        de fallar al descargar datos.
+
+        MLB no lo tenía, así que cualquier consumidor que lo llamara de
+        forma uniforme sobre los tres plugins obtenía un AttributeError
+        en vez de una respuesta. La verificación de entorno lo destapó
+        al recorrerlos en bucle.
+
+        Que un plugin no necesite dependencias externas no es razón
+        para omitir el método: la interfaz debe ser la misma aunque la
+        respuesta sea siempre True.
+        """
+        try:
+            import requests  # noqa: F401
+            return True
+        except ImportError:
+            return False
+
     def get_config(self) -> dict:
         """Retorna configuración MLB como dict para subsistemas del Core."""
         if self._config is None:
