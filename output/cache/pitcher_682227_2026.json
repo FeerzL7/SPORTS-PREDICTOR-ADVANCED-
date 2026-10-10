@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 28,
+            "gamesPlayed": 11,
+            "gamesStarted": 8,
+            "groundOuts": 46,
+            "airOuts": 62,
+            "runs": 30,
+            "doubles": 7,
+            "triples": 1,
+            "homeRuns": 8,
+            "strikeOuts": 33,
+            "baseOnBalls": 27,
+            "intentionalWalks": 1,
+            "hits": 43,
+            "hitByPitch": 4,
+            "avg": ".238",
+            "atBats": 181,
+            "obp": ".344",
+            "slg": ".420",
+            "ops": ".764",
+            "caughtStealing": 0,
+            "stolenBases": 2,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 10,
+            "numberOfPitches": 831,
+            "era": "4.89",
+            "inningsPitched": "49.2",
+            "wins": 5,
+            "losses": 4,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 27,
+            "whip": "1.41",
+            "battersFaced": 215,
+            "outs": 149,
+            "gamesPitched": 11,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 495,
+            "strikePercentage": ".600",
+            "hitBatsmen": 4,
+            "balks": 0,
+            "wildPitches": 1,
+            "pickoffs": 0,
+            "totalBases": 76,
+            "groundOutsToAirouts": "0.74",
+            "winPercentage": ".556",
+            "pitchesPerInning": "16.73",
+            "gamesFinished": 1,
+            "strikeoutWalkRatio": "1.22",
+            "strikeoutsPer9Inn": "5.98",
+            "walksPer9Inn": "4.89",
+            "hitsPer9Inn": "7.79",
+            "runsScoredPer9": "5.44",
+            "homeRunsPer9": "1.45",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 3
+          },
+          "team": {
+            "id": 113,
+            "name": "Cincinnati Reds",
+            "link": "/api/v1/teams/113"
+          },
+          "player": {
+            "id": 682227,
+            "fullName": "Brandon Williamson",
+            "link": "/api/v1/people/682227"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

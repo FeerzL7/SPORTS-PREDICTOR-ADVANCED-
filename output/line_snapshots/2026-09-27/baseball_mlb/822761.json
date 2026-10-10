@@ -1,0 +1,188 @@
+[
+  {
+    "event_id": "822761",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T17:26:02.657740+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "ML",
+        "selection": "Cincinnati Reds",
+        "line": null,
+        "price": 2.45,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      },
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "ML",
+        "selection": "Toronto Blue Jays",
+        "line": null,
+        "price": 1.64,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:25:40Z"
+      },
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.5,
+        "price": 1.87,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-27T17:25:39Z"
+      },
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.5,
+        "price": 2.03,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      },
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "SPREAD",
+        "selection": "Cincinnati Reds",
+        "line": 1.5,
+        "price": 1.81,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:25:40Z"
+      },
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "SPREAD",
+        "selection": "Toronto Blue Jays",
+        "line": -1.5,
+        "price": 2.22,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      }
+    ]
+  },
+  {
+    "event_id": "822761",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T17:33:21.988784+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "ML",
+        "selection": "Cincinnati Reds",
+        "line": null,
+        "price": 2.45,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "ML",
+        "selection": "Toronto Blue Jays",
+        "line": null,
+        "price": 1.63,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:33:01Z"
+      },
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.5,
+        "price": 1.87,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-27T17:33:17Z"
+      },
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.5,
+        "price": 2.03,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "SPREAD",
+        "selection": "Toronto Blue Jays",
+        "line": -1.5,
+        "price": 2.22,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "SPREAD",
+        "selection": "Cincinnati Reds",
+        "line": 1.5,
+        "price": 1.83,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:33:01Z"
+      }
+    ]
+  },
+  {
+    "event_id": "822761",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T18:06:57.033002+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "ML",
+        "selection": "Cincinnati Reds",
+        "line": null,
+        "price": 2.45,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:06:53Z"
+      },
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "ML",
+        "selection": "Toronto Blue Jays",
+        "line": null,
+        "price": 1.62,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:06:53Z"
+      },
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.5,
+        "price": 1.87,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-27T18:06:36Z"
+      },
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.5,
+        "price": 2.03,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:06:53Z"
+      },
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "SPREAD",
+        "selection": "Cincinnati Reds",
+        "line": 1.5,
+        "price": 1.8,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T18:06:52Z"
+      },
+      {
+        "event_id": "9f490d6bcfb661b6a7b1114e80646d4b",
+        "market": "SPREAD",
+        "selection": "Toronto Blue Jays",
+        "line": -1.5,
+        "price": 2.22,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:06:53Z"
+      }
+    ]
+  }
+]

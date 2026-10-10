@@ -57,6 +57,24 @@ Robustez operacional
   omitida con error, evento continúa.
 - Ningún error parcial aborta el evento completo.
 
+El cap de probabilidad y el contrato del pick
+-----------------------------------------------
+BlendingEngine aplica prob_cap al modelo ANTES de mezclar:
+
+    model_clamped = min(model_prob_raw, prob_cap)
+    blended       = w × model_clamped + (1 − w) × market_prob
+
+Con el cap activo, el blend cae LEGÍTIMAMENTE fuera del rango entre
+model_prob_raw y market_prob. Ejemplo real de MLB:
+
+    modelo 0.8449 → capado a 0.58
+    blend = 0.35 × 0.58 + 0.65 × 0.6843 = 0.647804
+
+CandidatePick valida que el blend sea una combinación convexa, y sin
+saber del cap rechazaba esas mezclas culpando al engine de un bug que
+no tenía. Por eso se le pasa `model_prob_capped`: el contrato valida
+contra la probabilidad que se mezcló de verdad.
+
 Uso típico
 -----------
     from core.value.engine import ValueEngine, EvaluationRequest
@@ -87,7 +105,7 @@ Uso típico
 from __future__ import annotations
 
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 
 from core.contracts.event import Event
 from core.contracts.market_odds import MarketOdds
@@ -270,10 +288,15 @@ class ValueEngine:
         picks_rejected: list[CandidatePick] = []
         errors:         list[str]           = []
 
-        sport    = request.event.sport
         event_id = request.event.event_id
 
-        # Agrupar market_odds por market — defensa contra inputs mezclados
+        # Agrupar market_odds por market — defensa contra inputs mezclados.
+        #
+        # Se agrupa SOLO por market, no por (market, line). En un
+        # handicap los dos lados llevan líneas opuestas —local -1.5 y
+        # visitante +1.5— así que incluir la línea en la clave dejaría
+        # cada lado en su propio grupo de una sola selección, y
+        # no_vig_probabilities() devolvería 1.00 para ambos.
         groups: dict[str, list[MarketOdds]] = defaultdict(list)
         for odds in request.market_odds:
             groups[odds.market].append(odds)
@@ -289,11 +312,6 @@ class ValueEngine:
                     f"Mercado omitido."
                 )
                 continue
-
-            # Índice rápido selection → MarketOdds normalizado
-            no_vig_by_selection: dict[str, MarketOdds] = {
-                o.selection: o for o in normalized
-            }
 
             # ── 2. Procesar cada selección del mercado ─────────────────
             for odds_normalized in normalized:
@@ -321,7 +339,7 @@ class ValueEngine:
                     )
                     continue
 
-                pick = self._build_pick(
+                self._build_pick(
                     event=request.event,
                     market=market,
                     selection=selection,
@@ -410,6 +428,23 @@ class ValueEngine:
                 model_prob_raw=model_prob,
                 market_prob=market_prob,
                 blended_prob=blend_result.blended_prob,
+                # Probabilidad del modelo DESPUÉS de aplicar prob_cap,
+                # que es la que BlendingEngine mezcló realmente.
+                #
+                # CandidatePick valida que blended_prob sea una
+                # combinación convexa. Con el cap activo el blend cae
+                # legítimamente FUERA del rango entre model_prob_raw y
+                # market_prob:
+                #
+                #     modelo 0.8449 → capado a 0.58
+                #     blend = 0.35×0.58 + 0.65×0.6843 = 0.647804
+                #     rango [0.6743, 0.8549] → rechazado
+                #
+                # Sin este campo el contrato descartaba mezclas
+                # correctas y culpaba al BlendingEngine de un bug que no
+                # tenía. Pasándolo, la validación usa la probabilidad
+                # que de verdad entró en la mezcla.
+                model_prob_capped=blend_result.model_prob_clamped,
                 kelly_fraction=kelly_result.kelly_final,
                 price_at_pick=odds.price,
             )
@@ -418,7 +453,8 @@ class ValueEngine:
                 f"market={market}, selection='{selection}': "
                 f"CandidatePick() rechazó los valores ({e}). "
                 f"blend={blend_result.blended_prob:.4f}, "
-                f"model={model_prob:.4f}, market={market_prob:.4f}. "
+                f"model={model_prob:.4f}, market={market_prob:.4f}, "
+                f"capado={blend_result.model_prob_clamped:.4f}. "
                 f"Selección omitida."
             )
             return

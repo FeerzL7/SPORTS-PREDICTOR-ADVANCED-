@@ -1,0 +1,188 @@
+[
+  {
+    "event_id": "823814",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T17:26:02.657740+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "ML",
+        "selection": "Atlanta Braves",
+        "line": null,
+        "price": 2.09,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      },
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "ML",
+        "selection": "Miami Marlins",
+        "line": null,
+        "price": 1.85,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:25:40Z"
+      },
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.0,
+        "price": 1.88,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      },
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.0,
+        "price": 1.98,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      },
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "SPREAD",
+        "selection": "Miami Marlins",
+        "line": -1.5,
+        "price": 2.75,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T17:22:44Z"
+      },
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "SPREAD",
+        "selection": "Atlanta Braves",
+        "line": -1.5,
+        "price": 2.55,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:25:40Z"
+      }
+    ]
+  },
+  {
+    "event_id": "823814",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T17:33:22.002009+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "ML",
+        "selection": "Atlanta Braves",
+        "line": null,
+        "price": 2.09,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "ML",
+        "selection": "Miami Marlins",
+        "line": null,
+        "price": 1.85,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:33:01Z"
+      },
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.0,
+        "price": 1.88,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.0,
+        "price": 1.98,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "SPREAD",
+        "selection": "Miami Marlins",
+        "line": -1.5,
+        "price": 2.75,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T17:31:28Z"
+      },
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "SPREAD",
+        "selection": "Atlanta Braves",
+        "line": -1.5,
+        "price": 2.55,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:33:01Z"
+      }
+    ]
+  },
+  {
+    "event_id": "823814",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T18:06:57.047726+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "ML",
+        "selection": "Atlanta Braves",
+        "line": null,
+        "price": 2.09,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-27T18:06:36Z"
+      },
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "ML",
+        "selection": "Miami Marlins",
+        "line": null,
+        "price": 1.85,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:06:53Z"
+      },
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.0,
+        "price": 1.91,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T18:06:25Z"
+      },
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.0,
+        "price": 1.98,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:06:53Z"
+      },
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "SPREAD",
+        "selection": "Miami Marlins",
+        "line": -1.5,
+        "price": 2.75,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T18:06:25Z"
+      },
+      {
+        "event_id": "f4a70a1cc28098ce3bd4a521555ad809",
+        "market": "SPREAD",
+        "selection": "Atlanta Braves",
+        "line": -1.5,
+        "price": 2.6,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T18:06:52Z"
+      }
+    ]
+  }
+]

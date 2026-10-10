@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 27,
+            "gamesPlayed": 24,
+            "gamesStarted": 0,
+            "groundOuts": 37,
+            "airOuts": 30,
+            "runs": 19,
+            "doubles": 6,
+            "triples": 0,
+            "homeRuns": 6,
+            "strikeOuts": 22,
+            "baseOnBalls": 16,
+            "intentionalWalks": 2,
+            "hits": 31,
+            "hitByPitch": 1,
+            "avg": ".263",
+            "atBats": 118,
+            "obp": ".356",
+            "slg": ".466",
+            "ops": ".822",
+            "caughtStealing": 2,
+            "stolenBases": 4,
+            "stolenBasePercentage": ".667",
+            "caughtStealingPercentage": ".333",
+            "groundIntoDoublePlay": 5,
+            "numberOfPitches": 520,
+            "era": "4.70",
+            "inningsPitched": "30.2",
+            "wins": 0,
+            "losses": 2,
+            "saves": 1,
+            "saveOpportunities": 4,
+            "holds": 8,
+            "blownSaves": 3,
+            "earnedRuns": 16,
+            "whip": "1.53",
+            "battersFaced": 137,
+            "outs": 92,
+            "gamesPitched": 24,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 319,
+            "strikePercentage": ".610",
+            "hitBatsmen": 1,
+            "balks": 0,
+            "wildPitches": 5,
+            "pickoffs": 0,
+            "totalBases": 55,
+            "groundOutsToAirouts": "1.23",
+            "winPercentage": ".000",
+            "pitchesPerInning": "16.96",
+            "gamesFinished": 7,
+            "strikeoutWalkRatio": "1.38",
+            "strikeoutsPer9Inn": "6.46",
+            "walksPer9Inn": "4.70",
+            "hitsPer9Inn": "9.10",
+            "runsScoredPer9": "5.58",
+            "homeRunsPer9": "1.76",
+            "inheritedRunners": 13,
+            "inheritedRunnersScored": 4,
+            "catchersInterference": 0,
+            "sacBunts": 2,
+            "sacFlies": 0
+          },
+          "team": {
+            "id": 137,
+            "name": "San Francisco Giants",
+            "link": "/api/v1/teams/137"
+          },
+          "player": {
+            "id": 693313,
+            "fullName": "Carson Seymour",
+            "link": "/api/v1/people/693313"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

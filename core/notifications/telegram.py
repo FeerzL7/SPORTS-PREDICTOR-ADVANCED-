@@ -53,17 +53,9 @@ from core.contracts.pick import CandidatePick
 
 try:
     import requests as _requests
+    _REQUESTS_AVAILABLE = True
 except ImportError:
-    _requests = None  # type: ignore[assignment]
-
-# CORRECCIÓN (auditoría 2026-08): antes _requests solo se asignaba en la
-# rama try, dejando la variable "possibly unbound" para el type checker
-# en cualquier punto donde se usara tras el try/except (Pylance/pyright
-# marcaba esto en cada uno de los ~10 archivos que repiten este patrón
-# de dependencia opcional). Ahora _requests siempre está definida (como
-# None si el import falla), y _REQUESTS_AVAILABLE se deriva de eso en
-# vez de ser una bandera independiente que podía desincronizarse.
-_REQUESTS_AVAILABLE = _requests is not None
+    _REQUESTS_AVAILABLE = False
 
 _TELEGRAM_API_BASE = "https://api.telegram.org/bot{token}/{method}"
 
@@ -425,7 +417,7 @@ class TelegramNotifier:
         Retorna True si el status code es 2xx.
         Nunca lanza excepción — errores de red retornan False.
         """
-        if not _REQUESTS_AVAILABLE or _requests is None:
+        if not _REQUESTS_AVAILABLE:
             return False
 
         url     = _TELEGRAM_API_BASE.format(
@@ -452,41 +444,196 @@ class TelegramNotifier:
     # ── Factory desde ConfigLoader ─────────────────────────────────────────────
 
     @classmethod
-    def from_config(cls, config_loader) -> "TelegramNotifier | None":
+    def from_config(cls, config_loader=None) -> "TelegramNotifier | None":
         """
-        Construye un TelegramNotifier desde un ConfigLoader.
+        Construye un TelegramNotifier desde el entorno o el config.
 
-        Lee TELEGRAM_BOT_TOKEN y TELEGRAM_CHAT_IDS del ConfigLoader.
-        Retorna None si las credenciales no están configuradas —
-        el pipeline puede continuar sin notificaciones.
+        Orden de búsqueda de credenciales
+        ----------------------------------
+        1. Variables de entorno (.env) — donde viven de verdad
+        2. ConfigLoader — por si alguien las pone en el YAML
 
-        TELEGRAM_CHAT_IDS puede ser un string con IDs separados por
-        coma: '-123456789,-987654321,@mi_canal'
+        CORRECCIÓN: la versión anterior solo consultaba el
+        ConfigLoader, que lee ÚNICAMENTE archivos YAML. Las
+        credenciales de Telegram viven en .env, así que
+        `config.get("TELEGRAM_BOT_TOKEN")` buscaba una clave YAML
+        inexistente, devolvía None, y las notificaciones se saltaban
+        en silencio — sin un mensaje que dijera por qué.
+
+        Un secreto en el YAML además acabaría versionado en git, que
+        es exactamente lo que .env evita. Por eso el entorno tiene
+        prioridad.
+
+        Variables reconocidas
+        ----------------------
+            TELEGRAM_BOT_TOKEN   token del bot, de @BotFather
+            TELEGRAM_CHAT_IDS    ids separados por coma
+            TELEGRAM_CHAT_ID     alias de una sola id, por compatibilidad
+                                 con el sistema MLB anterior
+            TELEGRAM_TOKEN       alias del token, mismo motivo
+
+        Retorna None si faltan credenciales. Para saber POR QUÉ, usar
+        `diagnose()`, que distingue "no configurado" de "configurado
+        pero inválido".
         """
-        token = config_loader.get("TELEGRAM_BOT_TOKEN", default=None)
-        if not token:
-            return None
-
-        raw_ids = config_loader.get("TELEGRAM_CHAT_IDS", default="")
-        if not raw_ids:
-            return None
-
-        chat_ids = [cid.strip() for cid in str(raw_ids).split(",") if cid.strip()]
-        if not chat_ids:
+        token, chat_ids = cls._read_credentials(config_loader)
+        if not token or not chat_ids:
             return None
 
         try:
             cfg = TelegramConfig(
-                bot_token = token,
-                chat_ids  = chat_ids,
-                parse_mode = config_loader.get(
-                    "telegram.parse_mode", default="HTML"
+                bot_token  = token,
+                chat_ids   = chat_ids,
+                parse_mode = cls._cfg(config_loader, "telegram.parse_mode",
+                                      "HTML"),
+                rate_limit_delay = float(
+                    cls._cfg(config_loader, "telegram.rate_limit_delay", 0.1)
                 ),
-                rate_limit_delay = float(config_loader.get(
-                    "telegram.rate_limit_delay", default=0.1
-                )),
             )
             return cls(config=cfg)
-        except ValueError:
+        except (ValueError, TypeError):
             return None
-         
+
+    @staticmethod
+    def _read_credentials(config_loader) -> tuple[str, list[str]]:
+        """
+        Lee token y chat_ids del entorno, con el config como respaldo.
+
+        Carga el .env si python-dotenv está disponible: los scripts
+        que llaman al notificador no siempre lo han hecho ya, y
+        depender de ello convertía el orden de imports en parte del
+        contrato.
+        """
+        import os
+
+        try:
+            from dotenv import load_dotenv
+            load_dotenv()
+        except ImportError:
+            pass
+
+        def buscar(*claves: str) -> str:
+            for clave in claves:
+                valor = os.environ.get(clave, "").strip()
+                if valor:
+                    return valor
+            if config_loader is not None:
+                for clave in claves:
+                    try:
+                        valor = config_loader.get(clave, default=None)
+                    except Exception:
+                        continue
+                    if valor:
+                        return str(valor).strip()
+            return ""
+
+        token = buscar("TELEGRAM_BOT_TOKEN", "TELEGRAM_TOKEN")
+        raw_ids = buscar("TELEGRAM_CHAT_IDS", "TELEGRAM_CHAT_ID")
+
+        chat_ids = [cid.strip() for cid in raw_ids.split(",") if cid.strip()]
+        return token, chat_ids
+
+    @staticmethod
+    def _cfg(config_loader, path: str, default):
+        """Lee del config con respaldo, tolerando que sea None."""
+        if config_loader is None:
+            return default
+        try:
+            value = config_loader.get(path, default=default)
+        except Exception:
+            return default
+        return value if value is not None else default
+
+    @classmethod
+    def diagnose(cls, config_loader=None) -> dict:
+        """
+        Estado de la configuración de Telegram, sin enviar nada.
+
+        Distingue los casos que `from_config()` colapsa en un mismo
+        None:
+
+            sin token          nunca se configuró
+            token sin chat     falta a quién enviar
+            token con formato
+            sospechoso         probablemente copiado a medias
+
+        Existe porque el fallo original era invisible: el pipeline
+        imprimía su resumen sin mencionar que las notificaciones no se
+        habían intentado siquiera.
+
+        El token se devuelve siempre redactado.
+        """
+        token, chat_ids = cls._read_credentials(config_loader)
+
+        problemas: list[str] = []
+
+        if not token:
+            problemas.append(
+                "Falta TELEGRAM_BOT_TOKEN. Se obtiene hablando con "
+                "@BotFather en Telegram: /newbot y copiar el token."
+            )
+        elif ":" not in token or len(token) < 40:
+            problemas.append(
+                f"TELEGRAM_BOT_TOKEN tiene formato sospechoso "
+                f"({len(token)} caracteres). Un token válido es como "
+                f"'123456789:AAH...' — unos 46 caracteres con dos "
+                f"puntos separando el id numérico del secreto."
+            )
+
+        if not chat_ids:
+            problemas.append(
+                "Falta TELEGRAM_CHAT_IDS. Para obtenerlo: escribir al "
+                "bot desde el chat destino y abrir "
+                "https://api.telegram.org/bot<TOKEN>/getUpdates — el "
+                "campo chat.id es el valor. Los grupos llevan signo "
+                "negativo."
+            )
+
+        return {
+            "configured":     bool(token and chat_ids and not problemas),
+            "has_token":      bool(token),
+            "token_redacted": (token[:8] + "****") if len(token) > 8 else "",
+            "chat_ids":       chat_ids,
+            "n_chats":        len(chat_ids),
+            "requests_available": _REQUESTS_AVAILABLE,
+            "problems":       problemas,
+        }
+
+    def verify_connection(self) -> tuple[bool, str]:
+        """
+        Comprueba credenciales contra la API, sin enviar mensajes.
+
+        Llama a getMe, que devuelve los datos del bot si el token es
+        válido. Es el paso previo a cualquier envío: distingue un token
+        incorrecto de un chat_id incorrecto, que producen el mismo
+        síntoma —nada llega— por causas distintas.
+
+        Retorna (ok, descripción).
+        """
+        if not _REQUESTS_AVAILABLE:
+            return False, "requests no está instalado"
+
+        url = _TELEGRAM_API_BASE.format(
+            token=self._config.bot_token, method="getMe"
+        )
+        try:
+            response = _requests.get(url, timeout=self._config.timeout_seconds)
+        except Exception as e:
+            return False, f"Sin conexión con api.telegram.org: {type(e).__name__}"
+
+        if response.status_code == 401:
+            return False, ("Token rechazado (401). Verificar "
+                           "TELEGRAM_BOT_TOKEN con @BotFather.")
+        if response.status_code != 200:
+            return False, f"La API respondió {response.status_code}"
+
+        try:
+            data = response.json()
+        except Exception:
+            return False, "Respuesta de la API ilegible"
+
+        if not data.get("ok"):
+            return False, f"API: {data.get('description', 'error desconocido')}"
+
+        bot = data.get("result", {})
+        return True, f"@{bot.get('username', '?')} ({bot.get('first_name', '')})"

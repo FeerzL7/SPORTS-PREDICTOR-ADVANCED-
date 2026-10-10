@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 24,
+            "gamesPlayed": 20,
+            "gamesStarted": 20,
+            "groundOuts": 65,
+            "airOuts": 108,
+            "runs": 43,
+            "doubles": 19,
+            "triples": 2,
+            "homeRuns": 12,
+            "strikeOuts": 118,
+            "baseOnBalls": 31,
+            "intentionalWalks": 0,
+            "hits": 78,
+            "hitByPitch": 2,
+            "avg": ".213",
+            "atBats": 366,
+            "obp": ".277",
+            "slg": ".374",
+            "ops": ".651",
+            "caughtStealing": 1,
+            "stolenBases": 5,
+            "stolenBasePercentage": ".833",
+            "caughtStealingPercentage": ".167",
+            "groundIntoDoublePlay": 3,
+            "numberOfPitches": 1579,
+            "era": "3.87",
+            "inningsPitched": "97.2",
+            "wins": 5,
+            "losses": 6,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 42,
+            "whip": "1.12",
+            "battersFaced": 402,
+            "outs": 293,
+            "gamesPitched": 20,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1019,
+            "strikePercentage": ".650",
+            "hitBatsmen": 2,
+            "balks": 2,
+            "wildPitches": 3,
+            "pickoffs": 1,
+            "totalBases": 137,
+            "groundOutsToAirouts": "0.60",
+            "winPercentage": ".455",
+            "pitchesPerInning": "16.17",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "3.81",
+            "strikeoutsPer9Inn": "10.87",
+            "walksPer9Inn": "2.86",
+            "hitsPer9Inn": "7.19",
+            "runsScoredPer9": "3.96",
+            "homeRunsPer9": "1.11",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 2
+          },
+          "team": {
+            "id": 134,
+            "name": "Pittsburgh Pirates",
+            "link": "/api/v1/teams/134"
+          },
+          "player": {
+            "id": 683003,
+            "fullName": "Jared Jones",
+            "link": "/api/v1/people/683003"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

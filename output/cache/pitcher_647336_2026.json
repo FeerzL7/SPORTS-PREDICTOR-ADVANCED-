@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 28,
+            "gamesPlayed": 21,
+            "gamesStarted": 20,
+            "groundOuts": 95,
+            "airOuts": 121,
+            "runs": 42,
+            "doubles": 21,
+            "triples": 3,
+            "homeRuns": 9,
+            "strikeOuts": 110,
+            "baseOnBalls": 27,
+            "intentionalWalks": 1,
+            "hits": 94,
+            "hitByPitch": 7,
+            "avg": ".226",
+            "atBats": 416,
+            "obp": ".283",
+            "slg": ".356",
+            "ops": ".639",
+            "caughtStealing": 5,
+            "stolenBases": 14,
+            "stolenBasePercentage": ".737",
+            "caughtStealingPercentage": ".263",
+            "groundIntoDoublePlay": 3,
+            "numberOfPitches": 1762,
+            "era": "3.31",
+            "inningsPitched": "111.1",
+            "wins": 9,
+            "losses": 5,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 41,
+            "whip": "1.09",
+            "battersFaced": 454,
+            "outs": 334,
+            "gamesPitched": 21,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1157,
+            "strikePercentage": ".660",
+            "hitBatsmen": 7,
+            "balks": 0,
+            "wildPitches": 1,
+            "pickoffs": 1,
+            "totalBases": 148,
+            "groundOutsToAirouts": "0.79",
+            "winPercentage": ".643",
+            "pitchesPerInning": "15.83",
+            "gamesFinished": 1,
+            "strikeoutWalkRatio": "4.07",
+            "strikeoutsPer9Inn": "8.89",
+            "walksPer9Inn": "2.18",
+            "hitsPer9Inn": "7.60",
+            "runsScoredPer9": "3.40",
+            "homeRunsPer9": "0.73",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 3
+          },
+          "team": {
+            "id": 109,
+            "name": "Arizona Diamondbacks",
+            "link": "/api/v1/teams/109"
+          },
+          "player": {
+            "id": 647336,
+            "fullName": "Michael Soroka",
+            "link": "/api/v1/people/647336"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

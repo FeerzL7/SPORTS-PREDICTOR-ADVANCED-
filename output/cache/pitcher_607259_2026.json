@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 35,
+            "gamesPlayed": 30,
+            "gamesStarted": 30,
+            "groundOuts": 163,
+            "airOuts": 243,
+            "runs": 58,
+            "doubles": 30,
+            "triples": 2,
+            "homeRuns": 22,
+            "strikeOuts": 108,
+            "baseOnBalls": 25,
+            "intentionalWalks": 0,
+            "hits": 164,
+            "hitByPitch": 3,
+            "avg": ".244",
+            "atBats": 673,
+            "obp": ".273",
+            "slg": ".392",
+            "ops": ".665",
+            "caughtStealing": 3,
+            "stolenBases": 12,
+            "stolenBasePercentage": ".800",
+            "caughtStealingPercentage": ".200",
+            "groundIntoDoublePlay": 12,
+            "numberOfPitches": 2474,
+            "era": "2.94",
+            "inningsPitched": "177.1",
+            "wins": 15,
+            "losses": 5,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 58,
+            "whip": "1.07",
+            "battersFaced": 706,
+            "outs": 532,
+            "gamesPitched": 30,
+            "completeGames": 1,
+            "shutouts": 0,
+            "strikes": 1686,
+            "strikePercentage": ".680",
+            "hitBatsmen": 3,
+            "balks": 0,
+            "wildPitches": 5,
+            "pickoffs": 1,
+            "totalBases": 264,
+            "groundOutsToAirouts": "0.67",
+            "winPercentage": ".750",
+            "pitchesPerInning": "13.95",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "4.32",
+            "strikeoutsPer9Inn": "5.48",
+            "walksPer9Inn": "1.27",
+            "hitsPer9Inn": "8.32",
+            "runsScoredPer9": "2.94",
+            "homeRunsPer9": "1.12",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 2,
+            "sacFlies": 3
+          },
+          "team": {
+            "id": 139,
+            "name": "Tampa Bay Rays",
+            "link": "/api/v1/teams/139"
+          },
+          "player": {
+            "id": 607259,
+            "fullName": "Nick Martinez",
+            "link": "/api/v1/people/607259"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

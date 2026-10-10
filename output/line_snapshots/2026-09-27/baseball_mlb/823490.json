@@ -1,0 +1,188 @@
+[
+  {
+    "event_id": "823490",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T17:26:02.657740+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "ML",
+        "selection": "Baltimore Orioles",
+        "line": null,
+        "price": 2.06,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-27T17:25:54Z"
+      },
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "ML",
+        "selection": "New York Yankees",
+        "line": null,
+        "price": 1.87,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      },
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 7.5,
+        "price": 2.05,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T17:25:23Z"
+      },
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 7.5,
+        "price": 1.87,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:25:40Z"
+      },
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "SPREAD",
+        "selection": "New York Yankees",
+        "line": -1.5,
+        "price": 2.79,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      },
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "SPREAD",
+        "selection": "Baltimore Orioles",
+        "line": -1.5,
+        "price": 2.65,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T17:25:23Z"
+      }
+    ]
+  },
+  {
+    "event_id": "823490",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T17:33:21.978521+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "ML",
+        "selection": "Baltimore Orioles",
+        "line": null,
+        "price": 2.06,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-27T17:32:27Z"
+      },
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "ML",
+        "selection": "New York Yankees",
+        "line": null,
+        "price": 1.87,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 7.5,
+        "price": 2.05,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T17:33:01Z"
+      },
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 7.5,
+        "price": 1.87,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:33:01Z"
+      },
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "SPREAD",
+        "selection": "New York Yankees",
+        "line": -1.5,
+        "price": 2.79,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "SPREAD",
+        "selection": "Baltimore Orioles",
+        "line": -1.5,
+        "price": 2.65,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T17:33:01Z"
+      }
+    ]
+  },
+  {
+    "event_id": "823490",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T18:06:57.013098+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "ML",
+        "selection": "Baltimore Orioles",
+        "line": null,
+        "price": 2.06,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-27T18:06:36Z"
+      },
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "ML",
+        "selection": "New York Yankees",
+        "line": null,
+        "price": 1.87,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:06:53Z"
+      },
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 7.5,
+        "price": 2.05,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T18:06:36Z"
+      },
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 7.5,
+        "price": 1.87,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T18:06:52Z"
+      },
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "SPREAD",
+        "selection": "New York Yankees",
+        "line": -1.5,
+        "price": 2.79,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:06:53Z"
+      },
+      {
+        "event_id": "8d968b3a9346c52d763b36a57a1cb74a",
+        "market": "SPREAD",
+        "selection": "Baltimore Orioles",
+        "line": -1.5,
+        "price": 2.65,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T18:06:36Z"
+      }
+    ]
+  }
+]

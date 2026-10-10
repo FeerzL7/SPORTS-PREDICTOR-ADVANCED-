@@ -1,0 +1,188 @@
+[
+  {
+    "event_id": "823246",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T17:26:02.657740+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "ML",
+        "selection": "Arizona Diamondbacks",
+        "line": null,
+        "price": 1.65,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:25:40Z"
+      },
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "ML",
+        "selection": "San Diego Padres",
+        "line": null,
+        "price": 2.4,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      },
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.0,
+        "price": 1.98,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T17:25:23Z"
+      },
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.0,
+        "price": 1.89,
+        "bookmaker": "MyBookie.ag",
+        "timestamp": "2026-09-27T17:25:07Z"
+      },
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "SPREAD",
+        "selection": "San Diego Padres",
+        "line": 1.5,
+        "price": 1.8,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T17:22:44Z"
+      },
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "SPREAD",
+        "selection": "Arizona Diamondbacks",
+        "line": -1.5,
+        "price": 2.13,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      }
+    ]
+  },
+  {
+    "event_id": "823246",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T17:33:21.993694+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "ML",
+        "selection": "Arizona Diamondbacks",
+        "line": null,
+        "price": 1.66,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-27T17:32:27Z"
+      },
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "ML",
+        "selection": "San Diego Padres",
+        "line": null,
+        "price": 2.4,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.0,
+        "price": 1.95,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T17:31:28Z"
+      },
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.0,
+        "price": 1.89,
+        "bookmaker": "MyBookie.ag",
+        "timestamp": "2026-09-27T17:31:37Z"
+      },
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "SPREAD",
+        "selection": "Arizona Diamondbacks",
+        "line": -1.5,
+        "price": 2.13,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "SPREAD",
+        "selection": "San Diego Padres",
+        "line": 1.5,
+        "price": 1.8,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T17:31:28Z"
+      }
+    ]
+  },
+  {
+    "event_id": "823246",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T18:06:57.045712+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "ML",
+        "selection": "Arizona Diamondbacks",
+        "line": null,
+        "price": 1.68,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:06:53Z"
+      },
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "ML",
+        "selection": "San Diego Padres",
+        "line": null,
+        "price": 2.34,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-27T18:06:36Z"
+      },
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.0,
+        "price": 1.98,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T18:06:36Z"
+      },
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.0,
+        "price": 1.89,
+        "bookmaker": "MyBookie.ag",
+        "timestamp": "2026-09-27T18:06:39Z"
+      },
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "SPREAD",
+        "selection": "San Diego Padres",
+        "line": 1.5,
+        "price": 1.8,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T18:06:25Z"
+      },
+      {
+        "event_id": "a30b8084ec3236e2dfd36571563a17b8",
+        "market": "SPREAD",
+        "selection": "Arizona Diamondbacks",
+        "line": -1.5,
+        "price": 2.13,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:06:53Z"
+      }
+    ]
+  }
+]

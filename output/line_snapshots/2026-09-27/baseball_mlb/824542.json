@@ -1,0 +1,188 @@
+[
+  {
+    "event_id": "824542",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T17:26:02.657740+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "ML",
+        "selection": "Chicago White Sox",
+        "line": null,
+        "price": 1.65,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-27T17:25:38Z"
+      },
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "ML",
+        "selection": "Colorado Rockies",
+        "line": null,
+        "price": 2.4,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-27T17:25:38Z"
+      },
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.5,
+        "price": 2.06,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      },
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.5,
+        "price": 1.91,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T17:25:23Z"
+      },
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "SPREAD",
+        "selection": "Chicago White Sox",
+        "line": -1.5,
+        "price": 2.32,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      },
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "SPREAD",
+        "selection": "Colorado Rockies",
+        "line": 1.5,
+        "price": 1.69,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T17:25:23Z"
+      }
+    ]
+  },
+  {
+    "event_id": "824542",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T17:33:22.000252+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "ML",
+        "selection": "Chicago White Sox",
+        "line": null,
+        "price": 1.65,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-27T17:33:01Z"
+      },
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "ML",
+        "selection": "Colorado Rockies",
+        "line": null,
+        "price": 2.4,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-27T17:33:01Z"
+      },
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.5,
+        "price": 2.06,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.5,
+        "price": 1.91,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T17:33:01Z"
+      },
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "SPREAD",
+        "selection": "Chicago White Sox",
+        "line": -1.5,
+        "price": 2.32,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "SPREAD",
+        "selection": "Colorado Rockies",
+        "line": 1.5,
+        "price": 1.69,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T17:33:01Z"
+      }
+    ]
+  },
+  {
+    "event_id": "824542",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T18:06:57.047726+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "ML",
+        "selection": "Chicago White Sox",
+        "line": null,
+        "price": 1.65,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-27T18:06:52Z"
+      },
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "ML",
+        "selection": "Colorado Rockies",
+        "line": null,
+        "price": 2.4,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-27T18:06:52Z"
+      },
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.5,
+        "price": 2.06,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:06:53Z"
+      },
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.5,
+        "price": 1.91,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T18:06:36Z"
+      },
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "SPREAD",
+        "selection": "Chicago White Sox",
+        "line": -1.5,
+        "price": 2.32,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:06:53Z"
+      },
+      {
+        "event_id": "febfe492bcd191327b90c25777e21db4",
+        "market": "SPREAD",
+        "selection": "Colorado Rockies",
+        "line": 1.5,
+        "price": 1.69,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T18:06:36Z"
+      }
+    ]
+  }
+]

@@ -1,0 +1,188 @@
+[
+  {
+    "event_id": "823650",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T17:26:02.657740+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "ML",
+        "selection": "Minnesota Twins",
+        "line": null,
+        "price": 2.0,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      },
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "ML",
+        "selection": "Texas Rangers",
+        "line": null,
+        "price": 1.91,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      },
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.0,
+        "price": 1.88,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      },
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.0,
+        "price": 1.98,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      },
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "SPREAD",
+        "selection": "Minnesota Twins",
+        "line": 1.5,
+        "price": 1.64,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:25:40Z"
+      },
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "SPREAD",
+        "selection": "Texas Rangers",
+        "line": -1.5,
+        "price": 2.48,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      }
+    ]
+  },
+  {
+    "event_id": "823650",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T17:33:21.998240+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "ML",
+        "selection": "Minnesota Twins",
+        "line": null,
+        "price": 2.0,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "ML",
+        "selection": "Texas Rangers",
+        "line": null,
+        "price": 1.91,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.0,
+        "price": 1.88,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.0,
+        "price": 1.98,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "SPREAD",
+        "selection": "Minnesota Twins",
+        "line": 1.5,
+        "price": 1.64,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:33:01Z"
+      },
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "SPREAD",
+        "selection": "Texas Rangers",
+        "line": -1.5,
+        "price": 2.48,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      }
+    ]
+  },
+  {
+    "event_id": "823650",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T18:06:57.047726+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "ML",
+        "selection": "Minnesota Twins",
+        "line": null,
+        "price": 2.02,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T18:06:52Z"
+      },
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "ML",
+        "selection": "Texas Rangers",
+        "line": null,
+        "price": 1.92,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-27T18:06:36Z"
+      },
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.0,
+        "price": 1.88,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:06:53Z"
+      },
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.0,
+        "price": 1.98,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:06:53Z"
+      },
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "SPREAD",
+        "selection": "Texas Rangers",
+        "line": -1.5,
+        "price": 2.5,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-27T18:06:36Z"
+      },
+      {
+        "event_id": "b399c26bfec19fedbe59553718bf1c7a",
+        "market": "SPREAD",
+        "selection": "Minnesota Twins",
+        "line": 1.5,
+        "price": 1.65,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T18:06:52Z"
+      }
+    ]
+  }
+]

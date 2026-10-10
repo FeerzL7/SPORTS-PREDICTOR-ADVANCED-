@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 29,
+            "gamesPlayed": 55,
+            "gamesStarted": 9,
+            "groundOuts": 94,
+            "airOuts": 90,
+            "runs": 41,
+            "doubles": 18,
+            "triples": 1,
+            "homeRuns": 9,
+            "strikeOuts": 54,
+            "baseOnBalls": 26,
+            "intentionalWalks": 0,
+            "hits": 66,
+            "hitByPitch": 4,
+            "avg": ".219",
+            "atBats": 302,
+            "obp": ".288",
+            "slg": ".374",
+            "ops": ".662",
+            "caughtStealing": 0,
+            "stolenBases": 2,
+            "stolenBasePercentage": "1.000",
+            "caughtStealingPercentage": ".000",
+            "groundIntoDoublePlay": 6,
+            "numberOfPitches": 1224,
+            "era": "4.13",
+            "inningsPitched": "80.2",
+            "wins": 6,
+            "losses": 6,
+            "saves": 1,
+            "saveOpportunities": 3,
+            "holds": 13,
+            "blownSaves": 2,
+            "earnedRuns": 37,
+            "whip": "1.14",
+            "battersFaced": 334,
+            "outs": 242,
+            "gamesPitched": 55,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 775,
+            "strikePercentage": ".630",
+            "hitBatsmen": 4,
+            "balks": 0,
+            "wildPitches": 2,
+            "pickoffs": 0,
+            "totalBases": 113,
+            "groundOutsToAirouts": "1.04",
+            "winPercentage": ".500",
+            "pitchesPerInning": "15.17",
+            "gamesFinished": 2,
+            "strikeoutWalkRatio": "2.08",
+            "strikeoutsPer9Inn": "6.02",
+            "walksPer9Inn": "2.90",
+            "hitsPer9Inn": "7.36",
+            "runsScoredPer9": "4.57",
+            "homeRunsPer9": "1.00",
+            "inheritedRunners": 20,
+            "inheritedRunnersScored": 4,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 1
+          },
+          "team": {
+            "id": 118,
+            "name": "Kansas City Royals",
+            "link": "/api/v1/teams/118"
+          },
+          "player": {
+            "id": 663738,
+            "fullName": "Daniel Lynch IV",
+            "link": "/api/v1/people/663738"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

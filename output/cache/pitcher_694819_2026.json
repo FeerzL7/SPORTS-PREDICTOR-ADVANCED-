@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 24,
+            "gamesPlayed": 29,
+            "gamesStarted": 29,
+            "groundOuts": 123,
+            "airOuts": 131,
+            "runs": 43,
+            "doubles": 8,
+            "triples": 2,
+            "homeRuns": 14,
+            "strikeOuts": 247,
+            "baseOnBalls": 42,
+            "intentionalWalks": 0,
+            "hits": 94,
+            "hitByPitch": 9,
+            "avg": ".159",
+            "atBats": 593,
+            "obp": ".225",
+            "slg": ".250",
+            "ops": ".475",
+            "caughtStealing": 1,
+            "stolenBases": 2,
+            "stolenBasePercentage": ".667",
+            "caughtStealingPercentage": ".333",
+            "groundIntoDoublePlay": 10,
+            "numberOfPitches": 2579,
+            "era": "1.86",
+            "inningsPitched": "169.1",
+            "wins": 15,
+            "losses": 5,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 35,
+            "whip": "0.80",
+            "battersFaced": 646,
+            "outs": 508,
+            "gamesPitched": 29,
+            "completeGames": 1,
+            "shutouts": 1,
+            "strikes": 1745,
+            "strikePercentage": ".680",
+            "hitBatsmen": 9,
+            "balks": 1,
+            "wildPitches": 5,
+            "pickoffs": 0,
+            "totalBases": 148,
+            "groundOutsToAirouts": "0.94",
+            "winPercentage": ".750",
+            "pitchesPerInning": "15.23",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "5.88",
+            "strikeoutsPer9Inn": "13.13",
+            "walksPer9Inn": "2.23",
+            "hitsPer9Inn": "5.00",
+            "runsScoredPer9": "2.29",
+            "homeRunsPer9": "0.74",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 1
+          },
+          "team": {
+            "id": 158,
+            "name": "Milwaukee Brewers",
+            "link": "/api/v1/teams/158"
+          },
+          "player": {
+            "id": 694819,
+            "fullName": "Jacob Misiorowski",
+            "link": "/api/v1/people/694819"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

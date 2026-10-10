@@ -1,0 +1,188 @@
+[
+  {
+    "event_id": "822679",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T17:26:02.641912+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "ML",
+        "selection": "New York Mets",
+        "line": null,
+        "price": 1.92,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-27T17:25:38Z"
+      },
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "ML",
+        "selection": "Washington Nationals",
+        "line": null,
+        "price": 2.0,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-27T17:25:39Z"
+      },
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.5,
+        "price": 2.0,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T17:25:23Z"
+      },
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.5,
+        "price": 1.87,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T17:22:44Z"
+      },
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "SPREAD",
+        "selection": "New York Mets",
+        "line": -1.5,
+        "price": 2.55,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T17:22:44Z"
+      },
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "SPREAD",
+        "selection": "Washington Nationals",
+        "line": 1.5,
+        "price": 1.62,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:25:40Z"
+      }
+    ]
+  },
+  {
+    "event_id": "822679",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T17:33:21.974492+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "ML",
+        "selection": "New York Mets",
+        "line": null,
+        "price": 1.92,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-27T17:33:01Z"
+      },
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "ML",
+        "selection": "Washington Nationals",
+        "line": null,
+        "price": 2.0,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-27T17:33:17Z"
+      },
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.5,
+        "price": 2.0,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T17:33:01Z"
+      },
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.5,
+        "price": 1.87,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T17:31:28Z"
+      },
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "SPREAD",
+        "selection": "New York Mets",
+        "line": -1.5,
+        "price": 2.55,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T17:31:28Z"
+      },
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "SPREAD",
+        "selection": "Washington Nationals",
+        "line": 1.5,
+        "price": 1.62,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:33:01Z"
+      }
+    ]
+  },
+  {
+    "event_id": "822679",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T18:06:57.013098+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "ML",
+        "selection": "New York Mets",
+        "line": null,
+        "price": 1.92,
+        "bookmaker": "BetOnline.ag",
+        "timestamp": "2026-09-27T18:05:15Z"
+      },
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "ML",
+        "selection": "Washington Nationals",
+        "line": null,
+        "price": 2.26,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-27T18:06:36Z"
+      },
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.5,
+        "price": 1.95,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T18:06:25Z"
+      },
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.5,
+        "price": 1.98,
+        "bookmaker": "BetMGM",
+        "timestamp": "2026-09-27T18:06:36Z"
+      },
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "SPREAD",
+        "selection": "New York Mets",
+        "line": -1.5,
+        "price": 2.52,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:05:16Z"
+      },
+      {
+        "event_id": "f915dd93e407b20c3b8693fa226d6bf6",
+        "market": "SPREAD",
+        "selection": "Washington Nationals",
+        "line": 1.5,
+        "price": 1.68,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-27T18:06:36Z"
+      }
+    ]
+  }
+]

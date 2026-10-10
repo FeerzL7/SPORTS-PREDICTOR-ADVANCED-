@@ -1,0 +1,104 @@
+{
+  "hand": "L",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 27,
+            "gamesPlayed": 66,
+            "gamesStarted": 2,
+            "groundOuts": 59,
+            "airOuts": 53,
+            "runs": 22,
+            "doubles": 8,
+            "triples": 0,
+            "homeRuns": 7,
+            "strikeOuts": 71,
+            "baseOnBalls": 23,
+            "intentionalWalks": 4,
+            "hits": 46,
+            "hitByPitch": 2,
+            "avg": ".204",
+            "atBats": 226,
+            "obp": ".283",
+            "slg": ".332",
+            "ops": ".615",
+            "caughtStealing": 1,
+            "stolenBases": 6,
+            "stolenBasePercentage": ".857",
+            "caughtStealingPercentage": ".143",
+            "groundIntoDoublePlay": 4,
+            "numberOfPitches": 1005,
+            "era": "3.16",
+            "inningsPitched": "62.2",
+            "wins": 5,
+            "losses": 2,
+            "saves": 2,
+            "saveOpportunities": 5,
+            "holds": 11,
+            "blownSaves": 3,
+            "earnedRuns": 22,
+            "whip": "1.10",
+            "battersFaced": 254,
+            "outs": 188,
+            "gamesPitched": 66,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 654,
+            "strikePercentage": ".650",
+            "hitBatsmen": 2,
+            "balks": 1,
+            "wildPitches": 4,
+            "pickoffs": 0,
+            "totalBases": 75,
+            "groundOutsToAirouts": "1.11",
+            "winPercentage": ".714",
+            "pitchesPerInning": "16.04",
+            "gamesFinished": 17,
+            "strikeoutWalkRatio": "3.09",
+            "strikeoutsPer9Inn": "10.20",
+            "walksPer9Inn": "3.30",
+            "hitsPer9Inn": "6.61",
+            "runsScoredPer9": "3.16",
+            "homeRunsPer9": "1.01",
+            "inheritedRunners": 43,
+            "inheritedRunnersScored": 16,
+            "catchersInterference": 0,
+            "sacBunts": 3,
+            "sacFlies": 0
+          },
+          "team": {
+            "id": 119,
+            "name": "Los Angeles Dodgers",
+            "link": "/api/v1/teams/119"
+          },
+          "player": {
+            "id": 676263,
+            "fullName": "Jack Dreyer",
+            "link": "/api/v1/people/676263"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

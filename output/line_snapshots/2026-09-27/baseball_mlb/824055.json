@@ -1,0 +1,188 @@
+[
+  {
+    "event_id": "824055",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T17:26:02.657740+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "ML",
+        "selection": "Cleveland Guardians",
+        "line": null,
+        "price": 1.96,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      },
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "ML",
+        "selection": "Kansas City Royals",
+        "line": null,
+        "price": 1.96,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-27T17:25:54Z"
+      },
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.5,
+        "price": 2.06,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:25:57Z"
+      },
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.5,
+        "price": 1.91,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:25:40Z"
+      },
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "SPREAD",
+        "selection": "Kansas City Royals",
+        "line": -1.5,
+        "price": 3.0,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T17:22:44Z"
+      },
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "SPREAD",
+        "selection": "Cleveland Guardians",
+        "line": -1.5,
+        "price": 2.58,
+        "bookmaker": "FanDuel",
+        "timestamp": "2026-09-27T17:25:39Z"
+      }
+    ]
+  },
+  {
+    "event_id": "824055",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T17:33:21.989655+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "ML",
+        "selection": "Cleveland Guardians",
+        "line": null,
+        "price": 1.96,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "ML",
+        "selection": "Kansas City Royals",
+        "line": null,
+        "price": 1.96,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-27T17:32:27Z"
+      },
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.5,
+        "price": 2.06,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      },
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.5,
+        "price": 1.91,
+        "bookmaker": "BetRivers",
+        "timestamp": "2026-09-27T17:33:01Z"
+      },
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "SPREAD",
+        "selection": "Kansas City Royals",
+        "line": -1.5,
+        "price": 3.0,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T17:31:28Z"
+      },
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "SPREAD",
+        "selection": "Cleveland Guardians",
+        "line": -1.5,
+        "price": 2.51,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T17:33:18Z"
+      }
+    ]
+  },
+  {
+    "event_id": "824055",
+    "sport": "baseball_mlb",
+    "timestamp": "2026-09-27T18:06:57.033002+00:00",
+    "snapshot_date": "2026-09-27",
+    "odds": [
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "ML",
+        "selection": "Cleveland Guardians",
+        "line": null,
+        "price": 1.96,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:06:53Z"
+      },
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "ML",
+        "selection": "Kansas City Royals",
+        "line": null,
+        "price": 1.96,
+        "bookmaker": "BetUS",
+        "timestamp": "2026-09-27T18:06:36Z"
+      },
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "TOTAL",
+        "selection": "Over",
+        "line": 8.0,
+        "price": 1.9,
+        "bookmaker": "MyBookie.ag",
+        "timestamp": "2026-09-27T18:06:39Z"
+      },
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "TOTAL",
+        "selection": "Under",
+        "line": 8.0,
+        "price": 1.95,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T18:06:25Z"
+      },
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "SPREAD",
+        "selection": "Kansas City Royals",
+        "line": -1.5,
+        "price": 3.0,
+        "bookmaker": "Bovada",
+        "timestamp": "2026-09-27T18:06:25Z"
+      },
+      {
+        "event_id": "145cdebdd889acf475c53aec610bd845",
+        "market": "SPREAD",
+        "selection": "Cleveland Guardians",
+        "line": -1.5,
+        "price": 2.51,
+        "bookmaker": "LowVig.ag",
+        "timestamp": "2026-09-27T18:06:53Z"
+      }
+    ]
+  }
+]

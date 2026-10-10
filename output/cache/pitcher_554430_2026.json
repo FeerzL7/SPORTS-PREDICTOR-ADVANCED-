@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 36,
+            "gamesPlayed": 27,
+            "gamesStarted": 27,
+            "groundOuts": 133,
+            "airOuts": 132,
+            "runs": 54,
+            "doubles": 22,
+            "triples": 1,
+            "homeRuns": 20,
+            "strikeOuts": 188,
+            "baseOnBalls": 47,
+            "intentionalWalks": 0,
+            "hits": 118,
+            "hitByPitch": 4,
+            "avg": ".208",
+            "atBats": 568,
+            "obp": ".272",
+            "slg": ".356",
+            "ops": ".628",
+            "caughtStealing": 3,
+            "stolenBases": 10,
+            "stolenBasePercentage": ".769",
+            "caughtStealingPercentage": ".231",
+            "groundIntoDoublePlay": 12,
+            "numberOfPitches": 2552,
+            "era": "3.06",
+            "inningsPitched": "156.0",
+            "wins": 13,
+            "losses": 5,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 53,
+            "whip": "1.06",
+            "battersFaced": 622,
+            "outs": 468,
+            "gamesPitched": 27,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1629,
+            "strikePercentage": ".640",
+            "hitBatsmen": 4,
+            "balks": 0,
+            "wildPitches": 2,
+            "pickoffs": 2,
+            "totalBases": 202,
+            "groundOutsToAirouts": "1.01",
+            "winPercentage": ".722",
+            "pitchesPerInning": "16.36",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "4.00",
+            "strikeoutsPer9Inn": "10.85",
+            "walksPer9Inn": "2.71",
+            "hitsPer9Inn": "6.81",
+            "runsScoredPer9": "3.12",
+            "homeRunsPer9": "1.15",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 3
+          },
+          "team": {
+            "id": 143,
+            "name": "Philadelphia Phillies",
+            "link": "/api/v1/teams/143"
+          },
+          "player": {
+            "id": 554430,
+            "fullName": "Zack Wheeler",
+            "link": "/api/v1/people/554430"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

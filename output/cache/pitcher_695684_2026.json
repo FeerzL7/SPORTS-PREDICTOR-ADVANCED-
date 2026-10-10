@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 22,
+            "gamesPlayed": 6,
+            "gamesStarted": 6,
+            "groundOuts": 31,
+            "airOuts": 25,
+            "runs": 16,
+            "doubles": 4,
+            "triples": 0,
+            "homeRuns": 2,
+            "strikeOuts": 21,
+            "baseOnBalls": 16,
+            "intentionalWalks": 0,
+            "hits": 26,
+            "hitByPitch": 5,
+            "avg": ".255",
+            "atBats": 102,
+            "obp": ".379",
+            "slg": ".353",
+            "ops": ".732",
+            "caughtStealing": 1,
+            "stolenBases": 1,
+            "stolenBasePercentage": ".500",
+            "caughtStealingPercentage": ".500",
+            "groundIntoDoublePlay": 2,
+            "numberOfPitches": 497,
+            "era": "5.40",
+            "inningsPitched": "26.2",
+            "wins": 0,
+            "losses": 3,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 16,
+            "whip": "1.58",
+            "battersFaced": 125,
+            "outs": 80,
+            "gamesPitched": 6,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 289,
+            "strikePercentage": ".580",
+            "hitBatsmen": 5,
+            "balks": 0,
+            "wildPitches": 2,
+            "pickoffs": 0,
+            "totalBases": 36,
+            "groundOutsToAirouts": "1.24",
+            "winPercentage": ".000",
+            "pitchesPerInning": "18.64",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "1.31",
+            "strikeoutsPer9Inn": "7.09",
+            "walksPer9Inn": "5.40",
+            "hitsPer9Inn": "8.78",
+            "runsScoredPer9": "5.40",
+            "homeRunsPer9": "0.67",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 1,
+            "sacBunts": 0,
+            "sacFlies": 1
+          },
+          "team": {
+            "id": 147,
+            "name": "New York Yankees",
+            "link": "/api/v1/teams/147"
+          },
+          "player": {
+            "id": 695684,
+            "fullName": "Elmer Rodr\u00edguez",
+            "link": "/api/v1/people/695684"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

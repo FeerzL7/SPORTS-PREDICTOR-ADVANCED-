@@ -240,6 +240,29 @@ class CandidatePick:
         punto de entrada al ValueEngine, en vez de dejar que un pick
         con probabilidad imposible reciba stake real.
         """
+        # ── Probabilidad de mercado plausible ──────────────────────
+        #
+        # Una probabilidad de mercado de 1.0 o mayor es imposible: la
+        # casa estaría dando el resultado por seguro y cotizando a
+        # 1.00. Con vig, la suma de las implícitas SUPERA 1.0, así que
+        # cada selección individual queda estrictamente por debajo.
+        #
+        # Se comprueba aquí como última línea de defensa. El origen
+        # real era no_vig_probabilities() recibiendo un grupo de una
+        # sola selección, que ya se rechaza en su propia validación —
+        # pero un contrato que acepta probabilidades imposibles deja la
+        # puerta abierta a cualquier otro camino que las produzca.
+        if not (0.0 < self.market_prob < 1.0):
+            raise ValueError(
+                f"market_prob={self.market_prob} fuera de (0, 1) para "
+                f"event_id='{self.event.event_id}', market='{self.market}', "
+                f"selection='{self.selection}'. Una probabilidad de mercado "
+                f"de 1.0 significaría certeza absoluta; con vig, cada "
+                f"selección queda estrictamente por debajo. Causa habitual: "
+                f"no_vig_probabilities() normalizó un grupo con una sola "
+                f"selección y devolvió 1.00."
+            )
+
         # Se valida contra la probabilidad que el engine mezcló DE
         # VERDAD, no contra la cruda.
         #

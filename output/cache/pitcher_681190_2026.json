@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 27,
+            "gamesPlayed": 31,
+            "gamesStarted": 22,
+            "groundOuts": 131,
+            "airOuts": 170,
+            "runs": 64,
+            "doubles": 30,
+            "triples": 4,
+            "homeRuns": 16,
+            "strikeOuts": 85,
+            "baseOnBalls": 37,
+            "intentionalWalks": 1,
+            "hits": 138,
+            "hitByPitch": 5,
+            "avg": ".267",
+            "atBats": 517,
+            "obp": ".319",
+            "slg": ".433",
+            "ops": ".752",
+            "caughtStealing": 5,
+            "stolenBases": 12,
+            "stolenBasePercentage": ".706",
+            "caughtStealingPercentage": ".294",
+            "groundIntoDoublePlay": 11,
+            "numberOfPitches": 2158,
+            "era": "4.01",
+            "inningsPitched": "134.2",
+            "wins": 10,
+            "losses": 6,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 2,
+            "blownSaves": 0,
+            "earnedRuns": 60,
+            "whip": "1.30",
+            "battersFaced": 566,
+            "outs": 404,
+            "gamesPitched": 31,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1419,
+            "strikePercentage": ".660",
+            "hitBatsmen": 5,
+            "balks": 1,
+            "wildPitches": 1,
+            "pickoffs": 0,
+            "totalBases": 224,
+            "groundOutsToAirouts": "0.77",
+            "winPercentage": ".625",
+            "pitchesPerInning": "16.02",
+            "gamesFinished": 3,
+            "strikeoutWalkRatio": "2.30",
+            "strikeoutsPer9Inn": "5.68",
+            "walksPer9Inn": "2.47",
+            "hitsPer9Inn": "9.22",
+            "runsScoredPer9": "4.28",
+            "homeRunsPer9": "1.07",
+            "inheritedRunners": 8,
+            "inheritedRunnersScored": 7,
+            "catchersInterference": 0,
+            "sacBunts": 1,
+            "sacFlies": 6
+          },
+          "team": {
+            "id": 135,
+            "name": "San Diego Padres",
+            "link": "/api/v1/teams/135"
+          },
+          "player": {
+            "id": 681190,
+            "fullName": "Randy V\u00e1squez",
+            "link": "/api/v1/people/681190"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

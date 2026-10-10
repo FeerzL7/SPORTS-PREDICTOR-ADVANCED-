@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 27,
+            "gamesPlayed": 28,
+            "gamesStarted": 28,
+            "groundOuts": 221,
+            "airOuts": 124,
+            "runs": 67,
+            "doubles": 28,
+            "triples": 3,
+            "homeRuns": 11,
+            "strikeOuts": 106,
+            "baseOnBalls": 49,
+            "intentionalWalks": 0,
+            "hits": 146,
+            "hitByPitch": 6,
+            "avg": ".246",
+            "atBats": 593,
+            "obp": ".309",
+            "slg": ".359",
+            "ops": ".668",
+            "caughtStealing": 2,
+            "stolenBases": 16,
+            "stolenBasePercentage": ".889",
+            "caughtStealingPercentage": ".111",
+            "groundIntoDoublePlay": 19,
+            "numberOfPitches": 2551,
+            "era": "3.61",
+            "inningsPitched": "157.0",
+            "wins": 12,
+            "losses": 8,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 63,
+            "whip": "1.24",
+            "battersFaced": 654,
+            "outs": 471,
+            "gamesPitched": 28,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 1584,
+            "strikePercentage": ".620",
+            "hitBatsmen": 6,
+            "balks": 0,
+            "wildPitches": 5,
+            "pickoffs": 2,
+            "totalBases": 213,
+            "groundOutsToAirouts": "1.78",
+            "winPercentage": ".600",
+            "pitchesPerInning": "16.25",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "2.16",
+            "strikeoutsPer9Inn": "6.08",
+            "walksPer9Inn": "2.81",
+            "hitsPer9Inn": "8.37",
+            "runsScoredPer9": "3.84",
+            "homeRunsPer9": "0.63",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 2,
+            "sacBunts": 1,
+            "sacFlies": 3
+          },
+          "team": {
+            "id": 138,
+            "name": "St. Louis Cardinals",
+            "link": "/api/v1/teams/138"
+          },
+          "player": {
+            "id": 669467,
+            "fullName": "Andre Pallante",
+            "link": "/api/v1/people/669467"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

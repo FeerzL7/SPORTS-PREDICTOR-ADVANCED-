@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 27,
+            "gamesPlayed": 1,
+            "gamesStarted": 1,
+            "groundOuts": 1,
+            "airOuts": 5,
+            "runs": 0,
+            "doubles": 1,
+            "triples": 0,
+            "homeRuns": 0,
+            "strikeOuts": 3,
+            "baseOnBalls": 1,
+            "intentionalWalks": 0,
+            "hits": 2,
+            "hitByPitch": 0,
+            "avg": ".182",
+            "atBats": 11,
+            "obp": ".250",
+            "slg": ".273",
+            "ops": ".523",
+            "caughtStealing": 0,
+            "stolenBases": 0,
+            "stolenBasePercentage": ".---",
+            "caughtStealingPercentage": ".---",
+            "groundIntoDoublePlay": 0,
+            "numberOfPitches": 43,
+            "era": "0.00",
+            "inningsPitched": "3.0",
+            "wins": 0,
+            "losses": 0,
+            "saves": 0,
+            "saveOpportunities": 0,
+            "holds": 0,
+            "blownSaves": 0,
+            "earnedRuns": 0,
+            "whip": "1.00",
+            "battersFaced": 12,
+            "outs": 9,
+            "gamesPitched": 1,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 26,
+            "strikePercentage": ".600",
+            "hitBatsmen": 0,
+            "balks": 0,
+            "wildPitches": 0,
+            "pickoffs": 0,
+            "totalBases": 3,
+            "groundOutsToAirouts": "0.20",
+            "winPercentage": ".---",
+            "pitchesPerInning": "14.33",
+            "gamesFinished": 0,
+            "strikeoutWalkRatio": "3.00",
+            "strikeoutsPer9Inn": "9.00",
+            "walksPer9Inn": "3.00",
+            "hitsPer9Inn": "6.00",
+            "runsScoredPer9": "0.00",
+            "homeRunsPer9": "0.00",
+            "inheritedRunners": 0,
+            "inheritedRunnersScored": 0,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 0
+          },
+          "team": {
+            "id": 116,
+            "name": "Detroit Tigers",
+            "link": "/api/v1/teams/116"
+          },
+          "player": {
+            "id": 689981,
+            "fullName": "River Ryan",
+            "link": "/api/v1/people/689981"
+          },
+          "league": {
+            "id": 103,
+            "name": "American League",
+            "link": "/api/v1/league/103"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}

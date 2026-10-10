@@ -362,11 +362,38 @@ class BestSpreadPrice:
                 line_counts[line] += len(outs)
             target_line = max(line_counts, key=lambda l: line_counts[l])
 
-        # Retornar mejor precio por selection para target_line
+        # Retornar mejor precio por selection para el handicap elegido.
+        #
+        # CORRECCIÓN: antes se buscaba (selection, target_line) para
+        # ambos lados, asumiendo que compartían línea. En un handicap
+        # los dos lados llevan líneas OPUESTAS:
+        #
+        #     Pittsburgh Pirates  -1.5
+        #     Chicago Cubs        +1.5
+        #
+        # Con target_line = -1.5, la clave ('Chicago Cubs', -1.5) no
+        # existía y solo se devolvía el lado local. Un mercado de una
+        # sola selección hace que no_vig_probabilities() normalice esa
+        # probabilidad contra sí misma y devuelva 1.00 — certeza
+        # absoluta, que ningún mercado expresa.
+        #
+        # Ese 1.00 contaminaba el blend hasta producir un EV de +188.8%
+        # sobre un pick cuyo modelo real decía 0.585. Los filtros de
+        # max_odds lo contuvieron por casualidad; una cuota bajo el
+        # umbral habría dejado pasar una apuesta con valor inventado.
+        #
+        # Se empareja por VALOR ABSOLUTO del handicap, que es lo que
+        # define el mercado: -1.5 y +1.5 son los dos lados del mismo.
+        target_abs = abs(target_line)
         result = []
+
         for sel in selections_seen:
-            key = (sel, target_line)
-            candidates = by_sel_line.get(key, [])
+            candidates = [
+                outcome
+                for (candidate_sel, line), outcomes in by_sel_line.items()
+                if candidate_sel == sel and abs(line) == target_abs
+                for outcome in outcomes
+            ]
             if not candidates:
                 continue
             best = max(candidates, key=lambda o: o["price"])

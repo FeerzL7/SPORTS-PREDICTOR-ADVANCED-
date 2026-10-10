@@ -1,0 +1,104 @@
+{
+  "hand": "R",
+  "stats_list": [
+    {
+      "type": {
+        "displayName": "season"
+      },
+      "group": {
+        "displayName": "pitching"
+      },
+      "exemptions": [],
+      "splits": [
+        {
+          "season": "2026",
+          "stat": {
+            "age": 23,
+            "gamesPlayed": 16,
+            "gamesStarted": 10,
+            "groundOuts": 65,
+            "airOuts": 64,
+            "runs": 39,
+            "doubles": 8,
+            "triples": 2,
+            "homeRuns": 12,
+            "strikeOuts": 66,
+            "baseOnBalls": 41,
+            "intentionalWalks": 1,
+            "hits": 58,
+            "hitByPitch": 6,
+            "avg": ".231",
+            "atBats": 251,
+            "obp": ".350",
+            "slg": ".422",
+            "ops": ".772",
+            "caughtStealing": 2,
+            "stolenBases": 8,
+            "stolenBasePercentage": ".800",
+            "caughtStealingPercentage": ".200",
+            "groundIntoDoublePlay": 5,
+            "numberOfPitches": 1191,
+            "era": "4.79",
+            "inningsPitched": "67.2",
+            "wins": 1,
+            "losses": 4,
+            "saves": 1,
+            "saveOpportunities": 1,
+            "holds": 2,
+            "blownSaves": 0,
+            "earnedRuns": 36,
+            "whip": "1.46",
+            "battersFaced": 300,
+            "outs": 203,
+            "gamesPitched": 16,
+            "completeGames": 0,
+            "shutouts": 0,
+            "strikes": 697,
+            "strikePercentage": ".590",
+            "hitBatsmen": 6,
+            "balks": 0,
+            "wildPitches": 1,
+            "pickoffs": 0,
+            "totalBases": 106,
+            "groundOutsToAirouts": "1.02",
+            "winPercentage": ".200",
+            "pitchesPerInning": "17.60",
+            "gamesFinished": 2,
+            "strikeoutWalkRatio": "1.61",
+            "strikeoutsPer9Inn": "8.78",
+            "walksPer9Inn": "5.45",
+            "hitsPer9Inn": "7.71",
+            "runsScoredPer9": "5.19",
+            "homeRunsPer9": "1.60",
+            "inheritedRunners": 4,
+            "inheritedRunnersScored": 1,
+            "catchersInterference": 0,
+            "sacBunts": 0,
+            "sacFlies": 2
+          },
+          "team": {
+            "id": 144,
+            "name": "Atlanta Braves",
+            "link": "/api/v1/teams/144"
+          },
+          "player": {
+            "id": 702275,
+            "fullName": "JR Ritchie",
+            "link": "/api/v1/people/702275"
+          },
+          "league": {
+            "id": 104,
+            "name": "National League",
+            "link": "/api/v1/league/104"
+          },
+          "sport": {
+            "id": 1,
+            "link": "/api/v1/sports/1",
+            "abbreviation": "MLB"
+          },
+          "gameType": "R"
+        }
+      ]
+    }
+  ]
+}
