@@ -29,20 +29,33 @@ que es donde los tests aportan más que la revisión de código.
         mismo fallo que en NFL dejó al QB titular marcado como suplente
         por no cruzar 'P.Mahomes' con 'Patrick Mahomes'.
 
+    FALLO VISIBLE DEL ELO
+        Con api.clubelo.com respondiendo 502, el cliente devolvía None
+        sin avisar y el barrido de --elo-weight produjo cuatro CSV
+        idénticos byte a byte. Se testea que el fallo deje WARNING y
+        cobertura cero, y que con datos válidos el peso SÍ mueva las
+        medias.
+
 Lo que NO se testea aquí: que las fuentes respondan (eso es
 integración) ni que el modelo tenga ventaja (eso es el backtest).
 """
 
+import logging
+
 import pytest
 
 from core.contracts.event import Event, EventStatus
+from core.contracts.features import TeamFeatures
 from core.contracts.ledger import TERMINAL_RESULTS, BetLedgerEntry
 from core.contracts.pick import CandidatePick
 from core.pipeline.stage import SettlementProvider as SportSettlement
 from core.tracking.protocols import SettlementProvider as FinancialSettlement
 
 from sports.soccer.dixon_coles import build_score_matrix
+from sports.soccer.elo import ClubEloClient
 from sports.soccer.h2h import is_derby
+from sports.soccer.projections import SoccerProjectionModel
+from sports.soccer.provider import SoccerDataProvider
 from sports.soccer.schedule import SoccerMatchInfo, build_match_id
 from sports.soccer.settlement import (
     RESULT_LOSE, RESULT_PUSH, RESULT_VOID, RESULT_WIN,
@@ -653,3 +666,201 @@ class TestDerbies:
 
     def test_same_team_is_not_a_derby(self):
         assert not is_derby("Arsenal", "Arsenal", "epl")
+
+
+# ── Elo: el fallo de ClubElo tiene que verse ─────────────────────────────────
+#
+# Todo pasa por el `fetch_fn` inyectable de ClubEloClient: ningún test
+# toca la red, y cada uno fija exactamente qué devuelve "ClubElo".
+
+CLUBELO_CSV = (
+    "Rank,Club,Country,Level,Elo,From,To\n"
+    "1,Man City,ENG,1,2000.00,2024-11-04,2024-11-10\n"
+    "4,Arsenal,ENG,1,1900.00,2024-11-04,2024-11-10\n"
+)
+
+
+def clubelo_502(url):
+    """Lo que hacía api.clubelo.com durante el barrido de pesos."""
+    raise ConnectionError(f"502 Bad Gateway for url: {url}")
+
+
+def clubelo_ok(url):
+    return CLUBELO_CSV
+
+
+class StubConfig:
+    """Config mínimo con notación de puntos, como ConfigLoader.get."""
+
+    def __init__(self, values: dict) -> None:
+        self._values = dict(values)
+
+    def get(self, key, default=None):
+        return self._values.get(key, default)
+
+
+class StubContext:
+    def get_context(self, event):
+        return {}
+
+
+class StubLeague:
+    """Sin medias de la temporada: el provider usa las del catálogo."""
+
+    def league_averages(self, comp, season, as_of):
+        return None
+
+
+def elo_provider(fetch_fn) -> tuple[SoccerDataProvider, ClubEloClient]:
+    """
+    Provider con el Elo activado y todo lo demás aislado de la red.
+
+    cache_dir=None para que ningún test lea ni escriba cache/elo/.
+    """
+    client = ClubEloClient(cache_dir=None, fetch_fn=fetch_fn)
+    provider = SoccerDataProvider(
+        schedule_fetcher=StubSchedule(match()),
+        team_stats_fetcher=StubLeague(),
+        congestion_fetcher=object(),
+        h2h_fetcher=object(),
+        context_fetcher=StubContext(),
+        config_loader=StubConfig({"soccer.elo.enabled": True,
+                                  "soccer.elo.min_coverage": 0.80}),
+        elo_client=client,
+    )
+    return provider, client
+
+
+def neutral_features(team: str) -> TeamFeatures:
+    """Equipo exactamente de media de liga: aísla el efecto del Elo."""
+    return TeamFeatures(
+        team_id=team, team_name=team, expected_score=1.4,
+        offense_index=1.0, defense_index=1.0, recent_scores=[],
+    )
+
+
+def project_with_weight(weight: float, context: dict):
+    model = SoccerProjectionModel(config_loader=StubConfig({
+        "soccer.elo.weight": weight,
+    }))
+    return model.project(neutral_features("manchester city"),
+                         neutral_features("arsenal"), context)
+
+
+def elo_warnings(caplog) -> list[logging.LogRecord]:
+    return [r for r in caplog.records
+            if r.levelno == logging.WARNING and "ClubElo" in r.getMessage()]
+
+
+class TestEloFailureIsVisible:
+
+    @pytest.mark.parametrize("fetch_fn,motivo", [
+        (clubelo_502, "ConnectionError"),
+        (lambda url: None, "respuesta vacía"),
+        (lambda url: "<html><body>502 Bad Gateway</body></html>",
+         "sin ratings reconocibles"),
+    ], ids=["excepcion", "vacia", "html_con_200"])
+    def test_failed_fetch_warns_and_reports_zero_coverage(
+        self, caplog, fetch_fn, motivo,
+    ):
+        """
+        El caso del barrido: ClubElo no da datos, nada lanza, y aun
+        así tiene que quedar constancia en el log Y en la cobertura.
+        """
+        provider, client = elo_provider(fetch_fn)
+
+        with caplog.at_level(logging.WARNING, logger="sports.soccer.elo"):
+            context = provider.get_context(event())
+
+        assert "elo_difference" not in context
+
+        warnings = elo_warnings(caplog)
+        assert len(warnings) == 1, "el fallo de ClubElo debe dejar un WARNING"
+        assert motivo in warnings[0].getMessage()
+
+        coverage = provider.elo_coverage()
+        assert coverage["matches"] == 1
+        assert coverage["with_elo"] == 0
+        assert coverage["coverage"] == 0.0
+        assert coverage["coverage"] < coverage["min_coverage"]
+        assert coverage["dates_failed"] == 1
+        assert coverage["last_error"]
+
+    def test_repeated_failures_warn_once_but_count_all(self, caplog):
+        """
+        Un ClubElo caído falla igual en las ~150 fechas de una
+        temporada. Un WARNING por fecha enterraría el informe del
+        backtest; uno por motivo, con la cuenta completa en
+        fetch_stats, lo deja visible sin ahogarlo.
+        """
+        client = ClubEloClient(cache_dir=None, fetch_fn=clubelo_502)
+
+        with caplog.at_level(logging.DEBUG, logger="sports.soccer.elo"):
+            for date in ("2024-11-09", "2024-11-10", "2024-11-23"):
+                assert client.ratings_on(date) == {}
+
+        assert len(elo_warnings(caplog)) == 1
+        assert client.fetch_stats["dates_requested"] == 3
+        assert client.fetch_stats["dates_failed"] == 3
+
+    def test_valid_csv_gives_difference_and_full_coverage(self, caplog):
+        provider, client = elo_provider(clubelo_ok)
+
+        with caplog.at_level(logging.WARNING, logger="sports.soccer.elo"):
+            context = provider.get_context(event())
+
+        # 'Man City' de ClubElo cruza con 'manchester city' del plugin
+        # vía _CLUBELO_ALIASES. Positiva: favorece al local.
+        assert context["elo_difference"] == pytest.approx(100.0)
+        assert elo_warnings(caplog) == []
+
+        coverage = provider.elo_coverage()
+        assert (coverage["matches"], coverage["with_elo"]) == (1, 1)
+        assert coverage["coverage"] == 1.0
+        assert coverage["dates_failed"] == 0
+
+    def test_same_match_twice_counts_once(self):
+        """
+        --verify-no-lookahead pasa cada partido dos veces por
+        get_context. Contarlo doble no movería la fracción en este
+        caso, pero sí cuando se mezclan partidos con y sin Elo.
+        """
+        provider, _ = elo_provider(clubelo_502)
+        provider.get_context(event())
+        provider.get_context(event())
+        assert provider.elo_coverage()["matches"] == 1
+
+    def test_weight_changes_lambdas_when_elo_present(self):
+        provider, _ = elo_provider(clubelo_ok)
+        context = provider.get_context(event())
+
+        base = project_with_weight(0.0, context)
+        with_elo = project_with_weight(0.3, context)
+
+        assert with_elo.expected_home != pytest.approx(base.expected_home)
+        assert with_elo.expected_away != pytest.approx(base.expected_away)
+
+        # Con dos equipos de media exacta, la ventaja local de la base
+        # es solo la de la liga. 100 puntos de Elo son 0.40 goles, más
+        # que esa ventaja en la Premier, así que el Elo debe ampliarla.
+        margin_base = base.expected_home - base.expected_away
+        margin_elo = with_elo.expected_home - with_elo.expected_away
+        assert margin_elo > margin_base
+        assert with_elo.model_inputs["elo_difference"] == pytest.approx(100.0)
+
+    def test_without_elo_weight_changes_nothing(self):
+        """
+        La firma exacta del barrido roto: sin diferencia de Elo en el
+        contexto, el peso 0.3 da la misma proyección que el 0.0. Por
+        eso los cuatro CSV salían idénticos — y por eso la cobertura
+        tiene que informarse aparte, porque la proyección no lo delata.
+        """
+        provider, _ = elo_provider(clubelo_502)
+        context = provider.get_context(event())
+
+        base = project_with_weight(0.0, context)
+        with_elo = project_with_weight(0.3, context)
+
+        assert with_elo.expected_home == base.expected_home
+        assert with_elo.expected_away == base.expected_away
+        assert provider.elo_coverage()["coverage"] == 0.0
