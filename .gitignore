@@ -1,0 +1,13 @@
+# Secretos — las credenciales van en .env o config/secrets.yaml
+# (ver la cabecera de config/base.yaml). Nunca se versionan.
+.env
+.env.*
+config/secrets.yaml
+
+# Bytecode de Python
+__pycache__/
+*.py[cod]
+
+# Artefactos de herramientas
+.pytest_cache/
+logs/
