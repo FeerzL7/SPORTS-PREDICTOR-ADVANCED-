@@ -115,6 +115,11 @@ class ROITracker:
         self._tracker       = tracker
         self._model_version = model_version
 
+    @property
+    def model_version(self) -> str:
+        """Versión del modelo con la que se etiquetan las entradas."""
+        return self._model_version
+
     # ── Registro de picks ─────────────────────────────────────────────────────
 
     def register_pick(

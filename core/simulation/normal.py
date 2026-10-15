@@ -9,7 +9,7 @@ converge hacia una distribución Normal por el Teorema Central del Límite.
 
 Deportes objetivo (ver SPORTS_PREDICTOR_ARCHITECTURE.md §8.1):
     NFL:  NormalModel(default_sigma=10.0) para todos los mercados
-    NBA:  NormalModel(default_sigma=11.0) para totales
+    NBA:  NormalModel(default_sigma=12.75) para totales (σ_total ≈ 18)
           SkellamModel para spread (tarea 2.5 del roadmap)
     Golf: NormalModel para strokes (Fase 4)
 
@@ -47,7 +47,7 @@ Parámetro σ: dos niveles
    instancia leyendo el valor correcto para cada deporte.
 
    NormalModel(default_sigma=10.0)  ← NFL
-   NormalModel(default_sigma=11.0)  ← NBA totales
+   NormalModel(default_sigma=12.75) ← NBA totales
 
 Over + Under = 1.0 siempre
 ---------------------------
@@ -113,7 +113,8 @@ class NormalModel:
                       Projection.metrics no provee sigma individual
                       por equipo. Valores documentados en literatura:
                         NFL: ~10.0 (sd de puntos por equipo por partido)
-                        NBA: ~11.0 (sd de puntos por equipo por partido)
+                        NBA: ~12.75 (sd por equipo; √2·12.75 ≈ 18.0,
+                             la σ del total medida frente al cierre)
                         Golf: ~3.5 (sd de strokes por ronda)
                       Configurable via config/{sport}.yaml bajo la key
                       simulation.normal.default_sigma.
@@ -123,7 +124,7 @@ class NormalModel:
         if default_sigma <= 0:
             raise ValueError(
                 f"default_sigma={default_sigma} debe ser > 0. "
-                f"Valores típicos: NFL=10.0, NBA=11.0, Golf=3.5."
+                f"Valores típicos: NFL=10.0, NBA=12.75, Golf=3.5."
             )
         self.default_sigma = default_sigma
 

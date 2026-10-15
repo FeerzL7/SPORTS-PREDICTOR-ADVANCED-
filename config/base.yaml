@@ -22,7 +22,10 @@ odds_api:
   base_url:        "https://api.the-odds-api.com/v4"
   regions:         "us"          # us | uk | eu | au | us2
                                  # Determina bookmakers disponibles.
-                                 # "us" cubre Pinnacle, DraftKings, FanDuel.
+                                 # "us" cubre DraftKings, FanDuel, BetMGM, LowVig,
+                                 # BetOnline, Bovada... pero NO Pinnacle, que en
+                                 # The Odds API está en "eu" (verificado en los
+                                 # snapshots y en output/book_archive, 2026-10).
   timeout_seconds: 20            # Timeout HTTP. 20s >> latencia real (~2s).
   max_retries:     0             # Sin retry por defecto — respetar rate limits.
                                  # Activar max_retries=2 solo para 5xx.
@@ -241,8 +244,31 @@ simulation:
       max_diff: 60        # Diferencia máxima de puntos para iteración de PMF.
                           # Adaptada automáticamente a 6σ para mu altos (≈90).
     normal:
-      default_sigma: 11.0 # Desviación estándar de totales NBA en puntos.
-                          # Mercado actual ronda 220-230 con σ≈11.
+      default_sigma: 12.75 # σ por EQUIPO en puntos (no del total).
+                          #
+                          # CORREGIDO (Fase 0, 2026-10): antes 11.0.
+                          # NormalModel usa este valor por equipo y,
+                          # sin sigma_total en la proyección, obtiene
+                          # σ_total = √2 · default_sigma.
+                          #
+                          #   antes : √2 · 11.00 = 15.56 pts
+                          #   ahora : √2 · 12.75 = 18.03 pts
+                          #
+                          # scripts/audit_nba_sources.py midió sobre
+                          # 7.836 partidos 2020-2026 que el total real
+                          # se desvía de la línea de CIERRE con
+                          # σ = 18.04 pts. Un modelo con menos
+                          # información que el cierre no puede ser más
+                          # preciso que él: con 15.56 las colas salían
+                          # un 14% más estrechas y fabricaban EV en
+                          # totales alejados de la línea.
+                          #
+                          # Es un SUELO, no un valor calibrado. El
+                          # plugin NBA debería pasar sigma_total
+                          # directamente en distribution_params (como
+                          # hace NFL), porque en NBA el ritmo correlaciona
+                          # POSITIVAMENTE la anotación de ambos equipos
+                          # y la fórmula de independencia la ignora.
 
   # NFL — NormalModel
   nfl:

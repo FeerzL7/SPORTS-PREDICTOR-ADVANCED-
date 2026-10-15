@@ -54,6 +54,7 @@ skip_stages: set[int] para debugging granular. skip_stages={5} omite
 
 from __future__ import annotations
 
+import os
 import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
@@ -87,12 +88,19 @@ class RunnerConfig:
                          igual a la fecha de ejecución.
     log_stage_times  -- Si True, registra el tiempo de cada stage en
                        context.metadata para profiling.
+    paper_ledger_path -- Ledger de los picks en solo-papel. None usa
+                        output/ledger/{sport}_paper_roi_tracking.csv,
+                        que paper_report.py descubre solo porque
+                        termina en _roi_tracking.csv.
+    paper_initial_bankroll -- Bankroll inicial del ledger de papel.
     """
     dry_run:            bool       = False
     skip_stages:        frozenset  = field(default_factory=frozenset)
     max_events:         int | None = None
     odds_snapshot_date: str | None = None
     log_stage_times:    bool       = True
+    paper_ledger_path:  str | None = None
+    paper_initial_bankroll: float  = 1000.0
 
 
 # ── Resultado de la ejecución ─────────────────────────────────────────────────
@@ -117,6 +125,8 @@ class PipelineResult:
                        intermedio (para backtesting y dashboard).
     duration_seconds -- Tiempo total de la ejecución.
     dry_run          -- True si fue ejecución en modo simulación.
+    paper_picks      -- Picks de mercados en solo-papel: registrados
+                       para medir, nunca notificados ni operados.
     """
     sport:            str
     date:             str
@@ -127,12 +137,14 @@ class PipelineResult:
     context:          PipelineContext
     duration_seconds: float
     dry_run:          bool
+    paper_picks:      list[CandidatePick] = field(default_factory=list)
 
     def summary(self) -> str:
         status = "[DRY RUN]" if self.dry_run else ""
         return (
             f"{status}[{self.sport}/{self.date}] "
             f"activos={len(self.active_picks)} "
+            f"solo_papel={len(self.paper_picks)} "
             f"candidatos={len(self.candidates)} "
             f"liquidados={self.settled_count} "
             f"errores={len(self.errors)} "
@@ -342,6 +354,7 @@ class PipelineRunner:
             context          = context,
             duration_seconds = round(duration, 2),
             dry_run          = self._config.dry_run,
+            paper_picks      = context.paper_picks,
         )
 
     # ── Fase A: por evento ────────────────────────────────────────────────────
@@ -772,6 +785,9 @@ class PipelineRunner:
             ]
             summary = self._risk_manager.apply(passed_filter)
             context.active_picks = summary.picks_active
+            # getattr: un RiskManager sustituto (tests, backtests) puede
+            # devolver un resumen sin la lista de papel.
+            context.paper_picks  = list(getattr(summary, "picks_paper", []) or [])
             context.set_meta("risk_summary", summary.log_summary())
         except Exception as e:
             context.add_error("Stage9", str(e))
@@ -790,6 +806,21 @@ class PipelineRunner:
         except Exception as e:
             context.add_error("Stage10", str(e))
             context.set_meta("settled_count", 0)
+
+        # Ledger de papel: se liquida con el mismo provider, pero solo si
+        # existe. Crearlo vacío en deportes sin mercados en papel
+        # ensuciaría output/ledger/ y paper_report.py lo listaría.
+        if not os.path.exists(self._paper_ledger_path(context.sport)):
+            return
+        try:
+            provider = self._plugin.get_settlement_provider()
+            settled  = self._get_paper_tracker(context.sport).settle_pending(
+                provider = provider,
+                sport    = context.sport,
+            )
+            context.set_meta("paper_settled_count", len(settled))
+        except Exception as e:
+            context.add_error("Stage10-papel", str(e))
 
     def _stage_11_register(self, context: PipelineContext) -> None:
         """Stage 11: registrar picks activos en el ledger."""
@@ -823,6 +854,67 @@ class PipelineRunner:
                 context.add_error("Stage11", f"pick={pick.selection}: {e}")
 
         context.set_meta("registered_count", registered)
+
+        # Picks de solo-papel: mismo registro y misma línea de apertura
+        # para CLV, pero en su propio ledger. Así el ROI y el bankroll
+        # del ledger operable no se mezclan con mercados sin evidencia.
+        paper_registered = 0
+        if context.paper_picks:
+            paper_tracker = self._get_paper_tracker(context.sport)
+            for pick in context.paper_picks:
+                try:
+                    result = paper_tracker.register_pick(pick, {
+                        "sport":  pick.event.sport,
+                        "league": self._plugin.league_id,
+                        "date":   context.date,
+                        "event":  f"{pick.event.away_team} @ {pick.event.home_team}",
+                    })
+                    if result.registered:
+                        paper_registered += 1
+                        try:
+                            self._clv_tracker.record_opening_line(
+                                entry_id      = result.entry_id,
+                                opening_price = pick.price,
+                                market        = pick.market,
+                                sport         = pick.event.sport,
+                            )
+                        except Exception:
+                            pass  # CLV es opcional — no abortar el registro
+                except Exception as e:
+                    context.add_error("Stage11-papel", f"pick={pick.selection}: {e}")
+
+        context.set_meta("paper_registered_count", paper_registered)
+
+    # ── Ledger de solo-papel ──────────────────────────────────────────────────
+
+    def _paper_ledger_path(self, sport: str) -> str:
+        """Ruta del ledger de papel; ver RunnerConfig.paper_ledger_path."""
+        return (self._config.paper_ledger_path
+                or f"output/ledger/{sport}_paper_roi_tracking.csv")
+
+    def _get_paper_tracker(self, sport: str):
+        """
+        ROITracker del ledger de papel, construido de forma diferida.
+
+        Diferido para que un deporte sin mercados en papel no cree el
+        archivo. Se guarda como atributo en la primera llamada en vez de
+        inicializarlo en __init__: el constructor no necesita saber nada
+        de este ledger.
+        """
+        tracker = getattr(self, "_paper_tracker", None)
+        if tracker is None:
+            from core.bankroll.tracker import BankrollTracker, CsvLedgerStore
+            from core.tracking.roi_tracker import ROITracker
+
+            tracker = ROITracker(
+                tracker = BankrollTracker(
+                    store            = CsvLedgerStore(self._paper_ledger_path(sport)),
+                    initial_bankroll = self._config.paper_initial_bankroll,
+                ),
+                model_version = f"{self._roi_tracker.model_version}-papel",
+            )
+            self._paper_tracker = tracker
+        return tracker
 
     # ── Utilidades ────────────────────────────────────────────────────────────
 

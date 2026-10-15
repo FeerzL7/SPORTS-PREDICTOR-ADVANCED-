@@ -130,8 +130,11 @@ class DistributionFactory:
             ('nba', 'ML'):           lambda: SkellamModel(
                 max_diff=self._get('nba', 'skellam.max_diff', 60)
             ),
+            # 12.75 por equipo → σ_total = √2·12.75 ≈ 18.0, la medida del
+            # total real frente al cierre (ver simulation.nba.normal en
+            # config/base.yaml).
             ('nba', 'TOTAL'):        lambda: NormalModel(
-                default_sigma=self._get('nba', 'normal.default_sigma', 11.0)
+                default_sigma=self._get('nba', 'normal.default_sigma', 12.75)
             ),
             ('tennis', _ANY_MARKET): lambda: BradleyTerryModel(),
 

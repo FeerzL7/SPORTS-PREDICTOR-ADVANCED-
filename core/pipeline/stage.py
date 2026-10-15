@@ -510,6 +510,8 @@ class PipelineContext:
     market_odds     -- {event_id: list[MarketOdds]} (Stage 5: OddsNormalizer).
     candidates      -- Picks candidatos antes de filtros (Stage 6: ValueEngine).
     active_picks    -- Picks aprobados por RiskManager (Stage 9).
+    paper_picks     -- Picks de mercados en solo-papel (Stage 9). Se
+                      registran en el ledger de papel, nunca se notifican.
     errors          -- Errores no fatales acumulados por todos los stages.
     metadata        -- Metadatos de la ejecución (tiempos, créditos API, etc.).
     """
@@ -522,6 +524,7 @@ class PipelineContext:
     market_odds:  dict[str, list]                          = field(default_factory=dict)
     candidates:   list[CandidatePick]                      = field(default_factory=list)
     active_picks: list[CandidatePick]                      = field(default_factory=list)
+    paper_picks:  list[CandidatePick]                      = field(default_factory=list)
     errors:       list[str]                                = field(default_factory=list)
     metadata:     dict                                     = field(default_factory=dict)
 
