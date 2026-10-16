@@ -37,6 +37,20 @@ sin depender de horarios fijos ni del cambio de horario.
 
 Si quedan menos de --min-credits, el ciclo no gasta y lo deja en el log.
 
+CAPTURA NBA (sin modelo)
+-------------------------
+El modelo de eficiencia de NBA dio no-go (tarea 12.3): no aporta nada
+sobre el spread de cierre. Lo único con posibilidad de ventaja es la
+disponibilidad de jugadores, y esa información no se puede reconstruir
+hacia atrás. Por eso NBA entra como deporte SOLO DE CAPTURA:
+
+    lesiones (ESPN, 0 créditos)   picks: si hay partidos en 24 h
+                                  closing: si alguno empieza en ≤ 90 min
+    precios de cierre por casa    closing: si alguno empieza en (15, 45]
+    (spreads+totals, 2 créditos)  min — cada tanda una sola vez
+
+Coste estimado: ~150-200 créditos/mes en temporada regular.
+
 POR QUÉ SIN FÚTBOL
 -------------------
 Sus siete competiciones cuestan ~28 créditos por corrida (~840 al mes,
@@ -58,6 +72,7 @@ Uso
     python scripts/daily_cycle.py closing
     python scripts/daily_cycle.py closing --plan     # decide, no ejecuta
     python scripts/daily_cycle.py picks --sports nfl
+    python scripts/daily_cycle.py closing --capture-sports     # sin capturas NBA
 
 Registro en: logs/daily_cycle/AAAA-MM-DD.log
 
@@ -90,6 +105,28 @@ ODDS_SPORT_KEYS: dict[str, str] = {
 DEFAULT_SPORTS      = ("nfl", "mlb")
 DEFAULT_WINDOW_MIN  = 45.0   # con cadencia de 30 min: captura 15-45 min antes
 DEFAULT_MIN_CREDITS = 40
+
+# Deportes SOLO DE CAPTURA: no tienen modelo ni ledger. Se archiva lo que
+# no se puede reconstruir después —el informe de lesiones previo al
+# partido y los precios de cierre por casa— para poder modelarlo dentro
+# de una o dos temporadas sin look-ahead. Es el plan posterior al no-go
+# del modelo de eficiencia de NBA (tarea 12.3).
+CAPTURE_SPORTS: dict[str, dict] = {
+    "nba": {"odds_key": "basketball_nba", "markets": "spreads,totals"},
+}
+DEFAULT_CAPTURE_SPORTS = ("nba",)
+
+# Lesiones: foto en cada corrida con algún partido a ≤ 90 min (0
+# créditos); el estado cambia hasta poco antes del inicio.
+AVAILABILITY_WINDOW_MIN = 90.0
+# Precios de cierre: se dispara solo si algún partido empieza en
+# (15, 45] min. Con cadencia de 30 min cada tanda cae ahí exactamente
+# una vez, así que no se paga dos veces la misma tanda.
+CLOSING_MIN_LEAD = 15.0
+
+# capture_availability.py: 0 = ok, 2 = crudo guardado pero sin filas.
+# capture_book_odds.py: 0 = ok, 2 = sin eventos.
+_CAPTURE_OK = {0, 2}
 
 # Códigos de run_daily.py que no son error: 0 = picks, 2 = sin picks.
 _RUN_DAILY_OK = {0, 2}
@@ -216,12 +253,81 @@ def due_for_closing(entries, events: list[dict], now: datetime,
     return due, later
 
 
+def minutes_until_start(events: list[dict], now: datetime) -> list[float]:
+    """Minutos hasta el inicio de cada partido que aún no empezó."""
+    from core.odds.book_archive import parse_iso8601
+
+    leads = []
+    for event in events:
+        start = parse_iso8601(event.get("commence_time"))
+        if start is not None:
+            lead = (start - now).total_seconds() / 60.0
+            if lead >= 0:
+                leads.append(lead)
+    return leads
+
+
+def capture_sport(sport: str, phase: str, log: CycleLog, plan: bool,
+                  window_minutes: float, min_credits: int, now: datetime,
+                  runner: Callable[[list[str], CycleLog], int],
+                  events_fn: Callable) -> int:
+    """
+    Capturas de un deporte sin modelo. Devuelve el número de fallos.
+
+    picks    foto de lesiones si hay partidos en las próximas 24 h.
+    closing  foto de lesiones si alguno empieza en ≤ 90 min, y precios de
+             cierre por casa si alguno empieza en (15, ventana] min.
+    """
+    spec = CAPTURE_SPORTS[sport]
+    try:
+        events, remaining = events_fn(spec["odds_key"])
+    except Exception as error:
+        log(f"{sport}: no se pudo consultar /events ({error})")
+        return 1
+
+    leads = minutes_until_start(events, now)
+    failures = 0
+
+    availability_window = 24 * 60.0 if phase == "picks" else AVAILABILITY_WINDOW_MIN
+    if any(lead <= availability_window for lead in leads):
+        cmd = ["scripts/capture_availability.py", "--sport", sport]
+        if plan:
+            log(f"{sport}: [plan] correría: python {' '.join(cmd)}  (0 créditos)")
+        elif runner(cmd, log) not in _CAPTURE_OK:
+            failures += 1
+    else:
+        log(f"{sport}: ningún partido en las próximas "
+            f"{availability_window / 60:.1f} h — sin foto de lesiones")
+
+    if phase != "closing":
+        return failures
+
+    if not any(CLOSING_MIN_LEAD < lead <= window_minutes for lead in leads):
+        return failures
+    if remaining is not None and remaining < min_credits:
+        log(f"{sport}: partidos por empezar pero quedan {remaining} créditos "
+            f"(< {min_credits}); no se capturan precios")
+        return failures
+
+    cmd = ["scripts/capture_book_odds.py", "--sport", sport,
+           "--markets", spec["markets"],
+           "--max-lead-minutes", f"{window_minutes:.0f}",
+           "--min-credits", str(min_credits)]
+    cost = len(spec["markets"].split(","))
+    if plan:
+        log(f"{sport}: [plan] correría: python {' '.join(cmd)}  ({cost} créditos)")
+    elif runner(cmd, log) not in _CAPTURE_OK:
+        failures += 1
+    return failures
+
+
 # ── Fases ─────────────────────────────────────────────────────────────────────
 
 def phase_picks(sports, date: str, log: CycleLog, plan: bool,
                 min_credits: int,
                 runner: Callable[[list[str], CycleLog], int] = run_script,
-                events_fn: Callable = fetch_events) -> int:
+                events_fn: Callable = fetch_events,
+                capture_sports=(), now: datetime | None = None) -> int:
     """
     run_daily.py por deporte, SIEMPRE, aunque no haya partidos: la misma
     corrida liquida los picks del día anterior (Stage 10). Saltarla en
@@ -251,13 +357,19 @@ def phase_picks(sports, date: str, log: CycleLog, plan: bool,
         code = runner(cmd, log)
         if code not in _RUN_DAILY_OK:
             failures += 1
+
+    now = now or datetime.now(timezone.utc)
+    for sport in capture_sports:
+        failures += capture_sport(sport, "picks", log, plan, DEFAULT_WINDOW_MIN,
+                                  min_credits, now, runner, events_fn)
     return 1 if failures else 0
 
 
 def phase_closing(sports, date: str, log: CycleLog, plan: bool,
                   window_minutes: float, min_credits: int, now: datetime | None = None,
                   runner: Callable[[list[str], CycleLog], int] = run_script,
-                  events_fn: Callable = fetch_events, cc=None) -> int:
+                  events_fn: Callable = fetch_events, cc=None,
+                  capture_sports=()) -> int:
     cc = cc or _load_capture_closing()
     now = now or datetime.now(timezone.utc)
     failures = 0
@@ -298,6 +410,9 @@ def phase_closing(sports, date: str, log: CycleLog, plan: bool,
         if runner(cmd, log) not in _CLOSING_OK:
             failures += 1
 
+    for sport in capture_sports:
+        failures += capture_sport(sport, "closing", log, plan, window_minutes,
+                                  min_credits, now, runner, events_fn)
     return 1 if failures else 0
 
 
@@ -308,14 +423,17 @@ def main(argv: list[str] | None = None) -> int:
     _load_dotenv()
     date = args.date or datetime.now().strftime("%Y-%m-%d")
     log = CycleLog(date, args.phase)
-    log(f"inicio — deportes {', '.join(args.sports)} | fecha {date}"
+    log(f"inicio — deportes {', '.join(args.sports)} | captura "
+        f"{', '.join(args.capture_sports) or '-'} | fecha {date}"
         f"{' | PLAN (no ejecuta)' if args.plan else ''}")
 
     if args.phase == "picks":
-        code = phase_picks(args.sports, date, log, args.plan, args.min_credits)
+        code = phase_picks(args.sports, date, log, args.plan, args.min_credits,
+                           capture_sports=args.capture_sports)
     else:
         code = phase_closing(args.sports, date, log, args.plan,
-                             args.window, args.min_credits)
+                             args.window, args.min_credits,
+                             capture_sports=args.capture_sports)
 
     log(f"fin — {'OK' if code == 0 else 'con errores'}")
     return code
@@ -343,7 +461,12 @@ def _parse_args(argv: list[str] | None) -> argparse.Namespace:
         epilog=__doc__,
     )
     parser.add_argument("phase", choices=["picks", "closing"])
-    parser.add_argument("--sports", nargs="+", default=list(DEFAULT_SPORTS))
+    parser.add_argument("--sports", nargs="*", default=list(DEFAULT_SPORTS),
+                        help="Deportes con modelo y ledger (default: nfl mlb)")
+    parser.add_argument("--capture-sports", nargs="*", default=list(DEFAULT_CAPTURE_SPORTS),
+                        choices=sorted(CAPTURE_SPORTS),
+                        help="Deportes solo de captura (default: nba). "
+                             "Sin valores desactiva las capturas")
     parser.add_argument("--date", default=None,
                         help="YYYY-MM-DD. Default: fecha LOCAL de hoy")
     parser.add_argument("--window", type=float, default=DEFAULT_WINDOW_MIN,
