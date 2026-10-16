@@ -53,6 +53,8 @@ xG de este equipo" es apostar menos, no apostar a ciegas.
 
 from __future__ import annotations
 
+import logging
+
 from core.contracts.event import Event
 from core.contracts.features import TeamFeatures
 
@@ -67,6 +69,9 @@ from sports.soccer.team_stats import SoccerTeamStats
 
 
 __all__ = ["SoccerDataProvider"]
+
+
+_log = logging.getLogger(__name__)
 
 
 # Media de goles por equipo cuando no hay datos de la competición.
@@ -181,6 +186,15 @@ class SoccerDataProvider:
         self._elo_enabled = self._cfg_bool("soccer.elo.enabled", False)
         self._elo_min_coverage = self._cfg_float("soccer.elo.min_coverage", 0.80)
 
+        # Cobertura REAL del Elo: por cada partido consultado con el
+        # Elo activo, si se obtuvo diferencia o no.
+        #
+        # Se indexa por event_id porque un mismo partido puede pasar
+        # dos veces por get_context —el backtest lo hace con
+        # --verify-no-lookahead— y contarlo doble sesgaría la fracción.
+        self._elo_seen: dict[str, bool] = {}
+        self._elo_warned: set[str] = set()
+
     # ── SportDataProvider Protocol ────────────────────────────────────────────
 
     def get_events(self, date: str) -> list[Event]:
@@ -282,6 +296,8 @@ class SoccerDataProvider:
         # PARTIDO, no de un equipo: la diferencia entre dos ratings no
         # pertenece a ninguno de los dos.
         elo_diff = self._elo_difference(match, comp)
+        if self._elo_enabled:
+            self._elo_seen[event.event_id] = elo_diff is not None
         if elo_diff is not None:
             context["elo_difference"] = elo_diff
 
@@ -571,9 +587,26 @@ class SoccerDataProvider:
         if client is None:
             return None
 
-        return self._safe(lambda: client.difference(
-            match.home, match.away, match.date, comp.comp_id,
-        ))
+        try:
+            diff = client.difference(
+                match.home, match.away, match.date, comp.comp_id,
+            )
+        except Exception as e:
+            self._warn_elo_once(
+                type(e).__name__,
+                "Elo: fallo al calcular la diferencia de %s vs %s (%s): "
+                "%s: %s", match.home, match.away, match.date,
+                type(e).__name__, e,
+            )
+            return None
+
+        if diff is None:
+            # Normalmente un equipo sin alias en ClubElo, o la fecha
+            # sin ratings (el cliente ya avisó de eso). Va a DEBUG
+            # porque la cifra agregada está en elo_coverage().
+            _log.debug("Elo: sin diferencia para %s vs %s (%s)",
+                       match.home, match.away, match.date)
+        return diff
 
     def _get_elo_client(self):
         """Cliente de Elo, construido de forma diferida."""
@@ -581,11 +614,74 @@ class SoccerDataProvider:
             try:
                 from sports.soccer.elo import ClubEloClient
                 if not ClubEloClient.is_available():
+                    self._warn_elo_once(
+                        "sin_requests",
+                        "Elo activado en soccer.elo.enabled pero requests "
+                        "no está instalado: la señal queda ausente.",
+                    )
                     return None
                 self._elo = ClubEloClient()
-            except Exception:
+            except Exception as e:
+                self._warn_elo_once(
+                    "cliente",
+                    "Elo: no se pudo construir ClubEloClient: %s: %s",
+                    type(e).__name__, e,
+                )
                 return None
         return self._elo
+
+    def elo_coverage(self) -> dict:
+        """
+        Cobertura real de la señal de Elo en lo proyectado hasta ahora.
+
+        Fracción de partidos con `elo_difference` no nulo entre los
+        que pasaron por get_context con el Elo activo. Es la cifra que
+        decide si un resultado con peso de Elo mide algo: con cobertura
+        cero, cualquier peso produce exactamente el mismo backtest que
+        el peso cero.
+
+        Campos
+        ------
+        enabled         -- soccer.elo.enabled.
+        matches         -- Partidos consultados con el Elo activo.
+        with_elo        -- De ellos, con diferencia disponible.
+        coverage        -- with_elo / matches. 0.0 si no hubo
+                           partidos: sin partidos tampoco hay señal, y
+                           devolver None invitaría a tratar el caso
+                           como "sin problema".
+        min_coverage    -- soccer.elo.min_coverage.
+        dates_requested -- Del cliente de ClubElo, si existe.
+        dates_failed    -- Ídem.
+        last_error      -- Último fallo de ClubElo, o None.
+        """
+        matches = len(self._elo_seen)
+        with_elo = sum(1 for ok in self._elo_seen.values() if ok)
+
+        stats = {
+            "enabled":         self._elo_enabled,
+            "matches":         matches,
+            "with_elo":        with_elo,
+            "coverage":        round(with_elo / matches, 4) if matches else 0.0,
+            "min_coverage":    self._elo_min_coverage,
+            "dates_requested": 0,
+            "dates_failed":    0,
+            "last_error":      None,
+        }
+
+        client_stats = getattr(self._elo, "fetch_stats", None)
+        if isinstance(client_stats, dict):
+            for key in ("dates_requested", "dates_failed", "last_error"):
+                if key in client_stats:
+                    stats[key] = client_stats[key]
+        return stats
+
+    def _warn_elo_once(self, reason: str, msg: str, *args) -> None:
+        """WARNING la primera vez por motivo; DEBUG en las siguientes."""
+        if reason in self._elo_warned:
+            _log.debug(msg, *args)
+            return
+        self._elo_warned.add(reason)
+        _log.warning(msg, *args)
 
     def _cfg_bool(self, key: str, default: bool) -> bool:
         if self._config is None:

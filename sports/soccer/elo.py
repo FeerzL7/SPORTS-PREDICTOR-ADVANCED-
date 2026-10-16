@@ -59,12 +59,31 @@ ranking antes de la jornada de ese día.
 Es una propiedad de la API, no un cuidado nuestro, pero conviene
 dejarla escrita: si algún día cambiara, el backtest se inflaría sin que
 nada fallara.
+
+Fallar sin ruido NO es degradar con elegancia
+-----------------------------------------------
+La ausencia de Elo no es un error —el modelo funciona sin él— así que
+el cliente no lanza excepciones. Pero no lanzar no es lo mismo que
+callar.
+
+La primera versión devolvía None ante cualquier fallo sin dejar
+rastro. Cuando api.clubelo.com empezó a responder HTTP 502, el barrido
+de `--elo-weight` produjo cuatro CSV idénticos byte a byte —pesos 0.0,
+0.3, 0.6 y 1.0, mismo MD5— porque la diferencia de Elo era None en
+todos los partidos y el peso nunca llegó a aplicarse. Nada falló;
+simplemente parecía que el Elo no aportaba nada.
+
+Ahora cada fallo —código HTTP, excepción de red, respuesta vacía o CSV
+sin ratings reconocibles— se registra como WARNING en el logger
+`sports.soccer.elo`, y `fetch_stats` lleva la cuenta para que quien
+consuma el cliente pueda informar de la cobertura real.
 """
 
 from __future__ import annotations
 
 import csv
 import io
+import logging
 import math
 import time
 from dataclasses import dataclass
@@ -77,6 +96,9 @@ except ImportError:
 
 
 __all__ = ["ClubEloClient", "EloRating", "elo_to_supremacy"]
+
+
+_log = logging.getLogger(__name__)
 
 
 _BASE_URL = "http://api.clubelo.com"
@@ -158,6 +180,19 @@ class ClubEloClient:
         # instantánea para los diez partidos.
         self._by_date: dict[str, dict[str, EloRating]] = {}
 
+        # Contabilidad de fallos.
+        #
+        # `_warned` guarda los motivos ya avisados: un ClubElo caído
+        # falla igual en cada una de las ~150 fechas de una temporada,
+        # y cien WARNING idénticos entierran el informe del backtest
+        # tanto como ninguno. El primero de cada motivo sale como
+        # WARNING; las repeticiones bajan a DEBUG y quedan contadas en
+        # `fetch_stats`.
+        self._dates_requested = 0
+        self._dates_failed = 0
+        self._last_error: str | None = None
+        self._warned: set[str] = set()
+
     @staticmethod
     def is_available() -> bool:
         """True si se puede consultar ClubElo. Solo requiere requests."""
@@ -176,16 +211,49 @@ class ClubEloClient:
         Retorna dict vacío ante cualquier fallo: sin red, fecha
         inválida o formato cambiado. La ausencia de Elo no es un error
         —el modelo funciona sin él— así que no se propaga como
-        excepción.
+        excepción. Pero SÍ se registra: cada fallo emite un WARNING
+        (ver `_record_failure`) y suma en `fetch_stats`.
         """
         key = str(date)[:10]
         if key in self._by_date:
             return self._by_date[key]
 
+        self._dates_requested += 1
         raw = self._fetch(key)
         ratings = self._parse(raw) if raw else {}
+
+        # Una respuesta que llega pero no contiene ningún rating es un
+        # fallo tan real como un 502: típicamente una página HTML de
+        # error servida con código 200, o un cambio de formato.
+        if raw and not ratings:
+            self._record_failure(
+                key, "formato",
+                f"respuesta sin ratings reconocibles "
+                f"(empieza por {raw.strip()[:40]!r})",
+            )
+
         self._by_date[key] = ratings
         return ratings
+
+    @property
+    def fetch_stats(self) -> dict:
+        """
+        Resumen de las descargas hechas por este cliente.
+
+        Campos
+        ------
+        dates_requested -- Fechas distintas consultadas.
+        dates_failed    -- Fechas sin ratings por fallo de la fuente.
+        last_error      -- Descripción del último fallo, o None.
+
+        Las fechas servidas desde el caché en disco cuentan como
+        consultadas y no fallidas: el dato está, venga de donde venga.
+        """
+        return {
+            "dates_requested": self._dates_requested,
+            "dates_failed":    self._dates_failed,
+            "last_error":      self._last_error,
+        }
 
     def rating_for(
         self,
@@ -266,31 +334,82 @@ class ClubEloClient:
         El endpoint devuelve los ratings VIGENTES ese día, que reflejan
         solo partidos anteriores. Esa propiedad es la que hace el dato
         utilizable en walk-forward.
+
+        Retorna None ante cualquier fallo, siempre registrándolo con
+        `_record_failure`. Un None sin rastro fue exactamente lo que
+        dejó el barrido de pesos midiendo nada.
         """
+        url = f"{_BASE_URL}/{date}"
+
         if self._fetch_fn is not None:
             try:
-                return self._fetch_fn(f"{_BASE_URL}/{date}")
-            except Exception:
+                text = self._fetch_fn(url)
+            except Exception as e:
+                self._record_failure(date, type(e).__name__,
+                                     f"{type(e).__name__}: {e}")
                 return None
+            if not text:
+                self._record_failure(date, "vacía", "respuesta vacía")
+                return None
+            return text
 
         cached = self._read_cache(date)
         if cached is not None:
             return cached
 
         if _requests is None:
+            self._record_failure(date, "sin_requests",
+                                 "el paquete requests no está instalado")
             return None
 
         try:
-            response = _requests.get(f"{_BASE_URL}/{date}",
-                                     timeout=self._timeout)
-            if response.status_code != 200:
-                return None
-            text = response.text
-        except Exception:
+            response = _requests.get(url, timeout=self._timeout)
+        except Exception as e:
+            self._record_failure(date, type(e).__name__,
+                                 f"{type(e).__name__}: {e}")
             return None
 
-        self._write_cache(date, text)
+        if response.status_code != 200:
+            self._record_failure(date, f"HTTP {response.status_code}",
+                                 f"HTTP {response.status_code} en {url}")
+            return None
+
+        text = response.text
+        if not text:
+            self._record_failure(date, "vacía", f"respuesta vacía de {url}")
+            return None
+
+        # Solo se cachea lo que parece un CSV de ClubElo. Los ratings de
+        # una fecha pasada se guardan un año: cachear una página de
+        # error servida con código 200 inutilizaría esa fecha durante
+        # todo ese tiempo, y en silencio.
+        if _looks_like_clubelo_csv(text):
+            self._write_cache(date, text)
         return text
+
+    def _record_failure(self, date: str, reason: str, detail: str) -> None:
+        """
+        Registra un fallo de la fuente: contador, último error y log.
+
+        `reason` agrupa los fallos equivalentes —"HTTP 502",
+        "ConnectionError"— para que un servicio caído produzca un
+        WARNING por motivo y no uno por fecha. `detail` es el texto
+        legible que acaba en el log y en `fetch_stats`.
+        """
+        self._dates_failed += 1
+        self._last_error = detail
+
+        if reason in self._warned:
+            _log.debug("ClubElo sin datos para %s: %s", date, detail)
+            return
+
+        self._warned.add(reason)
+        _log.warning(
+            "ClubElo sin datos para %s: %s. La señal de Elo queda ausente "
+            "en los partidos de esa fecha; los fallos repetidos por el "
+            "mismo motivo se registran en DEBUG.",
+            date, detail,
+        )
 
     @staticmethod
     def _parse(raw: str) -> dict[str, EloRating]:
@@ -480,6 +599,17 @@ def _is_recent(date: str, days: int = 14) -> bool:
     except (ValueError, TypeError):
         return True
     return (datetime.now(timezone.utc) - parsed).days <= days
+
+
+def _looks_like_clubelo_csv(text: str) -> bool:
+    """
+    True si la cabecera tiene las columnas que `_parse` necesita.
+
+    Comprobación barata, no validación: basta para no cachear una
+    página HTML de error, que es el caso que importa.
+    """
+    header = text.lstrip().split("\n", 1)[0]
+    return "Club" in header and "Elo" in header
 
 
 def _safe_float(value) -> float | None:

@@ -53,24 +53,85 @@ Dos capas, y la segunda es específica del fútbol.
         durante el partido— inflaba el rendimiento del mercado de
         totales en 8 puntos de ROI.
 
+El barrido del peso Elo y su cobertura
+-----------------------------------------
+`--elo-weight W` mezcla las medias del xG con las derivadas del Elo de
+ClubElo. Barrer varios W dice si el Elo aporta resolución o solo ruido.
+
+El primer barrido (0.0, 0.3, 0.6 y 1.0) produjo cuatro CSV idénticos
+byte a byte, mismo MD5. api.clubelo.com respondía HTTP 502, el cliente
+devolvía None sin avisar y la diferencia de Elo faltó en el 100% de los
+partidos: el peso nunca llegó a aplicarse. El resultado PARECÍA decir
+que el Elo no aporta nada, cuando en realidad no medía nada.
+
+Por eso, con peso efectivo > 0, el script informa de la cobertura real
+—fracción de partidos con diferencia de Elo— por competición y en
+total, y ABORTA con código de salida 2, sin exportar el CSV, si cae por
+debajo de `soccer.elo.min_coverage` (0.80 en config/soccer.yaml). El
+aborto llega al terminar la primera competición con cobertura baja,
+no después de horas de barrido.
+
+`--allow-low-elo-coverage` deja continuar —para diagnosticar alias que
+no cruzan, por ejemplo— pero el aviso sigue saliendo en grande y el CSV
+exportado no debe usarse para decidir el peso.
+
+Cómo re-ejecutar el barrido cuando ClubElo responda
+------------------------------------------------------
+    1. Comprobar que la API devuelve un CSV y no un error:
+
+        python -c "import requests; r = requests.get('http://api.clubelo.com/2023-10-01', timeout=20); print(r.status_code, r.text[:60])"
+
+       Debe dar 200 y la cabecera Rank,Club,Country,Level,Elo,From,To.
+
+    2. Descartar bt_elo00.csv, bt_elo30.csv, bt_elo60.csv y
+       bt_elo100.csv: se generaron sin Elo y no sirven de referencia.
+
+    3. Repetir el barrido con exactamente los mismos argumentos salvo el
+       peso. Solo las cinco grandes: ClubElo no cubre Liga MX ni
+       Brasileirão, y su cobertura nula haría abortar la corrida.
+
+        python scripts/backtest_soccer.py --seasons 2021 2022 2023 --comps epl laliga seriea bundesliga ligue1 --no-filter --elo-weight 0.0 --output bt_elo00.csv
+        python scripts/backtest_soccer.py --seasons 2021 2022 2023 --comps epl laliga seriea bundesliga ligue1 --no-filter --elo-weight 0.3 --output bt_elo30.csv
+        python scripts/backtest_soccer.py --seasons 2021 2022 2023 --comps epl laliga seriea bundesliga ligue1 --no-filter --elo-weight 0.6 --output bt_elo60.csv
+        python scripts/backtest_soccer.py --seasons 2021 2022 2023 --comps epl laliga seriea bundesliga ligue1 --no-filter --elo-weight 1.0 --output bt_elo100.csv
+
+    4. Comprobar en cada informe la sección COBERTURA DEL ELO (≥ 80%)
+       y que los CSV difieran entre sí:
+
+        python -c "import hashlib, glob; [print(hashlib.md5(open(f, 'rb').read()).hexdigest(), f) for f in sorted(glob.glob('bt_elo*.csv'))]"
+
+       Cuatro MD5 iguales significan que el peso no se aplicó.
+
+    5. Comparar resolución y calibración con scripts/calibration_report.py
+       sobre cada CSV.
+
+    La primera corrida con peso > 0 descarga una instantánea por fecha
+    con partidos —unas 150 por liga y temporada— y las guarda en
+    cache/elo/. Las fechas pasadas se cachean un año, así que las
+    corridas siguientes ya no tocan la red.
+
 Uso
 ----
     python scripts/backtest_soccer.py --seasons 2022 2023 2024
     python scripts/backtest_soccer.py --seasons 2023 --comps epl laliga
     python scripts/backtest_soccer.py --seasons 2023 --verify-no-lookahead
     python scripts/backtest_soccer.py --seasons 2022 2023 --output bt.csv
+    python scripts/backtest_soccer.py --seasons 2023 --comps epl --elo-weight 0.3
 
 Requisitos
 -----------
     Acceso a football-data.co.uk (resultados y cuotas).
     Opcional: acceso a understat.com para el xG. Sin él, el plugin
     opera en tier PARTIAL con goles y forma.
+    Con --elo-weight > 0: acceso a api.clubelo.com, o su caché en
+    cache/elo/.
 """
 
 from __future__ import annotations
 
 import argparse
 import csv
+import logging
 import math
 import sys
 from dataclasses import dataclass, field
@@ -341,8 +402,14 @@ def run_competition(
     verbose:   bool = False,
     no_filter: bool = False,
     opening:   bool = False,
-) -> tuple[Metrics, dict]:
-    """Backtestea una competición y temporada."""
+) -> tuple[Metrics, dict, dict]:
+    """
+    Backtestea una competición y temporada.
+
+    Retorna (métricas, descartes, cobertura del Elo). La cobertura es
+    SoccerDataProvider.elo_coverage() al terminar: sin ella, un barrido
+    de pesos sobre partidos sin Elo es indistinguible de uno válido.
+    """
     from sports.soccer.competitions import get_competition
     from sports.soccer.data_source import SoccerDataSource
     from sports.soccer.schedule import SoccerScheduleFetcher
@@ -360,7 +427,7 @@ def run_competition(
     }
 
     if comp is None:
-        return metrics, skipped
+        return metrics, skipped, {}
 
     source = SoccerDataSource(current_season=season)
     schedule = SoccerScheduleFetcher(
@@ -458,7 +525,7 @@ def run_competition(
                 passed_filter=passed,
             ))
 
-    return metrics, skipped
+    return metrics, skipped, provider.elo_coverage()
 
 
 def _leaks_own_xg(model, provider, event, match, baseline) -> bool:
@@ -741,6 +808,93 @@ def _interpret(overall: Metrics, lookahead: int) -> None:
         print(f"  los {_MIN_PICKS_ROI} que hacen interpretable el ROI.")
 
 
+# ── Cobertura del Elo ────────────────────────────────────────────────────────
+#
+# Con peso de Elo > 0, el backtest solo mide el Elo en los partidos que
+# TIENEN diferencia de Elo. En el resto el modelo proyecta igual que
+# con peso cero, así que con cobertura nula cualquier peso reproduce
+# byte a byte el backtest sin Elo. Ver "El barrido del peso Elo" en el
+# docstring del módulo.
+
+def _merge_elo(total: dict, part: dict) -> None:
+    """Acumula la cobertura de una competición en el total."""
+    for key in ("matches", "with_elo", "dates_requested", "dates_failed"):
+        total[key] = total.get(key, 0) + int(part.get(key) or 0)
+    if part.get("last_error"):
+        total["last_error"] = part["last_error"]
+    matches = total.get("matches", 0)
+    total["coverage"] = (round(total.get("with_elo", 0) / matches, 4)
+                         if matches else 0.0)
+
+
+def _elo_line(cov: dict) -> str:
+    """'12/310 partidos con diferencia de Elo (3.9%)'."""
+    return (f"{cov.get('with_elo', 0)}/{cov.get('matches', 0)} partidos con "
+            f"diferencia de Elo ({100.0 * cov.get('coverage', 0.0):.1f}%)")
+
+
+def _elo_alarm(
+    cov:          dict,
+    where:        str,
+    weight:       float,
+    min_coverage: float,
+    aborting:     bool,
+) -> None:
+    """
+    Aviso en grande de cobertura insuficiente.
+
+    Tiene que ser imposible de pasar por alto: el informe que viene
+    debajo tiene el mismo aspecto que uno válido, con su ROI y su
+    p-valor, y eso es exactamente lo que engañó en el primer barrido.
+    """
+    bar = "#" * 70
+    print()
+    print(f"  {bar}")
+    print(f"  #  COBERTURA DEL ELO INSUFICIENTE: "
+          f"{100.0 * cov.get('coverage', 0.0):.1f}% "
+          f"(mínimo {100.0 * min_coverage:.0f}%, soccer.elo.min_coverage)")
+    print("  #")
+    print(f"  #  {where}: el peso de Elo {weight} se aplicó a "
+          f"{cov.get('with_elo', 0)} de {cov.get('matches', 0)} partidos.")
+    print("  #  Donde falta la diferencia de Elo el peso no cambia nada,")
+    print("  #  así que este backtest reproduce el de peso 0.0 y NO mide")
+    print("  #  si el Elo aporta resolución.")
+    print("  #")
+
+    failed = int(cov.get("dates_failed") or 0)
+    requested = int(cov.get("dates_requested") or 0)
+    if failed:
+        print(f"  #  ClubElo: {failed} de {requested} fechas sin datos.")
+        if cov.get("last_error"):
+            print(f"  #  Último error: {str(cov['last_error'])[:60]}")
+        print("  #  Causa probable: api.clubelo.com no responde. Ver los")
+        print("  #  WARNING de sports.soccer.elo más arriba.")
+    elif cov.get("matches", 0) == 0:
+        print("  #  Ningún partido llegó a consultar el Elo: revisar los")
+        print("  #  descartes (sin cuotas, muestra corta).")
+    else:
+        print("  #  ClubElo respondió, pero los equipos no cruzan. Revisar")
+        print("  #  _CLUBELO_ALIASES en sports/soccer/elo.py, o si la")
+        print("  #  competición no es europea (ClubElo no la cubre).")
+    print("  #")
+    print("  #  Cómo re-ejecutar cuando ClubElo responda: ver el docstring")
+    print("  #  de scripts/backtest_soccer.py.")
+    if aborting:
+        print("  #")
+        print("  #  ABORTADO: no se exporta CSV. --allow-low-elo-coverage")
+        print("  #  permite continuar para diagnosticar.")
+    print(f"  {bar}")
+    print()
+
+
+def _cfg_float(config, key: str, default: float) -> float:
+    try:
+        value = config.get(key, default=default)
+        return float(value) if value is not None else default
+    except (ValueError, TypeError):
+        return default
+
+
 def _export(records: list[BetRecord], path: str) -> None:
     if not records:
         return
@@ -772,7 +926,14 @@ def main() -> int:
                              "de 0.0 a 1.0. Sobreescribe soccer.yaml. Barrer "
                              "varios valores dice si el Elo aporta resolución "
                              "o solo ruido — la misma pregunta que resolvimos "
-                             "con el peso del mercado.")
+                             "con el peso del mercado. Con peso > 0 aborta si "
+                             "la cobertura de Elo queda bajo "
+                             "soccer.elo.min_coverage.")
+    parser.add_argument("--allow-low-elo-coverage", action="store_true",
+                        help="No abortar cuando la cobertura de Elo quede bajo "
+                             "soccer.elo.min_coverage. El aviso sigue saliendo "
+                             "y el resultado NO sirve para elegir el peso: "
+                             "solo para diagnosticar.")
     parser.add_argument("--opening-odds", action="store_true",
                         help="Mide contra las cuotas de APERTURA en vez de "
                              "las de cierre. El pipeline en producción opera "
@@ -789,6 +950,12 @@ def main() -> int:
     parser.add_argument("--output", default=None, help="CSV de salida")
     parser.add_argument("--verbose", action="store_true")
     args = parser.parse_args()
+
+    # Los WARNING de las fuentes —ClubElo caído, sobre todo— salen en
+    # el mismo flujo que el informe, en su sitio cronológico. Sin un
+    # handler, Python los imprimiría sin formato por stderr.
+    logging.basicConfig(level=logging.WARNING, stream=sys.stdout,
+                        format="  %(levelname)s [%(name)s] %(message)s")
 
     _USING_OPENING[0] = args.opening_odds
 
@@ -813,6 +980,13 @@ def main() -> int:
 
     comps = args.comps or [c.comp_id for c in enabled_competitions()]
 
+    # Peso EFECTIVO, del CLI o de soccer.yaml: la compuerta de
+    # cobertura aplica igual si el peso se activó editando el archivo.
+    elo_weight = _cfg_float(config, "soccer.elo.weight", 0.0)
+    elo_active = (bool(config.get("soccer.elo.enabled", default=False))
+                  and elo_weight > 0)
+    elo_min_coverage = _cfg_float(config, "soccer.elo.min_coverage", 0.80)
+
     print("=" * 70)
     print("  BACKTEST SOCCER — walk-forward contra cuotas de cierre")
     print("=" * 70)
@@ -822,6 +996,11 @@ def main() -> int:
         print(f"  Verificación de look-ahead: ACTIVA")
     if args.elo_weight is not None:
         print(f"  Peso del Elo: {args.elo_weight}")
+    if elo_active:
+        print(f"  Cobertura mínima de Elo: {100.0 * elo_min_coverage:.0f}% "
+              f"(soccer.elo.min_coverage)"
+              + (" — solo aviso, --allow-low-elo-coverage"
+                 if args.allow_low_elo_coverage else ""))
     if args.opening_odds:
         print(f"  Cuotas: APERTURA (no cierre)")
     if args.no_filter:
@@ -839,11 +1018,13 @@ def main() -> int:
         "sin_cuotas": 0, "muestra_corta": 0, "proyeccion": 0,
         "sin_resultado": 0, "evaluados": 0, "filtrados": 0, "lookahead": 0,
     }
+    elo_total: dict = {}
+    elo_parts: list[tuple[str, dict]] = []
 
     for season in args.seasons:
         for comp_id in comps:
             try:
-                metrics, skipped = run_competition(
+                metrics, skipped, elo_cov = run_competition(
                     comp_id, season, config,
                     verify_no_lookahead=args.verify_no_lookahead,
                     verbose=args.verbose,
@@ -866,6 +1047,27 @@ def main() -> int:
 
             if args.verbose or metrics.n:
                 _report(metrics)
+
+            if elo_active:
+                label = f"{comp_id} {season}"
+                elo_parts.append((label, elo_cov))
+                _merge_elo(elo_total, elo_cov)
+                print(f"    Elo {label}: {_elo_line(elo_cov)}")
+
+                # Abortar en cuanto una competición con partidos queda
+                # bajo el mínimo: seguir costaría horas de barrido para
+                # producir un resultado que no mide el Elo.
+                #
+                # Una competición sin partidos consultados (temporada
+                # sin cuotas, por ejemplo) no dispara el aborto aquí: no
+                # dice nada sobre ClubElo. Si TODAS quedan así, lo
+                # recoge la comprobación final sobre el total.
+                low = (elo_cov.get("matches", 0) > 0
+                       and elo_cov.get("coverage", 0.0) < elo_min_coverage)
+                if low and not args.allow_low_elo_coverage:
+                    _elo_alarm(elo_cov, label, elo_weight, elo_min_coverage,
+                               aborting=True)
+                    return 2
 
     print()
     print("=" * 70)
@@ -890,7 +1092,44 @@ def main() -> int:
         print("      football-data no publicó cuotas para esas temporadas.")
         print("      Si 'muestra_corta' lo es, el rango es demasiado breve.")
 
+    # ── Cobertura del Elo, antes de la lectura del resultado ──────
+    #
+    # Va ANTES de _interpret a propósito: quien lea el ROI tiene que
+    # haber visto primero si el peso de Elo llegó a aplicarse.
+    elo_low = False
+    if elo_active:
+        if not elo_total:
+            _merge_elo(elo_total, {})
+        print()
+        print("=" * 70)
+        print(f"  COBERTURA DEL ELO  (peso {elo_weight}, "
+              f"mínimo {100.0 * elo_min_coverage:.0f}%)")
+        print("=" * 70)
+        for label, cov in elo_parts:
+            print(f"    {label:18s} {_elo_line(cov)}")
+        print(f"    {'TOTAL':18s} {_elo_line(elo_total)}")
+        if elo_total.get("dates_requested"):
+            print(f"    ClubElo: {elo_total.get('dates_failed', 0)} de "
+                  f"{elo_total['dates_requested']} fechas sin datos")
+
+        elo_low = elo_total.get("coverage", 0.0) < elo_min_coverage
+        if elo_low:
+            _elo_alarm(elo_total, "TOTAL", elo_weight, elo_min_coverage,
+                       aborting=not args.allow_low_elo_coverage)
+            if not args.allow_low_elo_coverage:
+                return 2
+
     _interpret(overall, total_skipped["lookahead"])
+
+    if elo_low:
+        # Con --allow-low-elo-coverage: se repite al final para que
+        # quien solo mire las últimas líneas no se lleve el ROI como
+        # un resultado sobre el Elo.
+        print()
+        print(f"  ⚠️  COBERTURA DEL ELO "
+              f"{100.0 * elo_total.get('coverage', 0.0):.1f}% < "
+              f"{100.0 * elo_min_coverage:.0f}%: este resultado NO mide "
+              f"el peso de Elo.")
 
     if args.output:
         _export(overall.records, args.output)
