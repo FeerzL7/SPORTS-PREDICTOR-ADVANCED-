@@ -474,6 +474,27 @@ risk:
   # correlacionadas, no diversificación.
   max_picks_per_match: 1
 
+  # ── Solo-papel (Fase 0, 2026-10) ────────────────────────────────────
+  #
+  # TODOS los mercados de fútbol se registran solo en papel.
+  #
+  # Evidencia (scripts/fit_blend_weights.py sobre bt_full.csv,
+  # bt_open.csv y bt_latam.csv, temporadas 2021-2023):
+  #
+  #     peso óptimo del modelo frente al cierre de Pinnacle
+  #         1X2  0.00    TOTAL  0.00    LATAM 1X2  0.00
+  #     combinación logística: coeficiente del modelo ≈ -0.13
+  #
+  # Un coeficiente negativo significa que cuando el modelo discrepa del
+  # mercado, el resultado tiende a darle la razón al mercado. Los picks
+  # salen justo de esas discrepancias, de ahí el ROI de -5.5% (top 5) y
+  # -17.2% (LATAM) del backtest.
+  #
+  # Para sacar un mercado de esta lista: Δlog-loss < 0 frente al cierre
+  # en una temporada reservada (fit_blend_weights.py) Y CLV medio > 0
+  # en el ledger de papel con n ≥ 100.
+  paper_only_markets: ["1X2", "TOTAL", "BTTS"]
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 #  MOVIMIENTO DE LÍNEA

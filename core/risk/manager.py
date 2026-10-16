@@ -37,6 +37,7 @@ RiskManager hace:
     - Aplicar límite máximo de picks diarios
     - Aplicar límite máximo de exposición diaria (suma de stake_pct)
     - Recortar stake_pct si excede el límite por pick
+    - Apartar los picks de mercados en SOLO-PAPEL (ver más abajo)
 
 NO hace:
     - Calcular EV, Kelly, blending (ValueEngine — Stage 6)
@@ -52,6 +53,28 @@ Garantías de diseño
   es el mismo que en la entrada — para reproducibilidad de logs.
 - Un pick desactivado por veto de movimiento nunca se reactiva
   aunque quepan más picks en el presupuesto.
+
+Mercados en SOLO-PAPEL (Fase 0, 2026-10)
+-----------------------------------------
+Un mercado sin evidencia de ventaja no debe producir picks operables,
+pero tampoco debe dejar de medirse: sin registro no hay forma de saber
+si algún día la gana. `RiskProfile.paper_only_markets` resuelve las dos
+cosas a la vez.
+
+Los picks de esos mercados:
+    - pasan el mismo veto por movimiento contradictorio y el mismo
+      recorte de stake por pick que los demás, para que el registro
+      refleje exactamente lo que se habría operado;
+    - NO compiten por max_picks_daily ni max_exposure_pct: no son
+      exposición real, y dejarlos competir censuraría la medición
+      según cuántos picks operables hubiera ese día;
+    - salen en `RiskSummary.picks_paper`, nunca en `picks_active`.
+      El runner los registra en un ledger separado y run_daily.py no
+      los notifica.
+
+Qué mercados van a solo-papel lo decide la evidencia, no este módulo:
+ver la sección `risk.paper_only_markets` de cada config/{sport}.yaml y
+scripts/fit_blend_weights.py.
 """
 
 from __future__ import annotations
@@ -91,6 +114,12 @@ def _pick_has_confirming_movement(pick: CandidatePick) -> bool:
     )
 
 
+# Marca que llevan en `reasons` los picks de mercados en solo-papel.
+# Pública para que runner, scripts y tests la reconozcan sin duplicar
+# el literal — la misma lección que MOVEMENT_CONFIRMS_PREFIX.
+PAPER_ONLY_REASON = "SOLO-PAPEL"
+
+
 # ── Perfil de riesgo ──────────────────────────────────────────────────────────
 
 @dataclass(frozen=True)
@@ -121,6 +150,10 @@ class RiskProfile:
                             Default: TOTAL=0, ML=1, SPREAD=2.
                             Sigue el principio del sistema MLB donde
                             TOTAL tenía prioridad estructural.
+    paper_only_markets     -- Mercados (en mayúsculas) cuyos picks se
+                            registran solo en papel. Default: ninguno.
+                            Ver "Mercados en SOLO-PAPEL" en el docstring
+                            del módulo.
     """
     max_picks_daily:        int             = 3
     max_exposure_pct:       int             = 6
@@ -132,6 +165,11 @@ class RiskProfile:
         "SPREAD": 2,
         "1X2":    1,
     })
+    paper_only_markets:     frozenset[str]  = frozenset()
+
+    def is_paper_only(self, market: str) -> bool:
+        """True si los picks de este mercado se registran solo en papel."""
+        return market.upper() in self.paper_only_markets
 
     def get_market_priority(self, market: str) -> int:
         """
@@ -161,6 +199,9 @@ class RiskSummary:
                             exceder max_stake_per_pick_pct.
     total_exposure_pct    -- Suma de stake_pct de picks activos.
     profile_used          -- RiskProfile aplicado.
+    picks_paper           -- Picks de mercados en solo-papel que
+                            superaron el veto. No cuentan en
+                            total_exposure_pct.
     """
     picks_active:         list[CandidatePick]
     picks_vetoed:         list[CandidatePick]
@@ -169,6 +210,7 @@ class RiskSummary:
     picks_stake_trimmed:  list[CandidatePick]
     total_exposure_pct:   int
     profile_used:         RiskProfile
+    picks_paper:          list[CandidatePick] = field(default_factory=list)
 
     def log_summary(self) -> str:
         """Descripción compacta para logs del pipeline."""
@@ -177,7 +219,8 @@ class RiskSummary:
             f"exposición={self.total_exposure_pct}% | "
             f"vetados={len(self.picks_vetoed)} | "
             f"por_límite={len(self.picks_over_limit)} | "
-            f"por_exposición={len(self.picks_over_exposure)}"
+            f"por_exposición={len(self.picks_over_exposure)} | "
+            f"solo_papel={len(self.picks_paper)}"
         )
 
 
@@ -215,15 +258,22 @@ class RiskManager:
               max_exposure_pct: 6
               max_stake_per_pick_pct: 3
               veto_on_contradiction: true
+              paper_only_markets: ["ML", "SPREAD"]   # opcional
         """
         def get(key: str, default):
             return config.get(f"risk.{key}", default=default)
+
+        paper_only = get("paper_only_markets", None) or []
+        if isinstance(paper_only, str):
+            # Un único mercado escrito sin lista en el YAML
+            paper_only = [paper_only]
 
         profile = RiskProfile(
             max_picks_daily        = int(get("max_picks_daily",        3)),
             max_exposure_pct       = int(get("max_exposure_pct",       6)),
             max_stake_per_pick_pct = int(get("max_stake_per_pick_pct", 3)),
             veto_on_contradiction  = bool(get("veto_on_contradiction", True)),
+            paper_only_markets     = frozenset(str(m).upper() for m in paper_only),
         )
         return cls(profile=profile)
 
@@ -255,6 +305,7 @@ class RiskManager:
         over_exposure:   list[CandidatePick] = []
         stake_trimmed:   list[CandidatePick] = []
         candidates:      list[CandidatePick] = []
+        paper:           list[CandidatePick] = []
 
         # ── Paso 1: Veto por movimiento contradictorio ────────────────
         for pick in picks:
@@ -269,10 +320,16 @@ class RiskManager:
                 vetoed.append(pick)
                 continue
 
+            if profile.is_paper_only(pick.market):
+                paper.append(pick)
+                continue
+
             candidates.append(pick)
 
         # ── Paso 2: Recortar stake por encima del límite por pick ─────
-        for pick in candidates:
+        # Se aplica también a los de papel: su registro debe reflejar
+        # el stake que se habría operado, no uno que nunca se permitiría.
+        for pick in candidates + paper:
             if pick.stake_pct > profile.max_stake_per_pick_pct:
                 original = pick.stake_pct
                 pick.stake_pct = profile.max_stake_per_pick_pct
@@ -337,6 +394,18 @@ class RiskManager:
         # Los candidatos que no fueron seleccionados ya fueron
         # desactivados en el loop anterior con su razón específica.
 
+        # ── Paso 5: Picks de solo-papel ───────────────────────────────
+        # Quedan con active=True porque están aprobados para SU ledger
+        # (ROITracker.register_pick exige active=True). Lo que los
+        # separa de los operables es la lista en la que salen y la
+        # razón PAPER_ONLY_REASON en su trail.
+        for pick in paper:
+            pick.add_reason(
+                f"{PAPER_ONLY_REASON}: mercado {pick.market} sin evidencia "
+                f"de ventaja — se registra para medir, no se opera"
+            )
+            pick.activate()
+
         return RiskSummary(
             picks_active        = active,
             picks_vetoed        = vetoed,
@@ -345,4 +414,5 @@ class RiskManager:
             picks_stake_trimmed = stake_trimmed,
             total_exposure_pct  = total_exposure,
             profile_used        = profile,
+            picks_paper         = paper,
         )

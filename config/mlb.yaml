@@ -13,6 +13,12 @@
 #   - ML:    hit_rate=39%, ROI=-22.43%, n=155 → SIN EDGE CONFIRMADO
 #   - RL:    hit_rate=33%, ROI=-31.87%, n=55  → SIN EDGE CONFIRMADO
 #
+# CORRECCIÓN (Fase 0, 2026-10): el "p<0.05" de TOTAL no se sostiene.
+# Un 56% de acierto en n=92 a cuota ~1.99 (break-even 50.3%) da
+# z≈1.10, p≈0.14 a una cola. Es compatible con la ausencia de ventaja.
+# Por eso ML y RL pasan a solo-papel y TOTAL queda en observación
+# (ver risk.paper_only_markets).
+#
 # Las constantes de ML y RL están configuradas de forma CONSERVADORA
 # hasta que el nuevo modelo con los bugs corregidos genere suficiente
 # historial para recalibrar (objetivo: n >= 150 picks por mercado).
@@ -160,6 +166,14 @@ risk:
   max_stake_per_pick_pct: 3   # No más de 3% por pick individual.
   veto_on_contradiction:  true
 
+  # Solo-papel (Fase 0, 2026-10). ML y RL no tienen evidencia de
+  # ventaja (ver cabecera: ROI -22% y -32% en el sistema original).
+  # TOTAL queda operable en observación: su evidencia tampoco es
+  # concluyente (p≈0.14, ver la nota de la cabecera) y este repo no
+  # tiene un backtest MLB reproducible — la validación tendrá que
+  # venir del CLV en paper trading.
+  paper_only_markets: ["ML", "SPREAD"]
+
 # ── Detección de movimiento de línea ─────────────────────────────────────────
 # Thresholds MLB del sistema original.
 # Los mercados MLB son muy líquidos — movimientos pequeños son
@@ -187,7 +201,8 @@ simulation:
 # No sobreescribe odds_api.regions — usa el default de base.yaml.
 #
 odds_api:
-  regions: "us"            # us cubre Pinnacle (la línea sharp reference).
+  regions: "us"            # us NO incluye Pinnacle (está en "eu"); las casas
+                           # de menor margen aquí son LowVig y BetOnline.
 
 # ── Ensemble ──────────────────────────────────────────────────────────────────
 # EnsembleModel (core/simulation/ensemble.py).

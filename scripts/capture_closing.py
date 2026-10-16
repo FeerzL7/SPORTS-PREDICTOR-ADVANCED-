@@ -53,6 +53,9 @@ Uso
     # Ver qué se capturaría sin escribir nada
     python scripts/capture_closing.py --sport mlb --dry-run
 
+    # El ledger de los mercados en solo-papel ({sport}_paper_roi_tracking.csv)
+    python scripts/capture_closing.py --sport nfl --paper
+
 Automatización recomendada (cron)
 -----------------------------------
     # MLB: 17:30 ET, antes de los partidos de tarde
@@ -135,7 +138,11 @@ def main() -> int:
     # ── Picks pendientes sin cierre registrado ────────────────────
     from core.bankroll.tracker import BankrollTracker, CsvLedgerStore
 
-    ledger_path = f"output/ledger/{sport}_roi_tracking.csv"
+    # El ledger de papel tiene el mismo esquema: solo cambia el archivo.
+    # Sin su CLV, los mercados en solo-papel no podrían salir nunca de
+    # ese estado, porque el CLV es justo la evidencia que se les pide.
+    suffix = "_paper_roi_tracking.csv" if args.paper else "_roi_tracking.csv"
+    ledger_path = f"output/ledger/{sport}{suffix}"
     if not Path(ledger_path).exists():
         print(f"  No hay ledger en {ledger_path}.")
         print(f"  Ejecutar primero: python scripts/run_daily.py --sport {sport}")
@@ -357,6 +364,8 @@ def _parse_args() -> argparse.Namespace:
                         help="Fecha YYYY-MM-DD. Default: hoy UTC")
     parser.add_argument("--dry-run", action="store_true",
                         help="Muestra el CLV sin escribirlo en el ledger")
+    parser.add_argument("--paper", action="store_true",
+                        help="Usa el ledger de los mercados en solo-papel")
     return parser.parse_args()
 
 

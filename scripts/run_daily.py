@@ -511,6 +511,20 @@ def _print_result(result) -> None:
         # en algo que se lee del informe.
         _mostrar_mejores_rechazados(result)
 
+    # Picks de mercados en solo-papel. Van en su propia sección y con
+    # su propio título para que nadie los confunda con picks operables:
+    # se registran para medir el modelo, no para apostar. No pasan por
+    # _send_notifications, que solo recibe result.active_picks.
+    paper = getattr(result, "paper_picks", None) or []
+    if paper:
+        print(f"\nSOLO-PAPEL — registrados para medir, NO operar ({len(paper)}):\n")
+        for i, pick in enumerate(paper, 1):
+            line_str = f" {pick.line}" if pick.line is not None else ""
+            print(
+                f"  {i}. [{pick.market}] {pick.selection}{line_str} "
+                f"@ {pick.price} | EV={pick.ev:+.1f}%"
+            )
+
     if result.errors:
         print(f"\nERRORES ({len(result.errors)}):")
         for err in result.errors[:5]:

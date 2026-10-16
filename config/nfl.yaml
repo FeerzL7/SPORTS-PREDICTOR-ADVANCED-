@@ -260,6 +260,23 @@ risk:
   max_stake_per_pick_pct: 2   # Ningún pick individual supera 2%.
   veto_on_contradiction:  true
 
+  # Solo-papel (Fase 0, 2026-10). Backtest 2015-2025 SIN el clima
+  # observado (look-ahead), temporada por temporada:
+  #
+  #     SPREAD  n=536  ROI -1.42% ±8.0    → sin ventaja
+  #     ML      sin backtest              → sin evidencia alguna
+  #     TOTAL   n=351  ROI +2.55% ±9.9    → no significativo, pero es
+  #                                         el mejor candidato; queda
+  #                                         operable en observación
+  #
+  # Con el clima observado TOTAL daba +10.74%: unos 8 puntos venían de
+  # conocer el tiempo durante el partido. backtest_10y.csv ya es la
+  # versión sin clima.
+  #
+  # Para sacar un mercado de esta lista: Δlog-loss < 0 frente al cierre
+  # en una temporada reservada Y CLV medio > 0 en papel con n ≥ 100.
+  paper_only_markets: ["SPREAD", "ML"]
+
 
 # ── Detección de movimiento de línea ─────────────────────────────────────────
 # Los mercados NFL son MÁS líquidos que MLB — movimientos pequeños tienen
@@ -402,7 +419,8 @@ output:
 
 # ── Odds API ──────────────────────────────────────────────────────────────────
 odds_api:
-  regions: "us"            # us cubre Pinnacle, DraftKings, FanDuel.
+  regions: "us"            # DraftKings, FanDuel, LowVig, BetOnline... pero
+                           # NO Pinnacle, que está en la región "eu".
 
 
 # ── Notificaciones ────────────────────────────────────────────────────────────
