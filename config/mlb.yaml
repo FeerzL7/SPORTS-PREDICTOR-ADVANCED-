@@ -168,11 +168,12 @@ risk:
 
   # Solo-papel (Fase 0, 2026-10). ML y RL no tienen evidencia de
   # ventaja (ver cabecera: ROI -22% y -32% en el sistema original).
-  # TOTAL queda operable en observación: su evidencia tampoco es
-  # concluyente (p≈0.14, ver la nota de la cabecera) y este repo no
-  # tiene un backtest MLB reproducible — la validación tendrá que
-  # venir del CLV en paper trading.
-  paper_only_markets: ["ML", "SPREAD"]
+  # TOTAL también: su evidencia no es concluyente (p≈0.14, ver la nota
+  # de la cabecera) y este repo no tiene un backtest MLB reproducible.
+  # La validación tendrá que venir del CLV en paper trading, que ahora
+  # sí se mide: hasta 2026-10 el ledger guardaba los totales sin línea
+  # y la liquidación desde el ledger daba todo moneyline por ganado.
+  paper_only_markets: ["ML", "SPREAD", "TOTAL"]
 
 # ── Detección de movimiento de línea ─────────────────────────────────────────
 # Thresholds MLB del sistema original.
