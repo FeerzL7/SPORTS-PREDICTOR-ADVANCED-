@@ -68,13 +68,12 @@ antes de tiempo. Con la ventana, cada corrida captura solo los
 partidos que están por empezar y deja los demás pendientes; los que ya
 empezaron se descartan, porque su cuota actual es en vivo.
 
-Automatización recomendada (cron)
------------------------------------
-    # MLB: 17:30 ET, antes de los partidos de tarde
-    30 21 * * * cd /ruta && python scripts/capture_closing.py --sport mlb
-
-    # NFL: domingo 12:15 ET, antes del bloque de las 13:00
-    15 17 * * 0 cd /ruta && python scripts/capture_closing.py --sport nfl
+Automatización
+----------------
+No programar este script a horas fijas: scripts/daily_cycle.py closing
+corre cada 30 minutos, consulta gratis a qué hora empieza cada partido
+y solo lo invoca cuando algún pick pendiente está dentro de la ventana.
+Ver scripts/register_daily_cycle.ps1.
 """
 
 from __future__ import annotations
