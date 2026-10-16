@@ -209,8 +209,8 @@ class TestRunnerPaperLedger:
 class TestConfiguredPaperMarkets:
     @pytest.mark.parametrize("sport,expected", [
         ("soccer", {"1X2", "TOTAL", "BTTS"}),
-        ("nfl",    {"SPREAD", "ML"}),
-        ("mlb",    {"ML", "SPREAD"}),
+        ("nfl",    {"SPREAD", "ML", "TOTAL"}),
+        ("mlb",    {"ML", "SPREAD", "TOTAL"}),
     ])
     def test_markets_without_evidence_are_paper_only(self, sport, expected):
         from core.utils.config_loader import load_config

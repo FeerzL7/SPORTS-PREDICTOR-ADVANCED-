@@ -171,3 +171,77 @@ def test_log_file_is_written(tmp_path):
     log = dc.CycleLog(DATE, "picks", base_dir=tmp_path)
     log("hola — ñandú")
     assert "hola — ñandú" in (tmp_path / f"{DATE}.log").read_text(encoding="utf-8")
+
+
+# ── Capturas NBA (deporte sin modelo) ─────────────────────────────────────────
+
+AVAIL = ["scripts/capture_availability.py", "--sport", "nba"]
+BOOKS = ["scripts/capture_book_odds.py", "--sport", "nba", "--markets", "spreads,totals",
+         "--max-lead-minutes", "45", "--min-credits", "40"]
+
+
+def nba_events(*minutes, remaining=400):
+    payload = [{"away_team": f"A{i}", "home_team": f"H{i}", "commence_time": iso(m)}
+               for i, m in enumerate(minutes)]
+    return lambda sport_key: (payload, remaining)
+
+
+def capture(phase, events_fn, plan=False):
+    rec = Recorder()
+    log = _NullLog()
+    failures = dc.capture_sport("nba", phase, log, plan, 45.0, 40, NOW, rec, events_fn)
+    return rec.calls, failures
+
+
+class _NullLog:
+    def __call__(self, message=""):
+        pass
+
+
+class TestNbaCapture:
+    def test_morning_snapshot_when_games_today(self):
+        calls, _ = capture("picks", nba_events(600))
+        assert calls == [AVAIL]
+
+    def test_no_snapshot_without_games(self):
+        calls, _ = capture("picks", nba_events())
+        assert calls == []
+
+    def test_closing_captures_injuries_and_prices_for_next_wave(self):
+        calls, _ = capture("closing", nba_events(30, 300))
+        assert calls == [AVAIL, BOOKS]
+
+    def test_injuries_only_when_wave_is_an_hour_away(self):
+        calls, _ = capture("closing", nba_events(60))
+        assert calls == [AVAIL]
+
+    def test_wave_already_captured_is_not_paid_twice(self):
+        # a 10 min: ya cayó en (15, 45] en la corrida anterior
+        calls, _ = capture("closing", nba_events(10))
+        assert calls == [AVAIL]
+
+    def test_low_credits_keeps_free_capture_only(self):
+        calls, _ = capture("closing", nba_events(30, remaining=5))
+        assert calls == [AVAIL]
+
+    def test_started_games_are_ignored(self):
+        calls, _ = capture("closing", nba_events(-20))
+        assert calls == []
+
+    def test_plan_runs_nothing(self):
+        calls, _ = capture("closing", nba_events(30), plan=True)
+        assert calls == []
+
+    def test_events_failure_counts_as_failure(self):
+        def boom(k):
+            raise RuntimeError("sin red")
+        calls, failures = capture("closing", boom)
+        assert calls == [] and failures == 1
+
+    def test_phase_closing_runs_capture_sports(self, log, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        rec = Recorder()
+        dc.phase_closing([], DATE, log, plan=False, window_minutes=45, min_credits=40,
+                         now=NOW, runner=rec, events_fn=nba_events(30), cc=cc,
+                         capture_sports=["nba"])
+        assert rec.calls == [AVAIL, BOOKS]

@@ -265,17 +265,25 @@ risk:
   #
   #     SPREAD  n=536  ROI -1.42% ±8.0    → sin ventaja
   #     ML      sin backtest              → sin evidencia alguna
-  #     TOTAL   n=351  ROI +2.55% ±9.9    → no significativo, pero es
-  #                                         el mejor candidato; queda
-  #                                         operable en observación
+  #     TOTAL   n=351  ROI +2.55% ±9.9    → no significativo
   #
   # Con el clima observado TOTAL daba +10.74%: unos 8 puntos venían de
   # conocer el tiempo durante el partido. backtest_10y.csv ya es la
   # versión sin clima.
   #
+  # TOTAL pasó también a papel (2026-10) tras el experimento con el
+  # pronóstico histórico de Open-Meteo (sin look-ahead):
+  # scripts/fit_blend_weights.py dio SIN SEÑAL en ML, SPREAD y TOTAL,
+  # tanto con el clima neutralizado como con el pronóstico. En TOTAL el
+  # intervalo de Δlog-loss en la temporada reservada (2025) quedó
+  # entero por ENCIMA de cero: el modelo empeora el cierre.
+  #
+  # Con todos los mercados en papel no hay picks operables ni avisos de
+  # Telegram; el ciclo diario sigue registrando y midiendo el CLV.
+  #
   # Para sacar un mercado de esta lista: Δlog-loss < 0 frente al cierre
   # en una temporada reservada Y CLV medio > 0 en papel con n ≥ 100.
-  paper_only_markets: ["SPREAD", "ML"]
+  paper_only_markets: ["SPREAD", "ML", "TOTAL"]
 
 
 # ── Detección de movimiento de línea ─────────────────────────────────────────

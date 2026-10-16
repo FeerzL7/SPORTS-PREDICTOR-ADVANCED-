@@ -11,3 +11,6 @@ __pycache__/
 # Artefactos de herramientas
 .pytest_cache/
 logs/
+
+# Caché de descargas de las auditorías de fuentes (se reconstruye sola)
+data/*/raw/

@@ -254,11 +254,23 @@ def main() -> int:
         _export_ledger(runner, sport)
 
     # ── Exit code ─────────────────────────────────────────────────────
-    if result.errors and not result.active_picks:
-        print(f"\n{len(result.errors)} errores sin picks activos.")
+    #
+    # Los picks de solo-papel cuentan como trabajo hecho: con todos los
+    # mercados en papel nunca hay picks activos, y tratar eso como fallo
+    # haría que el ciclo diario marcara error casi todos los días.
+    #
+    # "Sin eventos para esta fecha" tampoco es un error: es un día sin
+    # partidos. Se excluye para que esos días den 2 (nada que hacer) y
+    # no 1, que queda reservado para fallos de verdad (Stage 10 de
+    # liquidación incluido).
+    paper_picks = getattr(result, "paper_picks", None) or []
+    real_errors = [e for e in result.errors
+                   if not e.startswith("[Stage1] Sin eventos")]
+    if real_errors and not result.active_picks and not paper_picks:
+        print(f"\n{len(real_errors)} errores sin picks activos ni de papel.")
         return 1
 
-    return 0 if result.active_picks else 2
+    return 0 if (result.active_picks or paper_picks) else 2
 
 
 # ── Funciones auxiliares ──────────────────────────────────────────────────────
