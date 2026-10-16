@@ -100,6 +100,7 @@ import argparse
 import csv
 import json
 import os
+import re
 import sys
 from datetime import datetime, timezone
 from pathlib import Path
@@ -158,6 +159,9 @@ FIELDNAMES: tuple[str, ...] = (
     "injury_type",
     "injury_detail",
     "injury_date",
+    "return_date",
+    "fantasy_status",
+    "short_comment",
 )
 
 
@@ -260,6 +264,37 @@ def _walk_teams(payload: Any) -> list[dict]:
     return []
 
 
+_ESPN_ID_PATTERNS = (
+    re.compile(r"/id/(\d+)"),               # .../nba/player/_/id/4585618/...
+    re.compile(r"/players/full/(\d+)\."),   # .../headshots/nba/players/full/4585618.png
+)
+
+
+def _athlete_id(athlete: dict) -> str:
+    """
+    Id de ESPN del jugador.
+
+    El objeto `athlete` del endpoint de lesiones no trae `id` (verificado
+    con --inspect, 2026-10): el id vive en las URLs de su ficha y de su
+    foto. Es la llave para cruzar con los box scores de hoopR, que usan
+    el mismo id de ESPN, y ponderar cada ausencia por sus minutos.
+    """
+    direct = _as_text(_first(athlete, "id", "uid"))
+    if direct:
+        return direct
+    hrefs = [link.get("href", "") for link in athlete.get("links") or []
+             if isinstance(link, dict)]
+    headshot = athlete.get("headshot")
+    if isinstance(headshot, dict):
+        hrefs.append(headshot.get("href", ""))
+    for href in hrefs:
+        for pattern in _ESPN_ID_PATTERNS:
+            match = pattern.search(href or "")
+            if match:
+                return match.group(1)
+    return ""
+
+
 def parse_injuries(payload: Any, sport: str, moment: datetime) -> list[dict]:
     """
     Convierte la respuesta en filas planas, de la forma más tolerante
@@ -270,6 +305,18 @@ def parse_injuries(payload: Any, sport: str, moment: datetime) -> list[dict]:
     vacía. El crudo ya está en disco, así que una extracción pobre es
     recuperable; abortar la captura por un esquema inesperado no lo
     sería.
+
+    Estructura verificada con --inspect (2026-10, NBA):
+
+        injuries[]                       un elemento por equipo
+            id, displayName              (sin abreviatura)
+            injuries[]                   un elemento por jugador
+                status                   'Out', 'Day-To-Day', ...
+                date, shortComment
+                type{name}               tipo de ESTADO, no de lesión
+                athlete{displayName, team{abbreviation}, links[], headshot}
+                details{type, detail, returnDate, fantasyStatus}
+                                         type = parte del cuerpo ('Knee')
     """
     rows: list[dict] = []
     captured = moment.isoformat(timespec="seconds").replace("+00:00", "Z")
@@ -295,15 +342,20 @@ def parse_injuries(payload: Any, sport: str, moment: datetime) -> list[dict]:
                 athlete = {}
 
             position = athlete.get("position")
+            details = item.get("details") if isinstance(item.get("details"), dict) else {}
             injury_detail = _first(item, "details", "detail")
+
+            # El equipo del endpoint no trae abreviatura; el jugador sí.
+            athlete_team = athlete.get("team") if isinstance(athlete.get("team"), dict) else {}
+            abbr = team_abbr or _as_text(_first(athlete_team, "abbreviation"))
 
             rows.append({
                 "captured_at":       captured,
                 "sport":             sport,
                 "team_id":           team_id,
-                "team_abbreviation": team_abbr,
+                "team_abbreviation": abbr,
                 "team_display_name": team_name,
-                "athlete_id":        _as_text(_first(athlete, "id", "uid")),
+                "athlete_id":        _athlete_id(athlete),
                 "athlete_name":      _as_text(
                     _first(athlete, "displayName", "fullName", "shortName")
                 ),
@@ -311,11 +363,18 @@ def parse_injuries(payload: Any, sport: str, moment: datetime) -> list[dict]:
                 "status":            _as_text(
                     _first(item, "status", "type", "injuryStatus")
                 ),
+                # `item.type` es el tipo de ESTADO ('INJURY_STATUS_OUT');
+                # la parte del cuerpo está en details.type ('Knee').
                 "injury_type":       _as_text(
-                    _first(item, "type", "shortComment")
+                    _first(details, "type") or _first(item, "type", "shortComment")
                 ),
-                "injury_detail":     _as_text(injury_detail),
+                "injury_detail":     _as_text(_first(details, "detail") or injury_detail),
                 "injury_date":       _as_text(_first(item, "date")),
+                "return_date":       _as_text(_first(details, "returnDate")),
+                # 'GTD' = game-time decision: el caso que mueve la línea
+                # en la última hora.
+                "fantasy_status":    _as_text(_first(details, "fantasyStatus")),
+                "short_comment":     _as_text(_first(item, "shortComment")),
             })
 
     return rows
