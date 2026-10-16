@@ -64,6 +64,37 @@ from core.contracts.pick import CandidatePick
 from core.tracking.protocols import SettlementProvider, SettlementResult, apply_settlement
 
 
+# ── Selección tal como se guarda en el ledger ─────────────────────────────────
+
+def ledger_selection(market: str, selection: str, line: float | None) -> str:
+    """
+    Selección con la línea embebida, que es el formato que leen los
+    settlement providers desde el ledger.
+
+        TOTAL   'Over', 8.5                  → 'Over 8.5'
+        SPREAD  'Kansas City Chiefs', -3.5   → 'Kansas City Chiefs -3.5'
+        SPREAD  'Kansas City Chiefs', 7.0    → 'Kansas City Chiefs +7.0'
+        ML      'New York Mets', None        → 'New York Mets'
+
+    BetLedgerEntry no tiene campo `line`: la línea viaja dentro de
+    `selection` ('over 47.0', 'LAC -3.5'), como documentan
+    sports/nfl/settlement.py:_split_selection y los tests de NFL y
+    fútbol.
+
+    CORRECCIÓN (2026-10): register_pick() guardaba `pick.selection` sin
+    la línea. Todo total se liquidaba como void (no hay línea contra la
+    que comparar) y el runline de MLB se reconstruía adivinando por el
+    precio. En los totales el signo se omite porque la línea es siempre
+    positiva; en los hándicaps es lo que distingue favorito de
+    underdog, así que se escribe siempre.
+    """
+    if line is None:
+        return selection
+    if market.upper().startswith("TOTAL"):
+        return f"{selection} {float(line)}"
+    return f"{selection} {float(line):+}"
+
+
 # ── Resultado de registro ─────────────────────────────────────────────────────
 
 @dataclass(frozen=True)
@@ -179,7 +210,7 @@ class ROITracker:
             event           = event_info.get("event",
                                f"{pick.event.away_team} @ {pick.event.home_team}"),
             market          = pick.market,
-            selection       = pick.selection,
+            selection       = ledger_selection(pick.market, pick.selection, pick.line),
             price           = pick.price,
             model_prob      = pick.model_prob_raw,
             ev              = pick.ev,

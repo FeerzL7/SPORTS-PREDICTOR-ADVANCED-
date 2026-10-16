@@ -444,26 +444,36 @@ class MLBSettlementProvider:
         market = entry.market.upper()
         sel    = entry.selection.lower()
 
+        # CORRECCIÓN (2026-10): ML y RL usaban _selection_is_winner, que
+        # ignoraba la selección y devolvía "ganó el local". Con eso TODO
+        # moneyline se liquidaba como ganado, y el runline se resolvía
+        # como si la selección fuera siempre del equipo que ganó. Ahora
+        # el lado sale de comparar la selección con el campo `event`
+        # del ledger ("Away @ Home"), que usa los mismos nombres
+        # completos que The Odds API.
         if market == "ML":
-            home_won = game.home_score > game.away_score
-            # Determinar si la selección era el equipo local
-            # desde el campo 'event' del ledger: "Away @ Home"
-            home_won_sel = _selection_is_winner(sel, game, is_home=True)
-            if home_won_sel is None:
+            side = _selection_side(entry)
+            if side is None:
                 return "void"
-            return "win" if home_won_sel == home_won else "lose"
+            if game.home_score == game.away_score:
+                return "null"
+            home_won = game.home_score > game.away_score
+            return "win" if home_won == (side == "home") else "lose"
 
         elif market in ("SPREAD", "RL"):
-            line = entry.price  # La línea viene del campo price en este contexto
-            # Aproximación: si price > 2.0 es el underdog (+1.5)
-            line = 1.5 if entry.price > 2.0 else -1.5
-            home_won  = game.home_score > game.away_score
-            home_cover = game.margin > line if home_won else False
-            is_home_sel = _selection_is_winner(sel, game, is_home=True)
-            if is_home_sel is None:
+            side = _selection_side(entry)
+            if side is None:
                 return "void"
-            covers = (game.margin + line) > 0 if is_home_sel else (-game.margin + line) > 0
-            return "win" if covers else "lose"
+            line = _extract_line_from_selection(entry.selection)
+            if line is None:
+                # Entradas registradas antes de que el ledger guardara la
+                # línea: el runline MLB es ±1.5 y el underdog cotiza por
+                # encima de 2.0. Aproximación heredada, solo para ellas.
+                line = 1.5 if entry.price > 2.0 else -1.5
+            margin = game.margin if side == "home" else -game.margin
+            if margin + line == 0:
+                return "null"
+            return "win" if margin + line > 0 else "lose"
 
         elif market == "TOTAL":
             total  = game.total
@@ -653,21 +663,45 @@ def _is_home_selection(
     return None
 
 
-def _selection_is_winner(
-    sel: str,
-    game: MLBGameResult,
-    is_home: bool,
-) -> bool | None:
-    """Retorna si la selección ganó el partido."""
-    home_won = game.home_score > game.away_score
-    if is_home:
-        return home_won
-    return not home_won
+def _team_name_only(selection: str) -> str:
+    """'New York Yankees -1.5' → 'new york yankees' (sin la línea)."""
+    words = []
+    for token in (selection or "").lower().split():
+        try:
+            float(token)
+        except ValueError:
+            words.append(token)
+    return " ".join(words)
+
+
+def _selection_side(entry: BetLedgerEntry) -> str | None:
+    """
+    'home' o 'away' según a qué equipo del partido corresponde la
+    selección. None si no se puede determinar, lo que lleva a void:
+    liquidar un pick cuyo equipo no se identifica sería adivinar.
+
+    El ledger guarda el partido como "Away @ Home" con los nombres
+    completos del calendario de MLB, que coinciden con los de The Odds
+    API de los que sale la selección.
+    """
+    away, sep, home = (entry.event or "").partition(" @ ")
+    if not sep:
+        return None
+    sel = _team_name_only(entry.selection)
+    home, away = home.strip().lower(), away.strip().lower()
+    if not sel:
+        return None
+    if sel == home:
+        return "home"
+    if sel == away:
+        return "away"
+    return None
 
 
 def _extract_line_from_selection(selection: str) -> float | None:
     """
-    Extrae la línea numérica de una selección como 'over 8.5' o 'under 9'.
+    Extrae la línea numérica de una selección: 'over 8.5', 'under 9',
+    'New York Yankees -1.5'. El signo se conserva.
     """
     parts = selection.lower().split()
     for part in parts:

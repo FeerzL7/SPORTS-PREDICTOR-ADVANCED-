@@ -56,13 +56,24 @@ Uso
     # El ledger de los mercados en solo-papel ({sport}_paper_roi_tracking.csv)
     python scripts/capture_closing.py --sport nfl --paper
 
-Automatización recomendada (cron)
------------------------------------
-    # MLB: 17:30 ET, antes de los partidos de tarde
-    30 21 * * * cd /ruta && python scripts/capture_closing.py --sport mlb
+    # Operable + papel con una sola llamada, solo partidos que empiezan
+    # en los próximos 75 minutos (los demás quedan para otra corrida)
+    python scripts/capture_closing.py --sport nfl --with-paper --max-lead-minutes 75
 
-    # NFL: domingo 12:15 ET, antes del bloque de las 13:00
-    15 17 * * 0 cd /ruta && python scripts/capture_closing.py --sport nfl
+Ventana de captura
+--------------------
+El CLV de un pick se registra UNA vez. Sin --max-lead-minutes, una
+corrida a mediodía fija el "cierre" de un partido de la noche horas
+antes de tiempo. Con la ventana, cada corrida captura solo los
+partidos que están por empezar y deja los demás pendientes; los que ya
+empezaron se descartan, porque su cuota actual es en vivo.
+
+Automatización
+----------------
+No programar este script a horas fijas: scripts/daily_cycle.py closing
+corre cada 30 minutos, consulta gratis a qué hora empieza cada partido
+y solo lo invoca cuando algún pick pendiente está dentro de la ventana.
+Ver scripts/register_daily_cycle.ps1.
 """
 
 from __future__ import annotations
@@ -116,6 +127,8 @@ def main() -> int:
     print(f"  CAPTURA DE CIERRE — {sport.upper()} | {date}")
     if args.dry_run:
         print(f"  Modo: DRY RUN (no escribe en el ledger)")
+    if args.max_lead_minutes is not None:
+        print(f"  Ventana: partidos que empiezan en ≤ {args.max_lead_minutes:.0f} min")
     print(f"{'=' * 62}\n")
 
     # ── Cargar configuración y plugin ─────────────────────────────
@@ -141,32 +154,35 @@ def main() -> int:
     # El ledger de papel tiene el mismo esquema: solo cambia el archivo.
     # Sin su CLV, los mercados en solo-papel no podrían salir nunca de
     # ese estado, porque el CLV es justo la evidencia que se les pide.
-    suffix = "_paper_roi_tracking.csv" if args.paper else "_roi_tracking.csv"
-    ledger_path = f"output/ledger/{sport}{suffix}"
-    if not Path(ledger_path).exists():
-        print(f"  No hay ledger en {ledger_path}.")
+    # Con --with-paper se procesan los dos con UNA sola llamada a la
+    # API: el precio actual de un partido es el mismo para ambos.
+    work = []
+    for label, path in _ledger_paths(sport, args):
+        if not Path(path).exists():
+            continue
+        store = CsvLedgerStore(path)
+        tracker = BankrollTracker(
+            store=store,
+            initial_bankroll=config.get("bankroll.initial_bankroll", default=1000.0),
+        )
+        pending = [e for e in store.load_all() if e.date == date and e.clv is None]
+        work.append((label, store, tracker, pending))
+
+    if not work:
+        print(f"  No hay ledger para {sport} en output/ledger/.")
         print(f"  Ejecutar primero: python scripts/run_daily.py --sport {sport}")
         return 2
 
-    store = CsvLedgerStore(ledger_path)
-    tracker = BankrollTracker(
-        store=store,
-        initial_bankroll=config.get("bankroll.initial_bankroll", default=1000.0),
-    )
-
-    pending = [
-        e for e in store.load_all()
-        if e.date == date and e.clv is None
-    ]
-
-    if not pending:
+    total_pending = sum(len(pending) for *_, pending in work)
+    if not total_pending:
+        # Sin llamada a la API: no se gasta un crédito si no hay nada
+        # que capturar.
         print(f"  Sin picks pendientes de cierre para {date}.")
-        already = sum(1 for e in store.load_all() if e.date == date)
-        if already:
-            print(f"  ({already} picks de esa fecha ya tienen CLV registrado)")
         return 0
 
-    print(f"  Picks pendientes de cierre: {len(pending)}\n")
+    for label, _, _, pending in work:
+        print(f"  Pendientes ({label}): {len(pending)}")
+    print()
 
     # ── Obtener las cuotas actuales ───────────────────────────────
     from core.odds.client import OddsAPIClient, OddsAPIConfig
@@ -202,27 +218,62 @@ def main() -> int:
     print()
 
     # ── Emparejar y calcular CLV ──────────────────────────────────
-    from core.evaluation.clv import CLVTracker
-
     preferred = plugin.get_market_definitions().get_preferred_line("SPREAD")
-    current = _index_current_prices(response.events, markets, preferred)
+    by_event = _index_prices_by_event(response.events, markets, preferred)
 
-    if not current:
+    if not by_event:
         print("  Ninguna cuota pudo extraerse de la respuesta.")
         print("  Verificar que los mercados solicitados coinciden con los")
         print("  que devuelve la API para este deporte.")
         return 1
-    captured, unmatched = 0, []
+
+    now = datetime.now(timezone.utc)
+    for label, store, tracker, pending in work:
+        _capture_ledger(label, store, tracker, pending, by_event, now, args)
+
+    if args.dry_run:
+        print("\n  [DRY RUN] No se escribió nada en el ledger.")
+
+    print()
+    return 0
+
+
+def _ledger_paths(sport: str, args) -> list[tuple[str, str]]:
+    """Ledgers a procesar: (etiqueta, ruta)."""
+    live  = ("operable", f"output/ledger/{sport}_roi_tracking.csv")
+    paper = ("papel",    f"output/ledger/{sport}_paper_roi_tracking.csv")
+    if args.paper:
+        return [paper]
+    return [live, paper] if args.with_paper else [live]
+
+
+def _capture_ledger(label, store, tracker, pending, by_event, now, args) -> None:
+    """Calcula y guarda el CLV de los picks pendientes de un ledger."""
+    from core.evaluation.clv import CLVTracker
+
+    if not pending:
+        return
+
+    print(f"  ── Ledger {label} {'─' * (50 - len(label))}")
+    captured, deferred, started, unmatched = 0, [], [], []
 
     for entry in pending:
-        price_now = _find_price(entry, current)
-        if price_now is None:
+        event = by_event.get(_entry_event_key(entry))
+        if event is None:
             unmatched.append(entry)
             continue
 
-        clv = CLVTracker.calculate_clv(
-            pick_price=entry.price, closing_price=price_now
-        )
+        status = _window_status(event["commence_time"], now, args.max_lead_minutes)
+        if status == "started":
+            started.append(entry)
+            continue
+        if status == "deferred":
+            deferred.append(entry)
+            continue
+
+        price_now = _find_price(entry, event["prices"])
+        clv = (CLVTracker.calculate_clv(pick_price=entry.price, closing_price=price_now)
+               if price_now is not None else None)
         if clv is None:
             unmatched.append(entry)
             continue
@@ -236,60 +287,68 @@ def main() -> int:
             tracker.update_clv(entry_id=entry.entry_id, clv=clv)
         captured += 1
 
-    # ── Resumen ───────────────────────────────────────────────────
-    print()
-    print(f"{'─' * 62}")
-    print(f"  Capturados : {captured} de {len(pending)}")
+    print(f"    Capturados : {captured} de {len(pending)}")
+    if deferred:
+        print(f"    Aplazados  : {len(deferred)} (empiezan después de la ventana; "
+              f"se capturan en una corrida posterior)")
+    if started:
+        print(f"    Ya empezados: {len(started)} — su cierre se perdió: la cuota "
+              f"actual sería en vivo, no de cierre")
     if unmatched:
-        print(f"  Sin emparejar: {len(unmatched)}")
+        print(f"    Sin emparejar: {len(unmatched)}")
         for e in unmatched[:5]:
-            print(f"    - {e.market} {e.selection}")
+            print(f"      - {e.event} | {e.market} {e.selection}")
         if len(unmatched) > 5:
-            print(f"    ... y {len(unmatched) - 5} más")
-        print()
-        print("  Un pick sin emparejar suele significar que el mercado ya")
-        print("  cerró para ese partido. Capturar antes la próxima vez.")
+            print(f"      ... y {len(unmatched) - 5} más")
 
-    if captured:
+    if captured and not args.dry_run:
         clvs = []
-        for entry in pending:
-            refreshed = store.load_by_id(entry.entry_id)
+        for e in pending:
+            refreshed = store.load_by_id(e.entry_id)
             if refreshed and refreshed.clv is not None:
                 clvs.append(refreshed.clv)
         if clvs:
             mean = sum(clvs) / len(clvs)
             positive = sum(1 for c in clvs if c > 0)
-            print(f"  CLV medio  : {mean:+.2f}%")
-            print(f"  Positivos  : {positive}/{len(clvs)}")
-
-    if args.dry_run:
-        print("\n  [DRY RUN] No se escribió nada en el ledger.")
-
+            print(f"    CLV medio  : {mean:+.2f}%   positivos {positive}/{len(clvs)}")
     print()
-    return 0
 
 
 # ── Emparejamiento de cuotas ─────────────────────────────────────────────────
 
-def _index_current_prices(events, markets: list[str],
-                          preferred_line: float | None) -> dict:
+def _norm_team(name) -> str:
+    """Nombre de equipo comparable: minúsculas, sin acentos ni puntuación."""
+    import unicodedata
+    text = unicodedata.normalize("NFKD", str(name or "")).encode("ascii", "ignore").decode()
+    return " ".join("".join(c if c.isalnum() else " " for c in text.lower()).split())
+
+
+def _event_key(away, home) -> str:
+    return f"{_norm_team(away)}@{_norm_team(home)}"
+
+
+def _entry_event_key(entry) -> str | None:
+    """Clave del partido de un pick, desde su campo event ("Away @ Home")."""
+    away, sep, home = (entry.event or "").partition(" @ ")
+    return _event_key(away, home) if sep else None
+
+
+def _index_prices_by_event(events, markets: list[str],
+                           preferred_line: float | None) -> dict:
     """
-    Indexa las cuotas actuales por (mercado, selección, línea).
+    Indexa las cuotas actuales POR PARTIDO.
 
-    RawOddsEvent NO expone una lista de cuotas ya procesadas: guarda el
-    bloque `bookmakers` como dict crudo, porque su estructura varía
-    según los mercados pedidos. Extraer los precios es responsabilidad
-    de OddsNormalizer, no del cliente HTTP.
-    
-    Una primera versión de esta función hacía
-    `getattr(event, "odds", [])`, que devolvía lista vacía en silencio:
-    el script habría reportado "0 capturados" sin un solo error,
-    dejando el ledger sin CLV indefinidamente. Usar el normalizer —el
-    mismo que usa el pipeline en Stage 5— elimina esa divergencia.
+        {clave_partido: {"commence_time": str | None,
+                         "prices": {(mercado, selección, línea): precio}}}
 
-    La clave incluye la línea porque un mismo mercado tiene precios
-    distintos según el handicap: un total de 44.5 y otro de 47.5 son
-    apuestas diferentes aunque compartan mercado y selección.
+    CORRECCIÓN (2026-10): el índice era global por (mercado, selección,
+    línea). En totales la selección es solo 'over'/'under', así que dos
+    partidos con la misma línea compartían clave y el pick podía quedar
+    con el cierre de OTRO partido —el más alto de los dos—. Spread y
+    moneyline se salvaban porque la selección lleva el nombre del equipo.
+
+    RawOddsEvent guarda el bloque `bookmakers` crudo: extraer precios es
+    trabajo de OddsNormalizer, el mismo que usa el pipeline en Stage 5.
     """
     from core.odds.normalizer import OddsNormalizer
 
@@ -305,20 +364,43 @@ def _index_current_prices(events, markets: list[str],
         except Exception:
             continue
 
+        key = _event_key(getattr(event, "away_team", ""), getattr(event, "home_team", ""))
+        slot = index.setdefault(key, {
+            "commence_time": getattr(event, "commence_time", None),
+            "prices": {},
+        })
         for odds in odds_list:
-            key = (odds.market.upper(), odds.selection.strip().lower(), odds.line)
-            # extract_best ya devuelve el mejor precio por selección,
-            # pero un mismo par puede aparecer en varios eventos si la
-            # API los duplica; nos quedamos con el más alto.
-            if key not in index or odds.price > index[key]:
-                index[key] = odds.price
+            price_key = (odds.market.upper(), odds.selection.strip().lower(), odds.line)
+            if price_key not in slot["prices"] or odds.price > slot["prices"][price_key]:
+                slot["prices"][price_key] = odds.price
 
-    return index
+    return {k: v for k, v in index.items() if v["prices"]}
+
+
+def _window_status(commence_time, now, max_lead_minutes) -> str:
+    """
+    'capture', 'deferred' (empieza más tarde que la ventana) o
+    'started' (ya empezó: la cuota actual sería en vivo).
+
+    Sin hora de inicio legible se captura: es preferible un cierre
+    aproximado a ninguno, y es el comportamiento anterior.
+    """
+    from core.odds.book_archive import parse_iso8601
+
+    start = parse_iso8601(commence_time)
+    if start is None:
+        return "capture"
+    lead = (start - now).total_seconds() / 60.0
+    if lead < 0:
+        return "started"
+    if max_lead_minutes is not None and lead > max_lead_minutes:
+        return "deferred"
+    return "capture"
 
 
 def _find_price(entry, index: dict) -> float | None:
     """
-    Busca el precio actual de un pick del ledger.
+    Busca el precio actual de un pick entre las cuotas de SU partido.
 
     El ledger guarda la selección con la línea embebida ('over 47.0'),
     igual que en el settlement. Hay que separarlas antes de buscar.
@@ -365,7 +447,13 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--dry-run", action="store_true",
                         help="Muestra el CLV sin escribirlo en el ledger")
     parser.add_argument("--paper", action="store_true",
-                        help="Usa el ledger de los mercados en solo-papel")
+                        help="Usa SOLO el ledger de los mercados en solo-papel")
+    parser.add_argument("--with-paper", action="store_true",
+                        help="Procesa también el ledger de papel con la misma "
+                             "llamada a la API (sin coste extra)")
+    parser.add_argument("--max-lead-minutes", type=float, default=None,
+                        help="Captura solo los partidos que empiezan en esta "
+                             "ventana; los demás quedan para otra corrida")
     return parser.parse_args()
 
 

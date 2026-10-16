@@ -1,0 +1,173 @@
+"""
+tests/core/test_daily_cycle.py
+
+Decisiones del ciclo diario (scripts/daily_cycle.py), sin red ni
+créditos: los scripts y la consulta de /events se sustituyen por
+funciones falsas que registran lo que se habría ejecutado.
+"""
+
+import sys, os
+sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', '..'))
+
+import importlib.util
+from datetime import datetime, timedelta, timezone
+from typing import Any
+
+import pytest
+
+_ROOT = os.path.join(os.path.dirname(__file__), '..', '..')
+
+
+def _load(name):
+    spec = importlib.util.spec_from_file_location(name, os.path.join(_ROOT, 'scripts', f'{name}.py'))
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+dc = _load("daily_cycle")
+cc = _load("capture_closing")
+
+NOW = datetime(2026, 10, 18, 16, 0, tzinfo=timezone.utc)
+DATE = "2026-10-18"
+
+
+def iso(minutes):
+    return (NOW + timedelta(minutes=minutes)).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def make_entry(event, entry_id, clv=None, date=DATE):
+    from core.contracts.ledger import BetLedgerEntry
+    fields: dict[str, Any] = dict(
+        entry_id=entry_id, sport="nfl", league="NFL", date=date, event=event,
+        market="TOTAL", selection="Under 44.5", price=1.95, model_prob=0.55,
+        ev=5.0, stake_pct=1, stake_amount=10.0, bankroll_before=1000.0,
+        result="pending", model_version="nfl-v1.0",
+        created_at="2026-10-18T12:00:00Z", clv=clv,
+    )
+    return BetLedgerEntry(**fields)
+
+
+class Recorder:
+    """Sustituye a run_script: guarda los comandos y devuelve un código."""
+    def __init__(self, code=0):
+        self.calls, self.code = [], code
+
+    def __call__(self, cmd, log):
+        self.calls.append(cmd)
+        return self.code
+
+
+def events(*games, remaining=400):
+    payload = [{"away_team": a, "home_team": h, "commence_time": iso(m)} for a, h, m in games]
+    return lambda sport_key: (payload, remaining)
+
+
+@pytest.fixture
+def log(tmp_path):
+    return dc.CycleLog(DATE, "test", base_dir=tmp_path)
+
+
+@pytest.fixture
+def ledger(tmp_path, monkeypatch):
+    """Ledger operable en un directorio temporal, con dos picks pendientes."""
+    from core.bankroll.tracker import BankrollTracker, CsvLedgerStore
+    monkeypatch.chdir(tmp_path)
+    os.makedirs("output/ledger")
+    store = CsvLedgerStore("output/ledger/nfl_roi_tracking.csv")
+    tracker = BankrollTracker(store=store)
+    tracker.register(make_entry("Las Vegas Raiders @ Kansas City Chiefs", "soon"))
+    tracker.register(make_entry("Denver Broncos @ Los Angeles Chargers", "night"))
+    tracker.register(make_entry("Denver Broncos @ Los Angeles Chargers", "done", clv=2.0))
+    return store
+
+
+# ── Fase picks ────────────────────────────────────────────────────────────────
+
+class TestPicks:
+    def test_runs_every_sport_with_local_date(self, log):
+        rec = Recorder(code=2)  # 2 = sin picks, no es error
+        code = dc.phase_picks(["nfl", "mlb"], DATE, log, plan=False, min_credits=40,
+                              runner=rec, events_fn=events())
+        assert code == 0
+        assert rec.calls == [
+            ["scripts/run_daily.py", "--sport", "nfl", "--date", DATE],
+            ["scripts/run_daily.py", "--sport", "mlb", "--date", DATE],
+        ]
+
+    def test_runs_even_without_games_to_settle_yesterday(self, log):
+        rec = Recorder()
+        dc.phase_picks(["mlb"], DATE, log, plan=False, min_credits=40,
+                       runner=rec, events_fn=events())  # sin partidos
+        assert len(rec.calls) == 1
+
+    def test_low_credits_settles_without_odds(self, log):
+        rec = Recorder()
+        dc.phase_picks(["nfl"], DATE, log, plan=False, min_credits=40,
+                       runner=rec, events_fn=events(remaining=10))
+        assert rec.calls[0][-2:] == ["--skip-stages", "5"]
+
+    def test_error_code_is_reported(self, log):
+        assert dc.phase_picks(["nfl"], DATE, log, plan=False, min_credits=40,
+                              runner=Recorder(code=1), events_fn=events()) == 1
+
+    def test_plan_executes_nothing(self, log):
+        rec = Recorder()
+        dc.phase_picks(["nfl"], DATE, log, plan=True, min_credits=40,
+                       runner=rec, events_fn=events())
+        assert rec.calls == []
+
+
+# ── Fase closing ──────────────────────────────────────────────────────────────
+
+class TestClosing:
+    def test_no_pending_spends_nothing(self, log, tmp_path, monkeypatch):
+        monkeypatch.chdir(tmp_path)
+        rec = Recorder()
+        called = []
+        code = dc.phase_closing(["nfl"], DATE, log, plan=False, window_minutes=45,
+                                min_credits=40, now=NOW, runner=rec,
+                                events_fn=lambda k: called.append(k) or ([], 400), cc=cc)
+        assert code == 0 and rec.calls == [] and called == []  # ni siquiera /events
+
+    def test_captures_when_a_game_is_about_to_start(self, log, ledger):
+        rec = Recorder()
+        dc.phase_closing(["nfl"], DATE, log, plan=False, window_minutes=45, min_credits=40,
+                         now=NOW, runner=rec, cc=cc, events_fn=events(
+                             ("Las Vegas Raiders", "Kansas City Chiefs", 30),
+                             ("Denver Broncos", "Los Angeles Chargers", 300)))
+        assert rec.calls == [["scripts/capture_closing.py", "--sport", "nfl", "--date", DATE,
+                              "--with-paper", "--max-lead-minutes", "45"]]
+
+    def test_waits_when_no_game_is_in_window(self, log, ledger):
+        rec = Recorder()
+        dc.phase_closing(["nfl"], DATE, log, plan=False, window_minutes=45, min_credits=40,
+                         now=NOW, runner=rec, cc=cc, events_fn=events(
+                             ("Las Vegas Raiders", "Kansas City Chiefs", 120),
+                             ("Denver Broncos", "Los Angeles Chargers", 300)))
+        assert rec.calls == []
+
+    def test_low_credits_does_not_spend(self, log, ledger):
+        rec = Recorder()
+        dc.phase_closing(["nfl"], DATE, log, plan=False, window_minutes=45, min_credits=40,
+                         now=NOW, runner=rec, cc=cc, events_fn=events(
+                             ("Las Vegas Raiders", "Kansas City Chiefs", 30), remaining=5))
+        assert rec.calls == []
+
+    def test_pending_ignores_entries_with_clv_and_other_dates(self, ledger):
+        ids = {e.entry_id for e in dc.pending_entries("nfl", DATE, cc)}
+        assert ids == {"soon", "night"}
+
+    def test_events_failure_is_an_error_but_spends_nothing(self, log, ledger):
+        def boom(k):
+            raise RuntimeError("sin red")
+        rec = Recorder()
+        code = dc.phase_closing(["nfl"], DATE, log, plan=False, window_minutes=45,
+                                min_credits=40, now=NOW, runner=rec, events_fn=boom, cc=cc)
+        assert code == 1 and rec.calls == []
+
+
+def test_log_file_is_written(tmp_path):
+    log = dc.CycleLog(DATE, "picks", base_dir=tmp_path)
+    log("hola — ñandú")
+    assert "hola — ñandú" in (tmp_path / f"{DATE}.log").read_text(encoding="utf-8")
