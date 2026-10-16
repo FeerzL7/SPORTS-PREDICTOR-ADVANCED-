@@ -289,6 +289,10 @@ class PipelineRunner:
     roi_tracker     -- ROITracker conectado al BankrollTracker.
     clv_tracker     -- CLVTracker para registro de opening lines.
     config          -- RunnerConfig. Default: producción sin dry_run.
+    book_archive    -- BookArchive opcional para el archivo de precios
+                      por casa. None desactiva el archivo y el
+                      pipeline se comporta igual que antes del
+                      cableado.
     """
 
     def __init__(
@@ -303,6 +307,7 @@ class PipelineRunner:
         roi_tracker:    Any,  # ROITracker
         clv_tracker:    Any,  # CLVTracker
         config:         RunnerConfig | None = None,
+        book_archive:   Any = None,  # BookArchive | None
     ) -> None:
         self._plugin        = plugin
         self._odds_client   = odds_client
@@ -314,6 +319,10 @@ class PipelineRunner:
         self._roi_tracker   = roi_tracker
         self._clv_tracker   = clv_tracker
         self._config        = config or RunnerConfig()
+
+        # Archivo de precios por casa. Opcional: si es None el
+        # pipeline se comporta exactamente como antes del parche.
+        self._book_archive  = book_archive
 
     # ── Punto de entrada ──────────────────────────────────────────────────────
 
@@ -567,6 +576,13 @@ class PipelineRunner:
         snap_date = self._config.odds_snapshot_date or context.date
         sport = sport_ids[0]
 
+        # Lote del archivo de casas. Se acumula dentro del bucle y se
+        # escribe una sola vez al final, con un único instante de
+        # captura: todas estas cuotas vienen de la misma respuesta
+        # HTTP, así que compartir el timestamp es más fiel que tomar
+        # el reloj por evento.
+        archive_batch: list[tuple[str, str | None, list]] = []
+
         # ── Emparejador de eventos ─────────────────────────────────
         #
         # Por defecto se empareja por el id de The Odds API, que el
@@ -649,12 +665,52 @@ class PipelineRunner:
             context.market_odds[event.event_id] = market_odds
 
             # Guardar snapshot para Line Movement (Stage 7)
+            #
+            # Se le sigue pasando market_odds (mejor precio por
+            # selección) DELIBERADAMENTE. OddsSnapshot.get_odds_map()
+            # indexa por (market, selection, line), clave que deja de
+            # ser única con precios de varias casas: el diccionario
+            # se quedaría con la última casa que entre, de forma
+            # arbitraria, y el Stage 7 compararía snapshots formados
+            # por casas distintas. El archivo de casas va aparte.
             self._line_detector.snapshot(
                 odds          = market_odds,
                 event_id      = event.event_id,
                 sport         = sport,
                 snapshot_date = snap_date,
             )
+
+            # Acumular TODOS los precios para el archivo.
+            #
+            # extract_all() devuelve un MarketOdds por
+            # (selection, line, bookmaker). Es el mismo raw_event que
+            # ya descargamos, así que esto no cuesta un solo crédito
+            # adicional de API — solo deja de tirar la información.
+            if self._book_archive is not None and self._book_archive.enabled:
+                archive_batch.append((
+                    raw_event.event_id,
+                    raw_event.commence_time,
+                    self._normalizer.extract_all(
+                        raw_event = raw_event,
+                        markets   = mkt.get_core_markets(),
+                    ),
+                ))
+
+        # ── Archivo de precios por casa ────────────────────────────
+        #
+        # Fuera del bucle: una sola escritura por ejecución. Nunca
+        # lanza — un fallo de disco se reporta como error del stage y
+        # la ejecución continúa, porque perder una captura no debe
+        # tumbar un run que iba a producir picks.
+        if self._book_archive is not None and archive_batch:
+            captured = self._book_archive.capture_many(
+                sport  = sport,
+                events = archive_batch,
+            )
+            context.set_meta("book_archive_rows", captured.rows_written)
+            context.set_meta("book_archive_books", captured.bookmakers)
+            for message in captured.errors:
+                context.add_error("Stage5", message)
 
         self._log_stage_time(context, "stage_5", t)
 
@@ -958,6 +1014,7 @@ def build_runner(
     from core.odds.client import OddsAPIClient, OddsAPIConfig
     from core.odds.normalizer import OddsNormalizer
     from core.odds.line_movement import LineMovementDetector, JsonSnapshotStore
+    from core.odds.book_archive import build_default_archive
     from core.value.blending import BlendingEngine
     from core.value.kelly import KellyCriterion
     from core.value.filters import MarketFilters
@@ -989,6 +1046,12 @@ def build_runner(
     normalizer    = OddsNormalizer()
     line_detector = LineMovementDetector(store=JsonSnapshotStore())
 
+    # Archivo de precios por casa. Activado por defecto: los datos ya
+    # están descargados y no se pueden recomprar después.
+    book_archive  = build_default_archive(
+        enabled = bool(config_loader.get("book_archive.enabled", default=True)),
+    )
+
     # Value
     blending      = BlendingEngine(config=config_loader)
     kelly         = KellyCriterion(config=config_loader)
@@ -1016,4 +1079,5 @@ def build_runner(
         roi_tracker   = roi_tracker,
         clv_tracker   = clv_tracker,
         config        = RunnerConfig(dry_run=dry_run),
+        book_archive  = book_archive,
     )
