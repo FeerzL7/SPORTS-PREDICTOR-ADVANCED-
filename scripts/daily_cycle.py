@@ -46,10 +46,14 @@ hacia atrás. Por eso NBA entra como deporte SOLO DE CAPTURA:
 
     lesiones (ESPN, 0 créditos)   picks: si hay partidos en 24 h
                                   closing: si alguno empieza en ≤ 90 min
+    precio de la mañana por casa  picks: si hay partidos en 24 h
+    (spreads+totals, 2 créditos)
     precios de cierre por casa    closing: si alguno empieza en (15, 45]
     (spreads+totals, 2 créditos)  min — cada tanda una sola vez
 
-Coste estimado: ~150-200 créditos/mes en temporada regular.
+Mañana → cierre es el movimiento de línea que se cruzará con los
+cambios de estado de lesiones. Coste estimado: ~200-250 créditos/mes en
+temporada regular (unos 50 del precio de la mañana).
 
 POR QUÉ SIN FÚTBOL
 -------------------
@@ -75,6 +79,11 @@ Uso
     python scripts/daily_cycle.py closing --capture-sports     # sin capturas NBA
 
 Registro en: logs/daily_cycle/AAAA-MM-DD.log
+
+Respaldo (opcional): con SPORTS_BACKUP_DIR=<carpeta> en el .env, la fase
+picks copia cada día output/ledger, output/book_archive y
+output/availability_archive a <carpeta>/sports-predictor/ (solo lo nuevo
+o modificado; nunca borra en el destino).
 
 Códigos de salida: 0 todo bien (incluido "nada que hacer"), 1 algún paso
 falló.
@@ -120,6 +129,9 @@ DEFAULT_CAPTURE_SPORTS = ("nba",)
 # Lesiones: foto en cada corrida con algún partido a ≤ 90 min (0
 # créditos); el estado cambia hasta poco antes del inicio.
 AVAILABILITY_WINDOW_MIN = 90.0
+# Fase picks (mañana): foto de lesiones y precio de la mañana de los
+# partidos de las próximas 24 h.
+MORNING_WINDOW_MIN = 24 * 60.0
 # Precios de cierre: se dispara solo si algún partido empieza en
 # (15, 45] min. Con cadencia de 30 min cada tanda cae ahí exactamente
 # una vez, así que no se paga dos veces la misma tanda.
@@ -301,9 +313,19 @@ def capture_sport(sport: str, phase: str, log: CycleLog, plan: bool,
     """
     Capturas de un deporte sin modelo. Devuelve el número de fallos.
 
-    picks    foto de lesiones si hay partidos en las próximas 24 h.
+    picks    foto de lesiones y PRECIO DE LA MAÑANA por casa, si hay
+             partidos en las próximas 24 h.
     closing  foto de lesiones si alguno empieza en ≤ 90 min, y precios de
              cierre por casa si alguno empieza en (15, ventana] min.
+
+    Por qué el precio de la mañana
+    -------------------------------
+    Con solo el cierre no se puede responder la pregunta que justifica
+    capturar lesiones: ¿se mueve la línea DESPUÉS de la noticia? Hace
+    falta un precio anterior —el de la mañana, antes de la mayoría de
+    las actualizaciones de estado— para medir mañana → cierre y cruzarlo
+    con los cambios entre fotos de lesiones. book_archive guarda
+    `lead_minutes`, así que ambas capturas se distinguen sin otra marca.
     """
     spec = CAPTURE_SPORTS[sport]
     try:
@@ -315,7 +337,7 @@ def capture_sport(sport: str, phase: str, log: CycleLog, plan: bool,
     leads = minutes_until_start(events, now)
     failures = 0
 
-    availability_window = 24 * 60.0 if phase == "picks" else AVAILABILITY_WINDOW_MIN
+    availability_window = MORNING_WINDOW_MIN if phase == "picks" else AVAILABILITY_WINDOW_MIN
     if any(lead <= availability_window for lead in leads):
         cmd = ["scripts/capture_availability.py", "--sport", sport]
         if plan:
@@ -326,26 +348,97 @@ def capture_sport(sport: str, phase: str, log: CycleLog, plan: bool,
         log(f"{sport}: ningún partido en las próximas "
             f"{availability_window / 60:.1f} h — sin foto de lesiones")
 
-    if phase != "closing":
+    if phase == "picks":
+        if any(lead <= MORNING_WINDOW_MIN for lead in leads):
+            failures += _capture_prices(sport, spec, MORNING_WINDOW_MIN, "de la mañana",
+                                        remaining, min_credits, plan, log, runner)
         return failures
 
-    if not any(CLOSING_MIN_LEAD < lead <= window_minutes for lead in leads):
-        return failures
+    if any(CLOSING_MIN_LEAD < lead <= window_minutes for lead in leads):
+        failures += _capture_prices(sport, spec, window_minutes, "de cierre",
+                                    remaining, min_credits, plan, log, runner)
+    return failures
+
+
+# ── Respaldo ──────────────────────────────────────────────────────────────────
+#
+# Los archivos capturados no se pueden volver a descargar: el histórico
+# de lesiones previo al partido no existe en ninguna fuente, y el de
+# precios por casa no tiene proveedor barato. Tampoco se versionan. Una
+# copia diaria fuera del disco del proyecto es lo mínimo.
+
+BACKUP_ENV_VAR = "SPORTS_BACKUP_DIR"
+BACKUP_SOURCES = ("output/ledger", "output/book_archive", "output/availability_archive")
+
+
+def backup_outputs(dest_root: Path, log: CycleLog, plan: bool,
+                   project_root: Path = _PROJECT_ROOT) -> int:
+    """
+    Copia a `dest_root/sports-predictor/` los archivos nuevos o cambiados.
+
+    Nunca borra en el destino: un archivo que desaparezca del proyecto
+    por error sigue a salvo en la copia. Compara tamaño y fecha de
+    modificación, así que una corrida sin cambios no copia nada.
+    Devuelve 1 si falló, 0 si no.
+    """
+    import shutil
+
+    target_base = dest_root / "sports-predictor"
+    copied = 0
+    try:
+        for rel in BACKUP_SOURCES:
+            source = project_root / rel
+            if not source.is_dir():
+                continue
+            for path in source.rglob("*"):
+                if not path.is_file():
+                    continue
+                target = target_base / path.relative_to(project_root)
+                stat = path.stat()
+                if target.exists():
+                    t = target.stat()
+                    if t.st_size == stat.st_size and int(t.st_mtime) >= int(stat.st_mtime):
+                        continue
+                copied += 1
+                if not plan:
+                    target.parent.mkdir(parents=True, exist_ok=True)
+                    shutil.copy2(path, target)
+    except OSError as error:
+        log(f"respaldo: falló ({type(error).__name__}: {error})")
+        return 1
+
+    verb = "copiaría" if plan else "copiados"
+    log(f"respaldo: {copied} archivos {verb} → {target_base}")
+    return 0
+
+
+def _maybe_backup(log: CycleLog, plan: bool) -> int:
+    dest = os.environ.get(BACKUP_ENV_VAR, "").strip()
+    if not dest:
+        log(f"respaldo: desactivado (definir {BACKUP_ENV_VAR} en el .env)")
+        return 0
+    return backup_outputs(Path(dest), log, plan)
+
+
+def _capture_prices(sport, spec, max_lead, label, remaining, min_credits,
+                    plan, log, runner) -> int:
+    """Una llamada a capture_book_odds.py. Devuelve 1 si falló."""
     if remaining is not None and remaining < min_credits:
-        log(f"{sport}: partidos por empezar pero quedan {remaining} créditos "
-            f"(< {min_credits}); no se capturan precios")
-        return failures
+        log(f"{sport}: quedan {remaining} créditos (< {min_credits}); "
+            f"no se capturan precios {label}")
+        return 0
 
     cmd = ["scripts/capture_book_odds.py", "--sport", sport,
            "--markets", spec["markets"],
-           "--max-lead-minutes", f"{window_minutes:.0f}",
+           "--max-lead-minutes", f"{max_lead:.0f}",
            "--min-credits", str(min_credits)]
     cost = len(spec["markets"].split(","))
     if plan:
-        log(f"{sport}: [plan] correría: python {' '.join(cmd)}  ({cost} créditos)")
-    elif runner(cmd, log) not in _CAPTURE_OK:
-        failures += 1
-    return failures
+        log(f"{sport}: [plan] correría (precios {label}): python {' '.join(cmd)}  "
+            f"({cost} créditos)")
+        return 0
+    log(f"{sport}: precios {label} ({cost} créditos)")
+    return 0 if runner(cmd, log) in _CAPTURE_OK else 1
 
 
 # ── Fases ─────────────────────────────────────────────────────────────────────
@@ -457,6 +550,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.phase == "picks":
         code = phase_picks(args.sports, date, log, args.plan, args.min_credits,
                            capture_sports=args.capture_sports)
+        # Una vez al día, después de liquidar y capturar: el respaldo
+        # incluye lo que esta misma corrida acaba de escribir.
+        code = max(code, _maybe_backup(log, args.plan))
     else:
         code = phase_closing(args.sports, date, log, args.plan,
                              args.window, args.min_credits,
