@@ -178,6 +178,8 @@ def test_log_file_is_written(tmp_path):
 AVAIL = ["scripts/capture_availability.py", "--sport", "nba"]
 BOOKS = ["scripts/capture_book_odds.py", "--sport", "nba", "--markets", "spreads,totals",
          "--max-lead-minutes", "45", "--min-credits", "40"]
+MORNING = ["scripts/capture_book_odds.py", "--sport", "nba", "--markets", "spreads,totals",
+           "--max-lead-minutes", "1440", "--min-credits", "40"]
 
 
 def nba_events(*minutes, remaining=400):
@@ -199,9 +201,17 @@ class _NullLog:
 
 
 class TestNbaCapture:
-    def test_morning_snapshot_when_games_today(self):
+    def test_morning_snapshot_and_prices_when_games_today(self):
         calls, _ = capture("picks", nba_events(600))
+        assert calls == [AVAIL, MORNING]
+
+    def test_morning_prices_skipped_with_low_credits(self):
+        calls, _ = capture("picks", nba_events(600, remaining=5))
         assert calls == [AVAIL]
+
+    def test_morning_ignores_games_beyond_24h(self):
+        calls, _ = capture("picks", nba_events(30 * 60))
+        assert calls == []
 
     def test_no_snapshot_without_games(self):
         calls, _ = capture("picks", nba_events())
@@ -276,3 +286,59 @@ class TestRedaction:
         with pytest.raises(RuntimeError) as info:
             dc.fetch_events("basketball_nba")
         assert "clave-super-secreta-42" not in str(info.value)
+
+
+# ── Respaldo ──────────────────────────────────────────────────────────────────
+
+class TestBackup:
+    def make_project(self, root):
+        for rel, content in [("output/ledger/nfl_roi_tracking.csv", "a,b\n"),
+                             ("output/book_archive/basketball_nba/2026-10.csv", "x\n"),
+                             ("output/availability_archive/nba/raw/2026-10-20T1500Z.json", "{}"),
+                             ("output/cache/no_se_respalda.parquet", "cache")]:
+            path = root / rel
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(content, encoding="utf-8")
+
+    def test_copies_archives_and_ledgers_only(self, tmp_path):
+        project, dest = tmp_path / "proyecto", tmp_path / "respaldo"
+        self.make_project(project)
+        assert dc.backup_outputs(dest, _NullLog(), plan=False, project_root=project) == 0
+        copied = sorted(p.relative_to(dest).as_posix() for p in dest.rglob("*") if p.is_file())
+        assert copied == [
+            "sports-predictor/output/availability_archive/nba/raw/2026-10-20T1500Z.json",
+            "sports-predictor/output/book_archive/basketball_nba/2026-10.csv",
+            "sports-predictor/output/ledger/nfl_roi_tracking.csv",
+        ]
+
+    def test_second_run_copies_nothing_and_never_deletes(self, tmp_path):
+        project, dest = tmp_path / "proyecto", tmp_path / "respaldo"
+        self.make_project(project)
+        dc.backup_outputs(dest, _NullLog(), plan=False, project_root=project)
+        (project / "output/ledger/nfl_roi_tracking.csv").unlink()
+
+        messages = []
+        dc.backup_outputs(dest, messages.append, plan=False, project_root=project)
+        assert "0 archivos" in messages[-1]
+        assert (dest / "sports-predictor/output/ledger/nfl_roi_tracking.csv").exists()
+
+    def test_changed_file_is_copied_again(self, tmp_path):
+        project, dest = tmp_path / "proyecto", tmp_path / "respaldo"
+        self.make_project(project)
+        dc.backup_outputs(dest, _NullLog(), plan=False, project_root=project)
+        (project / "output/ledger/nfl_roi_tracking.csv").write_text("a,b\n1,2\n", encoding="utf-8")
+        dc.backup_outputs(dest, _NullLog(), plan=False, project_root=project)
+        assert (dest / "sports-predictor/output/ledger/nfl_roi_tracking.csv").read_text(
+            encoding="utf-8") == "a,b\n1,2\n"
+
+    def test_plan_copies_nothing(self, tmp_path):
+        project, dest = tmp_path / "proyecto", tmp_path / "respaldo"
+        self.make_project(project)
+        dc.backup_outputs(dest, _NullLog(), plan=True, project_root=project)
+        assert not dest.exists()
+
+    def test_disabled_without_env_var(self, monkeypatch):
+        monkeypatch.delenv(dc.BACKUP_ENV_VAR, raising=False)
+        messages = []
+        assert dc._maybe_backup(messages.append, plan=False) == 0
+        assert "desactivado" in messages[0]
