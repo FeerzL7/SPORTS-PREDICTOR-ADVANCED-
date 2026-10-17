@@ -245,3 +245,34 @@ class TestNbaCapture:
                          now=NOW, runner=rec, events_fn=nba_events(30), cc=cc,
                          capture_sports=["nba"])
         assert rec.calls == [AVAIL, BOOKS]
+
+
+# ── Credenciales fuera del log ────────────────────────────────────────────────
+
+class TestRedaction:
+    def test_api_key_in_url_is_hidden(self):
+        text = "Max retries exceeded with url: /v4/sports/x/events?apiKey=abc123def456&regions=us"
+        assert dc.redact(text) == \
+            "Max retries exceeded with url: /v4/sports/x/events?apiKey=***&regions=us"
+
+    def test_literal_secret_values_are_hidden(self, monkeypatch):
+        monkeypatch.setenv("TELEGRAM_BOT_TOKEN", "123456:SECRETOTOKEN")
+        assert "SECRETOTOKEN" not in dc.redact("bot123456:SECRETOTOKEN/sendMessage")
+
+    def test_log_file_never_contains_the_key(self, tmp_path, monkeypatch):
+        monkeypatch.setenv("ODDS_API_KEY", "clave-super-secreta-42")
+        log = dc.CycleLog(DATE, "closing", base_dir=tmp_path)
+        log("fallo con clave-super-secreta-42 y ?apiKey=clave-super-secreta-42")
+        content = (tmp_path / f"{DATE}.log").read_text(encoding="utf-8")
+        assert "clave-super-secreta-42" not in content
+
+    def test_fetch_events_error_does_not_leak_key(self, monkeypatch):
+        import requests
+        monkeypatch.setenv("ODDS_API_KEY", "clave-super-secreta-42")
+
+        def fail(url, params, timeout):
+            raise requests.ConnectionError(f"Max retries exceeded with url: {url}?apiKey={params['apiKey']}")
+        monkeypatch.setattr(requests, "get", fail)
+        with pytest.raises(RuntimeError) as info:
+            dc.fetch_events("basketball_nba")
+        assert "clave-super-secreta-42" not in str(info.value)

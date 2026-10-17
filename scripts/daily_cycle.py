@@ -85,6 +85,7 @@ from __future__ import annotations
 import argparse
 import importlib.util
 import os
+import re
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -145,8 +146,30 @@ def _load_capture_closing():
     return module
 
 
+_API_KEY_IN_URL = re.compile(r"((?:api_?key|apiKey|token)=)[^&\s'\")]+", re.IGNORECASE)
+_SECRET_ENV_VARS = ("ODDS_API_KEY", "TELEGRAM_BOT_TOKEN")
+
+
+def redact(text: str) -> str:
+    """
+    Oculta credenciales antes de que lleguen al log.
+
+    CORRECCIÓN (2026-10): un error de red de `requests` incluye la URL
+    completa, con `?apiKey=...`, y quedó escrito en texto plano en
+    logs/daily_cycle/. Se ocultan los parámetros de URL con nombre de
+    clave y, por si un mensaje la incluye de otra forma, el valor
+    literal de cada secreto del .env.
+    """
+    text = _API_KEY_IN_URL.sub(r"\1***", text)
+    for name in _SECRET_ENV_VARS:
+        value = os.environ.get(name, "").strip()
+        if len(value) >= 8:
+            text = text.replace(value, "***")
+    return text
+
+
 class CycleLog:
-    """Escribe a consola y al log del día."""
+    """Escribe a consola y al log del día, siempre sin credenciales."""
 
     def __init__(self, date: str, phase: str, base_dir: Path | None = None) -> None:
         base = base_dir or (_PROJECT_ROOT / "logs" / "daily_cycle")
@@ -156,7 +179,7 @@ class CycleLog:
 
     def __call__(self, message: str = "") -> None:
         stamp = datetime.now().strftime("%H:%M:%S")
-        line = f"[{stamp}] [{self._phase}] {message}"
+        line = redact(f"[{stamp}] [{self._phase}] {message}")
         try:
             print(line)
         except UnicodeEncodeError:
@@ -208,11 +231,15 @@ def fetch_events(sport_key: str) -> tuple[list[dict], int | None]:
     api_key = os.environ.get("ODDS_API_KEY", "").strip()
     if not api_key:
         raise RuntimeError("falta ODDS_API_KEY en el .env")
-    response = requests.get(
-        f"https://api.the-odds-api.com/v4/sports/{sport_key}/events",
-        params={"apiKey": api_key}, timeout=20,
-    )
-    response.raise_for_status()
+    try:
+        response = requests.get(
+            f"https://api.the-odds-api.com/v4/sports/{sport_key}/events",
+            params={"apiKey": api_key}, timeout=20,
+        )
+        response.raise_for_status()
+    except requests.RequestException as error:
+        # El mensaje de requests lleva la URL con la clave: no propagarla.
+        raise RuntimeError(redact(f"{type(error).__name__}: {error}")) from None
     remaining = response.headers.get("x-requests-remaining")
     return response.json(), (int(float(remaining)) if remaining else None)
 
