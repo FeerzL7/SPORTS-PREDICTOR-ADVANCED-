@@ -93,6 +93,15 @@ class RunnerConfig:
                         que paper_report.py descubre solo porque
                         termina en _roi_tracking.csv.
     paper_initial_bankroll -- Bankroll inicial del ledger de papel.
+    skip_started_events -- Si True (default), descarta en Stage 1 los
+                          eventos cuya hora de inicio ya pasó: sus
+                          cuotas serían en vivo y un pick con ellas no
+                          mide nada. Importa cuando la tarea programada
+                          corre tarde (PC suspendida a las 09:00). Los
+                          dry runs con fechas fijas lo desactivan.
+    clock            -- Función que devuelve el instante actual en UTC.
+                       None usa datetime.now(timezone.utc); los tests
+                       inyectan un reloj fijo.
     """
     dry_run:            bool       = False
     skip_stages:        frozenset  = field(default_factory=frozenset)
@@ -101,6 +110,26 @@ class RunnerConfig:
     log_stage_times:    bool       = True
     paper_ledger_path:  str | None = None
     paper_initial_bankroll: float  = 1000.0
+    skip_started_events: bool      = True
+    clock:              Callable[[], datetime] | None = None
+
+
+# Avisos que el pipeline deja en `errors` pero que describen un día SIN
+# TRABAJO, no un fallo. Contarlos como error hacía que el ciclo diario
+# marcara "con errores" casi a diario y ocultara los errores de verdad.
+NO_WORK_NOTICES: tuple[str, ...] = (
+    "[Stage1] Sin eventos para esta fecha",
+    "[Stage1] Sin eventos por jugar",
+    "[PhaseB] Sin candidatos",
+)
+
+
+def _has_started(start_time: str | None, now: datetime) -> bool:
+    """True si la hora de inicio ya pasó. Sin hora legible: False."""
+    from core.odds.book_archive import parse_iso8601
+
+    start = parse_iso8601(start_time)
+    return start is not None and start <= now
 
 
 # ── Resultado de la ejecución ─────────────────────────────────────────────────
@@ -138,6 +167,11 @@ class PipelineResult:
     duration_seconds: float
     dry_run:          bool
     paper_picks:      list[CandidatePick] = field(default_factory=list)
+
+    @property
+    def real_errors(self) -> list[str]:
+        """`errors` sin los avisos de día sin trabajo (NO_WORK_NOTICES)."""
+        return [e for e in self.errors if not e.startswith(NO_WORK_NOTICES)]
 
     def summary(self) -> str:
         status = "[DRY RUN]" if self.dry_run else ""
@@ -382,6 +416,22 @@ class PipelineRunner:
             events = events[:self._config.max_events]
             context.events = events
 
+        # Eventos ya empezados: sus cuotas serían en vivo. Si la tarea
+        # corre tarde, un partido de las 11:00 visto a las 11:30 se
+        # registraría con un precio que no es de apertura ni de cierre.
+        if self._config.skip_started_events:
+            now = (self._config.clock or (lambda: datetime.now(timezone.utc)))()
+            started = [e for e in events if _has_started(e.start_time, now)]
+            if started:
+                context.set_meta("skipped_started", [e.event_id for e in started])
+                events = [e for e in events if e not in started]
+                context.events = events
+            if not events:
+                context.add_error(
+                    "Stage1", f"Sin eventos por jugar: los {len(started)} del día ya empezaron."
+                )
+                return context
+
         # Stages 2-6 por evento
         for event in events:
             try:
@@ -422,7 +472,14 @@ class PipelineRunner:
         """Stages 7-11: operan sobre el conjunto completo de candidatos."""
 
         if not context.candidates:
-            context.add_error("PhaseB", "Sin candidatos — stages 7-11 omitidos.")
+            context.add_error("PhaseB", "Sin candidatos — stages 7-9 y 11 omitidos.")
+            # La liquidación NO depende de los candidatos de hoy: resuelve
+            # los picks pendientes de días anteriores. Omitirla dejaba sin
+            # liquidar todo lo que quedara pendiente al final de una
+            # temporada, y retrasaba el resto hasta el siguiente día con
+            # partidos (2026-10: los picks de MLB del 27-sep).
+            if not self._config.dry_run:
+                self._stage_10_settlement(context)
             return context
 
         self._stage_7_line_movement(context)

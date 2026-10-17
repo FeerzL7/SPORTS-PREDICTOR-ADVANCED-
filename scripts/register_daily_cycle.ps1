@@ -23,10 +23,14 @@
     la afecta.
 
     Las tareas corren con pythonw.exe (sin ventana) y SOLO con la sesion
-    del usuario iniciada: no se guarda ninguna contrasena. Si el equipo
-    esta apagado o suspendido a esa hora, la ejecucion se pierde; la de
-    picks se recupera al encender (StartWhenAvailable), la de cierre no
-    hace falta recuperarla porque la siguiente corrida retoma lo pendiente.
+    del usuario iniciada: no se guarda ninguna contrasena.
+
+    WakeToRun: si el equipo esta SUSPENDIDO, Windows lo despierta para
+    correr la tarea. Requiere que el plan de energia permita los
+    temporizadores de activacion (en esta PC: si con corriente, no con
+    bateria). Apagado del todo, la ejecucion se pierde; la de picks se
+    recupera al encender (StartWhenAvailable) y la de cierre no hace
+    falta recuperarla porque la siguiente corrida retoma lo pendiente.
 
     Registro: logs\daily_cycle\AAAA-MM-DD.log
 
@@ -65,7 +69,7 @@ $Pythonw = Join-Path (Split-Path $Python) "pythonw.exe"
 if (-not (Test-Path $Pythonw)) { $Pythonw = $Python }
 
 $settings = New-ScheduledTaskSettingsSet `
-    -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries `
+    -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -WakeToRun `
     -ExecutionTimeLimit (New-TimeSpan -Hours 1) `
     -MultipleInstances IgnoreNew
 
@@ -74,7 +78,7 @@ $picksAction  = New-ScheduledTaskAction -Execute $Pythonw `
     -Argument "scripts\daily_cycle.py picks" -WorkingDirectory $Repo
 $picksTrigger = New-ScheduledTaskTrigger -Daily -At "09:00"
 $picksSettings = New-ScheduledTaskSettingsSet `
-    -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable `
+    -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -WakeToRun `
     -ExecutionTimeLimit (New-TimeSpan -Hours 1) -MultipleInstances IgnoreNew
 
 Register-ScheduledTask -TaskName $TaskPicks -Action $picksAction `

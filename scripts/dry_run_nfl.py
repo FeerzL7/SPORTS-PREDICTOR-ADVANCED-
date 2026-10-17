@@ -227,6 +227,9 @@ def main() -> int:
         skip_stages=frozenset({5}),   # odds se inyectan a mano
         max_events=2,
         log_stage_times=True,
+        # Los partidos simulados tienen fecha fija (2026-11-08): sin
+        # esto, pasada esa fecha el runner los descartaría por empezados.
+        skip_started_events=False,
     )
 
     # ── Fase A: stages 1-4 ────────────────────────────────────
