@@ -22,18 +22,25 @@ usa para The Odds API, más `json` y `re` de la stdlib. Nada más.
 
 Cómo publica Understat sus datos
 ----------------------------------
-No hay API. Cada página de liga incrusta el dataset completo en una
-variable JavaScript, con el JSON escapado en hexadecimal:
+CAMBIO (verificado 2026-10): la página de liga YA NO incrusta los datos.
+Los carga después con una petición XHR a
 
-    <script>
-      var teamsData = JSON.parse('\\x7B\\x22...\\x7D');
-    </script>
+    https://understat.com/getLeagueData/{liga}/{temporada}
 
-Extraerlo es localizar la variable, deshacer el escapado y parsear el
-JSON. El formato lleva años estable, pero es scraping: si Understat
-cambia la estructura, esto deja de funcionar. Por eso todos los métodos
-degradan a vacío en vez de lanzar — el plugin sigue operando en tier
-PARTIAL, exactamente como si la librería no estuviera instalada.
+que devuelve JSON con tres bloques: `teams` (historial partido a
+partido por equipo, el mismo que antes traía `teamsData`), `players` y
+`dates` (partidos con xG y el pronóstico 1X2 del propio Understat).
+
+Hasta 2026 los datos iban dentro del HTML, en una variable JavaScript
+con el JSON escapado en hexadecimal:
+
+    var teamsData = JSON.parse('\\x7B\\x22...\\x7D');
+
+Con ese cambio el cliente devolvía cero partidos SIN ERROR y el modelo
+corría sin xG —su entrada principal— sin que nada lo advirtiera. Ahora
+se pide el endpoint JSON y, si la respuesta fuera HTML, se intenta el
+formato antiguo. Sigue siendo una fuente no oficial: todos los métodos
+degradan a vacío en vez de lanzar.
 
 Datos por partido, no solo agregados
 --------------------------------------
@@ -57,6 +64,7 @@ except ImportError:
 
 
 _BASE_URL = "https://understat.com/league"
+_DATA_URL = "https://understat.com/getLeagueData"
 
 # Navegador declarado en las peticiones.
 #
@@ -69,7 +77,14 @@ _HEADERS = {
         "Mozilla/5.0 (compatible; SportsPredictor/1.0; "
         "análisis estadístico)"
     ),
+    # El endpoint solo responde JSON a peticiones marcadas como XHR,
+    # que es como lo llama la propia página.
+    "X-Requested-With": "XMLHttpRequest",
 }
+
+# Caché en disco: una temporada cerrada no cambia; la actual se
+# revalida dos veces al día.
+_TTL_CURRENT_SECONDS = 12 * 3600
 
 # Variables JavaScript que contienen los datos.
 _VAR_TEAMS   = "teamsData"
@@ -135,16 +150,23 @@ class UnderstatClient:
     ----------
     timeout   -- Timeout HTTP en segundos.
     fetch_fn  -- Función de descarga inyectable, para tests. Recibe la
-                 URL y devuelve el HTML o None. Sin ella usa requests.
+                 URL y devuelve el texto (JSON o HTML) o None. Sin ella
+                 usa requests.
+    cache_dir -- Directorio para cachear las respuestas. None: sin caché.
+    current_season -- Temporada en curso; las anteriores no caducan.
     """
 
     def __init__(
         self,
         timeout:  int = 20,
         fetch_fn = None,
+        cache_dir = None,
+        current_season: int | None = None,
     ) -> None:
         self._timeout  = timeout
         self._fetch_fn = fetch_fn
+        self._cache_dir = cache_dir
+        self._current_season = current_season
 
     @staticmethod
     def is_available() -> bool:
@@ -173,15 +195,28 @@ class UnderstatClient:
         —el plugin funciona en tier PARTIAL— así que no se propaga
         como excepción.
         """
-        html = self._fetch(understat_id, season)
-        if not html:
+        text = self._fetch(understat_id, season)
+        if not text:
             return []
 
-        teams = self._extract_json(html, _VAR_TEAMS)
+        teams = self._teams_block(text)
         if not isinstance(teams, dict):
             return []
 
         return self._parse_teams(teams)
+
+    @classmethod
+    def _teams_block(cls, text: str):
+        """
+        Bloque de equipos, venga del endpoint JSON o del HTML antiguo.
+        """
+        try:
+            data = json.loads(text)
+        except (ValueError, TypeError):
+            data = None
+        if isinstance(data, dict) and isinstance(data.get("teams"), dict):
+            return data["teams"]
+        return cls._extract_json(text, _VAR_TEAMS)
 
     def fetch_team_totals(
         self,
@@ -222,14 +257,18 @@ class UnderstatClient:
     # ── Descarga ──────────────────────────────────────────────────────────────
 
     def _fetch(self, understat_id: str, season: int) -> str | None:
-        """Descarga la página de liga."""
-        url = f"{_BASE_URL}/{understat_id}/{season}"
+        """Descarga los datos de la liga (endpoint JSON), con caché."""
+        url = f"{_DATA_URL}/{understat_id}/{season}"
 
         if self._fetch_fn is not None:
             try:
                 return self._fetch_fn(url)
             except Exception:
                 return None
+
+        cached = self._read_cache(understat_id, season)
+        if cached is not None:
+            return cached
 
         if _requests is None:
             return None
@@ -238,9 +277,44 @@ class UnderstatClient:
             response = _requests.get(url, headers=_HEADERS, timeout=self._timeout)
             if response.status_code != 200:
                 return None
-            return response.text
+            text = response.text
         except Exception:
             return None
+
+        # Solo se cachea una respuesta que trae datos: cachear un error o
+        # una página vacía congelaría la ausencia de xG hasta que caduque.
+        if self._teams_block(text):
+            self._write_cache(understat_id, season, text)
+        return text
+
+    def _cache_path(self, understat_id: str, season: int):
+        if not self._cache_dir:
+            return None
+        from pathlib import Path
+        return Path(self._cache_dir) / f"understat_{understat_id}_{season}.json"
+
+    def _read_cache(self, understat_id: str, season: int) -> str | None:
+        import time
+        path = self._cache_path(understat_id, season)
+        if path is None or not path.exists():
+            return None
+        closed = self._current_season is not None and season < self._current_season
+        if not closed and time.time() - path.stat().st_mtime > _TTL_CURRENT_SECONDS:
+            return None
+        try:
+            return path.read_text(encoding="utf-8")
+        except OSError:
+            return None
+
+    def _write_cache(self, understat_id: str, season: int, text: str) -> None:
+        path = self._cache_path(understat_id, season)
+        if path is None:
+            return
+        try:
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(text, encoding="utf-8")
+        except OSError:
+            pass   # el caché es una optimización
 
     # ── Extracción ────────────────────────────────────────────────────────────
 

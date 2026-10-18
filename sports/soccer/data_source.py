@@ -125,6 +125,28 @@ _FOOTBALL_DATA_BASE = "https://www.football-data.co.uk/mmz4281"
 # principio. Cada formato tiene su extractor.
 _FOOTBALL_DATA_EXTRA = "https://www.football-data.co.uk/new"
 
+# Calendario FUTURO (2026-10). Los CSV de temporada solo traen partidos
+# ya jugados: football-data añade cada fila cuando hay resultado. Los
+# próximos partidos, con cuotas previas, están en dos ficheros aparte,
+# uno para las divisiones principales (columna Div) y otro para las
+# ligas extendidas (columnas Country y League). Sin ellos, el plugin
+# nunca encontraba los partidos del día y no podía operar en vivo.
+_FIXTURES_MAIN  = "https://www.football-data.co.uk/fixtures.csv"
+_FIXTURES_EXTRA = "https://www.football-data.co.uk/new_league_fixtures.csv"
+_TTL_FIXTURES   = 3 * 3600   # se actualizan con las cuotas, varias veces por semana
+
+# Las horas de football-data son hora del Reino Unido.
+_FD_TIMEZONE = "Europe/London"
+
+# Código de país de los ficheros extendidos → valor de la columna
+# Country en new_league_fixtures.csv.
+_EXTRA_COUNTRY_NAMES = {
+    "ARG": "Argentina", "AUT": "Austria", "BRA": "Brazil", "CHN": "China",
+    "DNK": "Denmark", "FIN": "Finland", "IRL": "Ireland", "JPN": "Japan",
+    "MEX": "Mexico", "NOR": "Norway", "POL": "Poland", "ROU": "Romania",
+    "RUS": "Russia", "SWE": "Sweden", "SWZ": "Switzerland", "USA": "USA",
+}
+
 # TTL del caché en disco, en segundos.
 # Una temporada cerrada no cambia nunca; la actual se actualiza tras
 # cada jornada, así que un día es suficiente.
@@ -208,6 +230,10 @@ class MatchRow:
     open_over:  float | None = None
     open_under: float | None = None
     open_source: str = ""
+
+    # Hora de inicio en UTC ('YYYY-MM-DDTHH:MM:SSZ'), desde la columna
+    # Time (hora del Reino Unido). Vacía si la fuente no la publica.
+    kickoff_utc: str = ""
 
     @property
     def is_final(self) -> bool:
@@ -340,6 +366,12 @@ class SoccerDataSource:
     current_season -- Temporada en curso, para decidir el TTL. None la
                       deduce de la fecha.
     timeout        -- Timeout HTTP en segundos.
+    odds_source    -- Fuerza UNA casa como referencia de cuotas
+                      ('pinnacle', 'betfair_exchange', 'bet365',
+                      'market_avg'). None usa el orden de preferencia.
+                      Forzarla sirve para comparar referencias sobre
+                      los mismos partidos: los que no la tengan quedan
+                      sin cuotas en vez de caer a otra casa.
     """
 
     def __init__(
@@ -347,7 +379,11 @@ class SoccerDataSource:
         cache_dir:      str | None = "cache/soccer",
         current_season: int | None = None,
         timeout:        int = 20,
+        odds_source:    str | None = None,
     ) -> None:
+        if odds_source is not None and odds_source not in CLOSING_SOURCE_NAMES:
+            raise ValueError(f"odds_source desconocido: {odds_source!r}")
+        self._odds_source = odds_source
         self._cache_dir = Path(cache_dir) if cache_dir else None
         if self._cache_dir:
             self._cache_dir.mkdir(parents=True, exist_ok=True)
@@ -401,8 +437,12 @@ class SoccerDataSource:
         if not self._understat_checked:
             self._understat_checked = True
             from sports.soccer.understat import UnderstatClient
+            # Mismo directorio de caché que los CSV: un backtest de varias
+            # temporadas no vuelve a pedir a Understat las ya cerradas.
             self._understat = (
-                UnderstatClient(timeout=self._timeout)
+                UnderstatClient(timeout=self._timeout,
+                                cache_dir=self._cache_dir,
+                                current_season=self._current_season)
                 if UnderstatClient.is_available() else None
             )
         return self._understat is not None
@@ -604,7 +644,8 @@ class SoccerDataSource:
                 away_team  = away,
                 home_goals = _safe_int(record.get("HG")),
                 away_goals = _safe_int(record.get("AG")),
-                **_extract_odds_extra(record),
+                kickoff_utc = _kickoff_utc(date, record.get("Time")),
+                **_extract_odds_extra(record, self._odds_source),
             ))
 
         return rows
@@ -645,7 +686,7 @@ class SoccerDataSource:
             if not home or not away or not date:
                 continue
 
-            odds = _extract_odds(record)
+            odds = _extract_odds(record, self._odds_source)
 
             rows.append(MatchRow(
                 comp_id    = comp.comp_id,
@@ -657,9 +698,97 @@ class SoccerDataSource:
                 away_goals = _safe_int(record.get("FTAG")),
                 ht_home    = _safe_int(record.get("HTHG")),
                 ht_away    = _safe_int(record.get("HTAG")),
+                kickoff_utc = _kickoff_utc(date, record.get("Time")),
                 **odds,
             ))
 
+        return rows
+
+    # ── Calendario futuro ─────────────────────────────────────────────────────
+
+    def load_fixtures(self, comp: Competition | str) -> list[MatchRow]:
+        """
+        Próximos partidos de una competición, con cuotas PREVIAS.
+
+        Salen de fixtures.csv (divisiones principales) o de
+        new_league_fixtures.csv (ligas extendidas). No traen resultado
+        ni cuotas de cierre: las cuotas van a los campos open_*, porque
+        son el precio publicado días u horas antes del partido.
+
+        Retorna lista vacía ante cualquier fallo, igual que load_matches.
+        """
+        competition = (comp if isinstance(comp, Competition)
+                       else get_competition(str(comp)))
+        if competition is None or not competition.football_data_code:
+            return []
+
+        code = competition.football_data_code
+        if code.startswith("new:"):
+            raw = self._fetch_fixtures(_FIXTURES_EXTRA, "fixtures_extra.csv")
+            return self._parse_extra_fixtures(raw, competition, code[4:]) if raw else []
+
+        raw = self._fetch_fixtures(_FIXTURES_MAIN, "fixtures_main.csv")
+        if not raw:
+            return []
+        # Mismo formato que el CSV de temporada: se reutiliza el parser
+        # sobre las filas de esta división.
+        header, *lines = raw.splitlines()
+        div_rows = [line for line in lines if line.split(",", 1)[0].strip() == code]
+        rows = self._parse_football_data("\n".join([header, *div_rows]), competition,
+                                         season=0)
+        return [_with_season(row, competition) for row in rows if not row.is_final]
+
+    def _fetch_fixtures(self, url: str, cache_name: str) -> str | None:
+        """Descarga un fichero de fixtures, con caché corta."""
+        path = self._cache_path(cache_name)
+        if path is not None and path.exists():
+            try:
+                if time.time() - path.stat().st_mtime <= _TTL_FIXTURES:
+                    return path.read_text(encoding="utf-8")
+            except OSError:
+                pass
+
+        if _requests is None:
+            return None
+        try:
+            response = _requests.get(url, timeout=self._timeout)
+            if response.status_code != 200:
+                return None
+            # utf-8-sig: estos ficheros empiezan con BOM, que de otro modo
+            # se pega al nombre de la primera columna ('\ufeffDiv').
+            text = response.content.decode("utf-8-sig", errors="replace")
+        except Exception:
+            return None
+
+        self._write_cache(cache_name, text)
+        return text
+
+    def _parse_extra_fixtures(
+        self,
+        raw:     str,
+        comp:    Competition,
+        country: str,
+    ) -> list[MatchRow]:
+        """Fixtures del formato extendido: filtra por la columna Country."""
+        name = _EXTRA_COUNTRY_NAMES.get(country, country)
+        rows: list[MatchRow] = []
+        for record in csv.DictReader(io.StringIO(raw.lstrip("\ufeff"))):
+            if _clean(record.get("Country")) != name:
+                continue
+            home = _clean(record.get("Home"))
+            away = _clean(record.get("Away"))
+            date = _parse_date(record.get("Date"))
+            if not home or not away or not date:
+                continue
+            rows.append(_with_season(MatchRow(
+                comp_id     = comp.comp_id,
+                season      = 0,
+                date        = date,
+                home_team   = home,
+                away_team   = away,
+                kickoff_utc = _kickoff_utc(date, record.get("Time")),
+                **_extract_odds_extra(record, self._odds_source),
+            ), comp))
         return rows
 
     # ── xG ────────────────────────────────────────────────────────────────────
@@ -816,11 +945,24 @@ class SoccerDataSource:
 # Pinnacle primero: margen mínimo y límites altos hacen de su cierre el
 # mejor estimador del precio justo, y por tanto el benchmark más
 # exigente para el backtest.
+#
+# Betfair Exchange segundo (2026-10). football-data dejó de publicar
+# Pinnacle a mitad de 2025-26 (EPL: 380/380 partidos en 2024-25, 210 en
+# 2025-26, 0 en 2026-27), y sin esta entrada la referencia caía en
+# silencio a Bet365, una casa con más margen. La bolsa de Betfair tiene
+# margen casi nulo y la publica desde 2024-25: es el sustituto natural,
+# el mismo que validó la auditoría de tenis. En 2024-25 conviven ambas,
+# lo que permite comparar las dos referencias sobre los mismos partidos.
 _CLOSING_SOURCES: tuple[tuple[str, dict[str, str]], ...] = (
     ("pinnacle", {
         "home": "PSCH", "draw": "PSCD", "away": "PSCA",
         "over": "PC>2.5", "under": "PC<2.5",
         "ah_line": "AHCh", "ah_home": "PCAHH", "ah_away": "PCAHA",
+    }),
+    ("betfair_exchange", {
+        "home": "BFECH", "draw": "BFECD", "away": "BFECA",
+        "over": "BFEC>2.5", "under": "BFEC<2.5",
+        "ah_line": "AHCh", "ah_home": "BFECAHH", "ah_away": "BFECAHA",
     }),
     ("bet365", {
         "home": "B365CH", "draw": "B365CD", "away": "B365CA",
@@ -831,13 +973,24 @@ _CLOSING_SOURCES: tuple[tuple[str, dict[str, str]], ...] = (
 
 # Columnas del formato EXTENDIDO (ligas no europeas).
 #
-# Pinnacle aparece como PH/PD/PA y su cierre como PCH/PCD/PCA. Cuando
-# falta, se usa la media del mercado (AvgH...), que es un benchmark
-# algo más blando pero honesto: representa lo que un apostante
-# encontraría sin buscar el mejor precio.
+# CORRECCIÓN (2026-10): el cierre de Pinnacle se buscaba como
+# PCH/PCD/PCA, pero el fichero real lo llama PSCH/PSCD/PSCA (igual que
+# el formato principal). La entrada nunca coincidía y el backtest LATAM
+# usó siempre la media del mercado (odds_source = market_avg) creyendo
+# medir contra Pinnacle. Se aceptan ambos nombres y se añade Betfair
+# Exchange (BFECH...) antes de la media. Este formato no trae columnas
+# de over/under.
 _EXTRA_CLOSING: tuple[tuple[str, dict[str, str]], ...] = (
     ("pinnacle", {
+        "home": "PSCH", "draw": "PSCD", "away": "PSCA",
+        "over": "AvgC>2.5", "under": "AvgC<2.5",
+    }),
+    ("pinnacle", {
         "home": "PCH", "draw": "PCD", "away": "PCA",
+        "over": "AvgC>2.5", "under": "AvgC<2.5",
+    }),
+    ("betfair_exchange", {
+        "home": "BFECH", "draw": "BFECD", "away": "BFECA",
         "over": "AvgC>2.5", "under": "AvgC<2.5",
     }),
     ("market_avg", {
@@ -862,6 +1015,10 @@ _OPENING_SOURCES: tuple[tuple[str, dict[str, str]], ...] = (
     ("pinnacle", {
         "home": "PSH", "draw": "PSD", "away": "PSA",
         "over": "P>2.5", "under": "P<2.5",
+    }),
+    ("betfair_exchange", {
+        "home": "BFEH", "draw": "BFED", "away": "BFEA",
+        "over": "BFE>2.5", "under": "BFE<2.5",
     }),
     ("bet365", {
         "home": "B365H", "draw": "B365D", "away": "B365A",
@@ -894,7 +1051,17 @@ def _season_matches(raw, target: str) -> bool:
     return False
 
 
-def _extract_odds_extra(record: dict) -> dict:
+CLOSING_SOURCE_NAMES = ("pinnacle", "betfair_exchange", "bet365", "market_avg")
+
+
+def _only(sources, source: str | None):
+    """Las fuentes en orden de preferencia, o solo `source` si se fuerza."""
+    if not source:
+        return sources
+    return tuple(entry for entry in sources if entry[0] == source)
+
+
+def _extract_odds_extra(record: dict, source: str | None = None) -> dict:
     """
     Cuotas del formato extendido, apertura y cierre por separado.
 
@@ -907,8 +1074,9 @@ def _extract_odds_extra(record: dict) -> dict:
     todos los partidos.
     """
     out: dict = {"odds_source": "", "open_source": ""}
+    forced = source
 
-    for source, cols in _EXTRA_CLOSING:
+    for source, cols in _only(_EXTRA_CLOSING, forced):
         home = _safe_float(record.get(cols["home"]))
         draw = _safe_float(record.get(cols["draw"]))
         away = _safe_float(record.get(cols["away"]))
@@ -921,7 +1089,7 @@ def _extract_odds_extra(record: dict) -> dict:
             })
             break
 
-    for source, cols in _EXTRA_OPENING:
+    for source, cols in _only(_EXTRA_OPENING, forced):
         home = _safe_float(record.get(cols["home"]))
         draw = _safe_float(record.get(cols["draw"]))
         away = _safe_float(record.get(cols["away"]))
@@ -937,7 +1105,7 @@ def _extract_odds_extra(record: dict) -> dict:
     return out
 
 
-def _extract_odds(record: dict) -> dict:
+def _extract_odds(record: dict, source: str | None = None) -> dict:
     """
     Extrae las cuotas de apertura y de cierre por separado.
 
@@ -953,8 +1121,9 @@ def _extract_odds(record: dict) -> dict:
     operable.
     """
     out: dict = {"odds_source": "", "open_source": ""}
+    forced = source
 
-    for source, cols in _CLOSING_SOURCES:
+    for source, cols in _only(_CLOSING_SOURCES, forced):
         home = _safe_float(record.get(cols["home"]))
         draw = _safe_float(record.get(cols["draw"]))
         away = _safe_float(record.get(cols["away"]))
@@ -970,7 +1139,7 @@ def _extract_odds(record: dict) -> dict:
             })
             break
 
-    for source, cols in _OPENING_SOURCES:
+    for source, cols in _only(_OPENING_SOURCES, forced):
         home = _safe_float(record.get(cols["home"]))
         draw = _safe_float(record.get(cols["draw"]))
         away = _safe_float(record.get(cols["away"]))
@@ -1008,6 +1177,43 @@ def current_soccer_season(today: str | None = None) -> int:
         date = datetime.now(timezone.utc)
 
     return date.year if date.month >= 7 else date.year - 1
+
+
+def _kickoff_utc(date_iso: str | None, raw_time) -> str:
+    """
+    Hora de inicio en UTC desde la fecha ISO y la hora del Reino Unido.
+
+    football-data publica la hora local británica (GMT o BST según la
+    época del año). Sin convertirla, un partido de las 15:00 en Londres
+    figuraría a las 15:00 UTC en invierno y una hora tarde en verano.
+    """
+    text = _clean(raw_time)
+    if not date_iso or not text or ":" not in text:
+        return ""
+    try:
+        from zoneinfo import ZoneInfo
+        hour, minute = (int(part) for part in text.split(":")[:2])
+        local = datetime.strptime(date_iso, "%Y-%m-%d").replace(
+            hour=hour, minute=minute, tzinfo=ZoneInfo(_FD_TIMEZONE))
+        return local.astimezone(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    except Exception:
+        return ""
+
+
+def _with_season(row: MatchRow, comp: Competition) -> MatchRow:
+    """
+    Asigna la temporada a una fila de fixtures, que no la trae.
+
+    Ligas de año natural (Brasileirão): el año de la fecha. El resto
+    —europeas y torneos cortos como la Liga MX— identifican la
+    temporada por su año de inicio, con corte en julio.
+    """
+    from dataclasses import replace
+    from sports.soccer.competitions import SEASON_CALENDAR
+
+    year, month = int(row.date[:4]), int(row.date[5:7])
+    season = year if comp.season_type == SEASON_CALENDAR else (year if month >= 7 else year - 1)
+    return replace(row, season=season)
 
 
 def _parse_date(raw) -> str | None:

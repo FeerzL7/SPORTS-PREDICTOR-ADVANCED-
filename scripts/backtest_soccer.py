@@ -156,6 +156,10 @@ _MIN_PICKS_ROI = 150
 # Marca si la ejecución usa apertura, para adaptar la lectura final.
 _USING_OPENING = [False]
 
+# Casa forzada como referencia de cuotas (--odds-source). None: el orden
+# de preferencia de data_source.py (Pinnacle, Betfair Exchange, Bet365).
+_ODDS_SOURCE: list[str | None] = [None]
+
 
 @dataclass
 class BetRecord:
@@ -429,7 +433,7 @@ def run_competition(
     if comp is None:
         return metrics, skipped, {}
 
-    source = SoccerDataSource(current_season=season)
+    source = SoccerDataSource(current_season=season, odds_source=_ODDS_SOURCE[0])
     schedule = SoccerScheduleFetcher(
         data_source=source, competitions=[comp], season=season
     )
@@ -934,6 +938,13 @@ def main() -> int:
                              "soccer.elo.min_coverage. El aviso sigue saliendo "
                              "y el resultado NO sirve para elegir el peso: "
                              "solo para diagnosticar.")
+    parser.add_argument("--odds-source", default="auto",
+                        choices=["auto", "pinnacle", "betfair_exchange", "bet365", "market_avg"],
+                        help="Casa de referencia para las cuotas. 'auto' usa el orden "
+                             "de preferencia; una casa concreta deja sin cuotas los "
+                             "partidos que no la tengan, para comparar referencias "
+                             "sobre los mismos partidos (2024-25 tiene Pinnacle y "
+                             "Betfair Exchange).")
     parser.add_argument("--opening-odds", action="store_true",
                         help="Mide contra las cuotas de APERTURA en vez de "
                              "las de cierre. El pipeline en producción opera "
@@ -958,6 +969,7 @@ def main() -> int:
                         format="  %(levelname)s [%(name)s] %(message)s")
 
     _USING_OPENING[0] = args.opening_odds
+    _ODDS_SOURCE[0] = None if args.odds_source == "auto" else args.odds_source
 
     problem = _verify_imports()
     if problem:
@@ -1003,6 +1015,8 @@ def main() -> int:
                  if args.allow_low_elo_coverage else ""))
     if args.opening_odds:
         print(f"  Cuotas: APERTURA (no cierre)")
+    if args.odds_source != "auto":
+        print(f"  Referencia de cuotas forzada: {args.odds_source}")
     if args.no_filter:
         print(f"  Sin filtro: el CSV incluirá TODOS los candidatos")
         print(f"  (las métricas del informe siguen contando solo los que pasan)")

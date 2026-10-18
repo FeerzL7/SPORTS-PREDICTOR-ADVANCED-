@@ -157,6 +157,9 @@ class SoccerMatchInfo:
     home_npxg: float | None = None
     away_npxg: float | None = None
 
+    # Hora de inicio en UTC; vacía si la fuente no la publica.
+    kickoff_utc: str = ""
+
     # ── Estado ────────────────────────────────────────────────────────────────
 
     @property
@@ -303,14 +306,42 @@ class SoccerScheduleFetcher:
         season = self._season or _season_for_date(date)
 
         for comp in self._competitions:
+            seen: set[str] = set()
             for match in self._competition_matches(comp, season):
                 if match.date != date:
                     continue
                 event = self._to_event(match, comp)
                 if event is not None:
                     events.append(event)
+                    seen.add(event.event_id)
+
+            # Partidos aún no jugados (2026-10). El CSV de temporada solo
+            # los incluye cuando ya hay resultado, así que sin esto el
+            # día de hoy nunca tenía eventos y el plugin no podía operar
+            # en vivo. El id coincide con el que tendrá la fila jugada
+            # (mismos competición, fecha y nombres canónicos), así que la
+            # liquidación la encuentra después.
+            for match in self._fixture_matches(comp):
+                if match.date != date or match.match_id in seen:
+                    continue
+                event = self._to_event(match, comp)
+                if event is not None:
+                    events.append(event)
+                    seen.add(event.event_id)
 
         return events
+
+    def _fixture_matches(self, comp: Competition) -> list[SoccerMatchInfo]:
+        """Próximos partidos de la competición, si la fuente los ofrece."""
+        loader = getattr(self._source, "load_fixtures", None)
+        if loader is None:
+            return []
+        try:
+            rows = loader(comp)
+        except Exception:
+            return []
+        matches = [self._to_match_info(row, comp) for row in rows]
+        return [m for m in matches if m is not None]
 
     def get_match_info(self, match_id: str) -> SoccerMatchInfo | None:
         """
@@ -473,6 +504,7 @@ class SoccerScheduleFetcher:
             open_over    = row.open_over,
             open_under   = row.open_under,
             open_source  = row.open_source,
+            kickoff_utc  = getattr(row, "kickoff_utc", "") or "",
         )
 
     def _attach_xg(
@@ -557,11 +589,15 @@ class SoccerScheduleFetcher:
 
         Sobre start_time
         -----------------
-        football-data publica la hora en algunas temporadas y en otras
-        no, y cuando la publica es hora local del estadio sin indicar
-        el huso. Ponerla en UTC sería inventar precisión, así que se usa
-        mediodía UTC como marcador de fecha. El pipeline solo lo usa
-        para ordenar y para saber si el partido ya empezó.
+        Se usa la hora real en UTC cuando la fuente la publica: la
+        columna Time de football-data es hora del Reino Unido y
+        data_source.py la convierte (kickoff_utc).
+
+        CORRECCIÓN (2026-10): antes se ponía siempre mediodía UTC como
+        marcador. Desde que el runner descarta los eventos ya empezados,
+        ese marcador habría hecho desaparecer todos los partidos del día
+        en una corrida posterior a las 12:00 UTC (las 06:00 en México).
+        Sin hora publicada se mantiene el marcador.
         """
         if not match.home or not match.away:
             return None
@@ -577,7 +613,7 @@ class SoccerScheduleFetcher:
                             if comp.season_type == "split_year"
                             else match.season),
             date         = match.date,
-            start_time   = f"{match.date}T12:00:00Z",
+            start_time   = match.kickoff_utc or f"{match.date}T12:00:00Z",
             home_team_id = match.home,
             away_team_id = match.away,
             home_team    = match.home_display or match.home,

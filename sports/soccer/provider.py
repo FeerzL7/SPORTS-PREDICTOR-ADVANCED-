@@ -609,7 +609,25 @@ class SoccerDataProvider:
         return diff
 
     def _get_elo_client(self):
-        """Cliente de Elo, construido de forma diferida."""
+        """
+        Cliente de Elo, construido de forma diferida.
+
+        `soccer.elo.source`:
+            local    (default) Elo calculado con los resultados de
+                     football-data (sports/soccer/elo_local.py). Cubre
+                     cualquier competición con calendario y no depende
+                     de otro servicio.
+            clubelo  clubelo.com. Solo clubes europeos; caído con 502
+                     durante días en 2026-10.
+        """
+        if self._elo is None and self._elo_source() == "local":
+            from sports.soccer.elo_local import LocalEloClient
+            match_source = self._source or getattr(self._schedule, "_source", None)
+            if match_source is None:
+                self._warn_elo_once(
+                    "sin_fuente", "Elo local sin fuente de partidos: la señal queda ausente.")
+                return None
+            self._elo = LocalEloClient(match_source)
         if self._elo is None:
             try:
                 from sports.soccer.elo import ClubEloClient
@@ -629,6 +647,15 @@ class SoccerDataProvider:
                 )
                 return None
         return self._elo
+
+    def _elo_source(self) -> str:
+        if self._config is None:
+            return "local"
+        try:
+            value = self._config.get("soccer.elo.source", default="local")
+        except Exception:
+            return "local"
+        return str(value or "local").lower()
 
     def elo_coverage(self) -> dict:
         """
