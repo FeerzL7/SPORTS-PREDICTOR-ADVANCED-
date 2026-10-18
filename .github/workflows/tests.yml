@@ -1,0 +1,35 @@
+# Corre la suite de pytest en cada push a main y en cada PR.
+#
+# Windows y Python 3.12: es el entorno donde corre el sistema (tareas
+# programadas, run_mlb.bat) y la versión validada del proyecto.
+# nfl_data_py no se instala: los tests no lo necesitan y su pin de
+# pandas<2.0 haría fallar a pip (ver requirements.txt).
+
+name: Tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: windows-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: requirements*.txt
+
+      - name: Instalar dependencias
+        run: python -m pip install -r requirements-dev.txt
+
+      - name: Correr tests
+        run: python -m pytest -q

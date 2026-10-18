@@ -1,0 +1,24 @@
+# Dependencias del proyecto. Python validado: 3.12.
+# Los rangos siguen a scripts/check_environment.py, que sigue siendo la
+# referencia para diagnosticar un entorno plugin por plugin.
+#
+#   pip install -r requirements.txt          # para correr el sistema
+#   pip install -r requirements-dev.txt      # + tests
+
+# Núcleo — sin estos no arranca nada (MLB y fútbol solo necesitan esto)
+requests>=2.31,<3.0
+pyyaml>=6.0,<7.0
+
+# Configuración: carga .env (cuotas en vivo, Telegram)
+python-dotenv>=1.0,<2.0
+
+# NBA y NFL — DataFrames y caché en parquet.
+# Se usa fastparquet y no pyarrow: ver scripts/audit_nba_sources.py.
+pandas>=2.0,<3.0
+fastparquet
+
+# nfl_data_py NO va aquí: declara pandas<2.0 y numpy<2.0, pip abortaría
+# al combinarlo con lo de arriba. Se instala aparte, saltándose el pin:
+#
+#   pip install --no-deps "nfl-data-py>=0.3.0,<0.4.0"
+#   pip install appdirs python-snappy
