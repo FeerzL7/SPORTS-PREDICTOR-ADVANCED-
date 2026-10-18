@@ -377,21 +377,27 @@ class SoccerProjectionModel:
         Par de medias esperadas derivado solo del Elo.
 
         El Elo da una diferencia de fuerza, que se convierte en ventaja
-        de goles. Repartirla sobre el total medio de la competición da
-        un par de medias comparable al del xG:
+        de goles y se reparte a partes iguales sobre las medias de la
+        liga por localía:
 
-            total     = media_liga_local + media_liga_visitante
-            ventaja   = diferencia_elo / elo_por_gol
-            λ_local     = (total + ventaja) / 2
-            λ_visitante = (total − ventaja) / 2
+            ventaja     = diferencia_elo / elo_por_gol
+            λ_local     = media_liga_local     + ventaja / 2
+            λ_visitante = media_liga_visitante − ventaja / 2
 
-        El total se toma de la liga y no del Elo porque el Elo no mide
+        Las medias se toman de la liga y no del Elo porque el Elo no mide
         cuántos goles se marcan, solo quién es mejor. Dos equipos de la
         Bundesliga y dos de La Liga con la misma diferencia de Elo
         tienen la misma ventaja pero totales distintos.
 
-        La ventaja de campo ya está dentro de las medias por localía,
-        así que el reparto no la añade otra vez.
+        La diferencia de Elo no incluye la ventaja de campo (ni la de
+        ClubElo ni la del Elo local); esa ventaja ya está en que la media
+        del local supera a la del visitante.
+
+        CORRECCIÓN (2026-10): antes se repartía el TOTAL a partes iguales,
+        λ_local = (total + ventaja) / 2. Con dos equipos de igual Elo,
+        local y visitante recibían la misma media y la ventaja de campo
+        desaparecía. No había salido a la luz porque el peso del Elo
+        estaba en 0.
 
         Retorna (None, None) si no hay diferencia de Elo: proyectar con
         una señal ausente sería inventarla.
@@ -403,11 +409,10 @@ class SoccerProjectionModel:
             return None, None
 
         supremacy = elo_to_supremacy(diff, self._elo_per_goal)
-        total = league_home + league_away
 
         return (
-            max(0.05, (total + supremacy) / 2.0),
-            max(0.05, (total - supremacy) / 2.0),
+            max(0.05, league_home + supremacy / 2.0),
+            max(0.05, league_away - supremacy / 2.0),
         )
 
     # ── Confianza ─────────────────────────────────────────────────────────────

@@ -192,6 +192,15 @@ soccer:
     enabled: true
     weight: 0.0
 
+    # Origen de los ratings (2026-10):
+    #   local    Elo propio calculado con los resultados de football-data
+    #            (sports/soccer/elo_local.py). Cubre cualquier competición
+    #            con calendario —Liga MX, Brasil, segundas divisiones— y
+    #            no depende de otro servicio.
+    #   clubelo  clubelo.com: solo clubes europeos, y respondiendo 502
+    #            durante días en 2026-10.
+    source: local
+
     # Puntos de Elo por gol de ventaja.
     #
     # La relación empírica en fútbol ronda los 100 puntos por 0.40
