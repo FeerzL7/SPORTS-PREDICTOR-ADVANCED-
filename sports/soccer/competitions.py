@@ -302,6 +302,51 @@ _COMPETITIONS: dict[str, Competition] = {
         avg_home_goals=1.48, avg_away_goals=1.15,
     ),
 
+    # ── Segundas divisiones (2026-10, para investigación) ────────
+    #
+    # Hipótesis: menos volumen y menos modelos profesionales que en
+    # primera, así que precios menos eficientes. football-data publica
+    # resultados y cierre de Pinnacle completos desde 2018 y también
+    # sus partidos futuros en fixtures.csv.
+    #
+    # Sin Understat (no las cubre): el modelo trabaja con goles y Elo
+    # propio, sin xG. Una ventaja aquí tendría que venir de la
+    # ineficiencia del mercado, no de mejores datos.
+    #
+    # Desactivadas: solo las usa el backtest con --comps. Las medias de
+    # goles son de 2021-2023 (football-data), anteriores a la temporada
+    # reservada de la prueba (2024).
+    "championship": Competition(
+        comp_id="championship", name="Championship", country="Inglaterra",
+        football_data_code="E1", odds_api_key="soccer_efl_champ",
+        tier=TIER_PARTIAL, n_teams=24, enabled=False,
+        avg_home_goals=1.41, avg_away_goals=1.13,
+    ),
+    "segunda": Competition(
+        comp_id="segunda", name="Segunda División", country="España",
+        football_data_code="SP2", odds_api_key="soccer_spain_segunda_division",
+        tier=TIER_PARTIAL, n_teams=22, enabled=False,
+        avg_home_goals=1.30, avg_away_goals=0.93,
+    ),
+    "serieb": Competition(
+        comp_id="serieb", name="Serie B", country="Italia",
+        football_data_code="I2", odds_api_key="soccer_italy_serie_b",
+        tier=TIER_PARTIAL, n_teams=20, enabled=False,
+        avg_home_goals=1.34, avg_away_goals=1.11,
+    ),
+    "bundesliga2": Competition(
+        comp_id="bundesliga2", name="2. Bundesliga", country="Alemania",
+        football_data_code="D2", odds_api_key="soccer_germany_bundesliga2",
+        tier=TIER_PARTIAL, n_teams=18, enabled=False,
+        avg_home_goals=1.63, avg_away_goals=1.35,
+    ),
+    "ligue2": Competition(
+        comp_id="ligue2", name="Ligue 2", country="Francia",
+        football_data_code="F2", odds_api_key="soccer_france_ligue_two",
+        tier=TIER_PARTIAL, n_teams=18, enabled=False,
+        avg_home_goals=1.30, avg_away_goals=1.08,
+    ),
+
     # ── Declaradas, no activas ───────────────────────────────────
     # Añadir cualquiera de estas es cambiar `enabled` y validar que su
     # fuente responde — no reescribir el plugin. Esa es la razón de
